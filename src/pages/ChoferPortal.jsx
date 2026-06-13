@@ -105,12 +105,11 @@ const RUTAS_LIST = [
 /* ─── Pantalla de Selección de Ruta ───────────────────────── */
 const RutaSelectionPanel = ({ onSelect, rutasActivas, loading }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-    style={{ padding: 'var(--spacing-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)', height: '100%', overflowY: 'auto' }}
+    style={{ position: 'absolute', inset: 0, padding: 'var(--spacing-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)', overflowY: 'auto' }}
   >
-    <div style={{ textAlign: 'center', marginTop: 'var(--spacing-xl)' }}>
-      <Bus size={48} color="var(--color-accent)" style={{ opacity: 0.2, marginBottom: 'var(--spacing-base)' }} />
-      <h2 style={{ margin: 0, fontSize: 'var(--typography-title-lg-size)', fontWeight: 'var(--typography-title-lg-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>Selecciona tu Ruta</h2>
-      <p style={{ margin: '8px 0 0', fontSize: 'var(--typography-body-sm-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>¿Qué ruta vas a manejar en este viaje?</p>
+    <div style={{ marginBottom: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}>
+      <h2 style={{ margin: 0, fontSize: 'var(--typography-display-sm-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>Selecciona tu ruta</h2>
+      <p style={{ margin: '4px 0 0', fontSize: 'var(--typography-body-sm-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>¿Qué ruta vas a manejar hoy?</p>
     </div>
 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', paddingBottom: 'var(--spacing-xxl)' }}>
@@ -266,7 +265,7 @@ const RegistrosPanel = ({ registros, loading }) => {
   );
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: 'var(--spacing-lg)', paddingBottom: 'var(--spacing-xxl)' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'var(--spacing-lg)', paddingBottom: 'var(--spacing-xxl)' }}>
       <AnimatePresence mode="wait">
 
         {/* NIVEL 0 – Rutas */}

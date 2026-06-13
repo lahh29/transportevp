@@ -7,24 +7,29 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['logo.svg'],
       manifest: {
         name: 'ViñoPlastic',
         short_name: 'ViñoPlastic',
         description: 'App para abordaje de transporte empresarial',
-        theme_color: '#f7f7f4',
-        background_color: '#f7f7f4',
+        theme_color: '#26251E',
+        background_color: '#FCFBF8',
         display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: '/logo.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'pwa-512x512.png',
+            src: '/logo.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml'
+          },
+          {
+            src: '/logo.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
