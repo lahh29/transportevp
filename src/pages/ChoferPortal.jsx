@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, ScanLine, List, Camera, LogOut, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin } from 'lucide-react';
@@ -14,27 +14,45 @@ const getInitials = (nombre) => {
 
 const getWeekKey = (dateStr) => {
   const d = new Date(dateStr);
-  // Lunes de la semana
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : 1 - day);
+  const day = d.getDay(); // 0=dom, 1=lun...
+  const diff = day === 0 ? -6 : 1 - day; // desplazar al lunes
   const mon = new Date(d);
   mon.setDate(d.getDate() + diff);
-  mon.setHours(0,0,0,0);
-  return mon.toISOString().split('T')[0];
+  // Usar fecha LOCAL para evitar desfase por UTC vs UTC-6
+  const y = mon.getFullYear();
+  const m = String(mon.getMonth() + 1).padStart(2, '0');
+  const dd = String(mon.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+};
+
+// Número de semana ISO 8601 (lunes = primer día)
+const getISOWeek = (dateOrStr) => {
+  const d = new Date(dateOrStr instanceof Date ? dateOrStr : dateOrStr + 'T12:00:00');
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const w1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - w1) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
 };
 
 const formatWeekLabel = (weekKey) => {
-  const mon = new Date(weekKey + 'T12:00:00');
+  const mon = new Date(weekKey + 'T12:00:00'); // noon local para evitar salto de día
   const sun = new Date(mon);
   sun.setDate(mon.getDate() + 6);
-  const opts = { day: 'numeric', month: 'short' };
-  return `${mon.toLocaleDateString('es-MX', opts)} – ${sun.toLocaleDateString('es-MX', opts)}`;
+  const weekNum = getISOWeek(mon);
+  const monStr = mon.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  const sunStr = sun.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  return `Semana ${weekNum} · ${monStr} – ${sunStr}`;
 };
 
-const getDayKey = (dateStr) => new Date(dateStr).toISOString().split('T')[0];
+const getDayKey = (dateStr) => {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`; // fecha local, no UTC
+};
 
 const formatDayLabel = (dayKey) => {
-  const d = new Date(dayKey + 'T12:00:00');
+  const d = new Date(dayKey + 'T12:00:00'); // noon local para no saltar de día
   return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
@@ -326,6 +344,7 @@ export const ChoferPortal = () => {
   const [session, setSession] = useState(null);
   const timerRef = useRef(null);
   const isScanningRef = useRef(false);
+  const qrRef = useRef(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -425,7 +444,8 @@ export const ChoferPortal = () => {
 
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+    const qr = new Html5Qrcode('reader');
+    qrRef.current = qr;
 
     const onScanSuccess = async (decodedText) => {
       if (isScanningRef.current) return;
@@ -453,8 +473,27 @@ export const ChoferPortal = () => {
       }
     };
 
-    scanner.render(onScanSuccess, () => {});
-    return () => { scanner.clear().catch(console.error); if (timerRef.current) clearTimeout(timerRef.current); };
+    // Arranca directo con cámara trasera, sin UI intermedia
+    qr.start(
+      { facingMode: 'environment' },
+      { fps: 15, qrbox: { width: 240, height: 240 }, aspectRatio: 1.0 },
+      onScanSuccess,
+      () => {} // errores de frame ignorados
+    ).catch((err) => {
+      console.warn('Cámara trasera no disponible, probando cámara frontal:', err);
+      // Fallback: cualquier cámara disponible
+      qr.start(
+        { facingMode: 'user' },
+        { fps: 15, qrbox: { width: 240, height: 240 } },
+        onScanSuccess,
+        () => {}
+      ).catch(console.error);
+    });
+
+    return () => {
+      qr.isScanning && qr.stop().then(() => qr.clear()).catch(console.error);
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [session]);
 
   return (
@@ -463,9 +502,8 @@ export const ChoferPortal = () => {
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .app-container > nav, .app-container > header { display: none !important; }
         .app-container > main { padding: 0 !important; max-width: none !important; }
-        #reader { width: 100%; border: none !important; }
-        #reader img { display: none; }
-        #reader button { background: var(--color-surface-card); border: 1px solid var(--color-hairline-strong); padding: 8px 16px; border-radius: var(--rounded-md); margin-top: 10px; color: var(--color-ink); font-family: var(--font-body); font-weight: 500; cursor: pointer; }
+        #reader { width: 100% !important; height: 100% !important; border: none !important; }
+        #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
       `}</style>
 
       {/* Header */}
