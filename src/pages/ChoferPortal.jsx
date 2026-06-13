@@ -476,7 +476,16 @@ export const ChoferPortal = () => {
     // Arranca directo con cámara trasera, sin UI intermedia
     qr.start(
       { facingMode: 'environment' },
-      { fps: 15, qrbox: { width: 240, height: 240 }, aspectRatio: 1.0 },
+      {
+        fps: 15,
+        // qrbox como función: centra el área de deteccion pero el video sigue a pantalla completa
+        qrbox: (w, h) => {
+          const size = Math.round(Math.min(w, h) * 0.65);
+          return { width: size, height: size };
+        },
+        aspectRatio: window.innerHeight / window.innerWidth, // portrait
+        disableFlip: false,
+      },
       onScanSuccess,
       () => {} // errores de frame ignorados
     ).catch((err) => {
@@ -502,8 +511,37 @@ export const ChoferPortal = () => {
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
         .app-container > nav, .app-container > header { display: none !important; }
         .app-container > main { padding: 0 !important; max-width: none !important; }
-        #reader { width: 100% !important; height: 100% !important; border: none !important; }
-        #reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+
+        /* --- Html5Qrcode overrides: video a pantalla completa --- */
+        #reader {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+          background: #000 !important;
+          padding: 0 !important;
+          position: absolute !important;
+          inset: 0 !important;
+        }
+        #reader > div {
+          width: 100% !important;
+          height: 100% !important;
+          padding: 0 !important;
+          border: none !important;
+        }
+        #reader video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          position: absolute !important;
+          top: 0 !important; left: 0 !important;
+        }
+        /* Ocultar el QR box nativo de la librería, usamos el nuestro */
+        #reader__scan_region {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+        }
+        #reader__scan_region img, #reader__dashboard { display: none !important; }
       `}</style>
 
       {/* Header */}
