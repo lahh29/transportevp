@@ -1,0 +1,909 @@
+/* ============================================================
+   DESIGN SYSTEM — VIÑOPLASTIC / Vertx System
+   Querétaro Plant · HR & Training Platform
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap");
+
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* --- Surfaces --- */
+  --color-canvas-raw: 248 247 244; /* #f8f7f4 — warm cream floor */
+  --color-canvas-soft-raw: 252 251 248; /* #fcfbf8 — pane background  */
+  --color-surface-card-raw: 255 255 255; /* #ffffff — card surface      */
+  --color-surface-strong-raw: 230 229 224; /* #e6e5e0 — badges, pills     */
+
+  --color-canvas: rgb(var(--color-canvas-raw));
+  --color-canvas-soft: rgb(var(--color-canvas-soft-raw));
+  --color-surface-card: rgb(var(--color-surface-card-raw));
+  --color-surface-strong: rgb(var(--color-surface-strong-raw));
+
+  /* --- Accent (Cursor Orange) --- */
+  --color-accent-raw: 245 78 0; /* #f54e00 — use scarcely      */
+  --color-accent-active-raw: 208 66 0; /* #d04200 — press state       */
+
+  --color-accent: rgb(var(--color-accent-raw));
+  --color-accent-active: rgb(var(--color-accent-active-raw));
+
+  /* Aliases para compatibilidad con código legacy */
+  --color-primary: var(--color-accent);
+  --color-primary-active: var(--color-accent-active);
+  --color-on-primary: #ffffff;
+
+  /* --- Hairlines --- */
+  --color-hairline-raw: 230 229 224; /* #e6e5e0 */
+  --color-hairline-soft-raw: 239 238 232; /* #efeee8 */
+  --color-hairline-strong-raw: 207 205 196; /* #cfcdc4 */
+
+  --color-hairline: rgb(var(--color-hairline-raw));
+  --color-hairline-soft: rgb(var(--color-hairline-soft-raw));
+  --color-hairline-strong: rgb(var(--color-hairline-strong-raw));
+
+  /* --- Text --- */
+  --color-ink-raw: 38 37 30; /* #26251e — warm near-black   */
+  --color-body-raw: 90 88 82; /* #5a5852 — running text      */
+  --color-muted-raw: 128 125 114; /* #807d72 — subtitles         */
+  --color-muted-soft-raw: 160 156 146; /* #a09c92 — disabled text     */
+
+  --color-ink: rgb(var(--color-ink-raw));
+  --color-body: rgb(var(--color-body-raw));
+  --color-muted: rgb(var(--color-muted-raw));
+  --color-muted-soft: rgb(var(--color-muted-soft-raw));
+
+  /* Aliases */
+  --color-body-strong: var(--color-ink);
+
+  /* --- Semantic --- */
+  --color-semantic-success-raw: 31 138 101; /* #1f8a65 */
+  --color-semantic-error-raw: 207 45 86; /* #cf2d56 */
+
+  --color-semantic-success: rgb(var(--color-semantic-success-raw));
+  --color-semantic-error: rgb(var(--color-semantic-error-raw));
+
+  /* --- Timeline (in-product AI actions only) --- */
+  --color-timeline-thinking: #dfa88f;
+  --color-timeline-grep: #9fc9a2;
+  --color-timeline-read: #9fbbe0;
+  --color-timeline-edit: #c0a8dd;
+  --color-timeline-done: #c08532;
+
+  /* --- Spacing (base: 4px) --- */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-base: 16px;
+  --spacing-md: 20px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+  --spacing-section: 80px;
+
+  /* --- Border Radius --- */
+  --rounded-none: 0px;
+  --rounded-xs: 4px;
+  --rounded-sm: 6px;
+  --rounded-md: 8px;
+  --rounded-lg: 12px;
+  --rounded-xl: 16px;
+  --rounded-pill: 9999px;
+  --rounded-full: 9999px;
+
+  /* --- Font Families --- */
+  --font-display: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-code: "JetBrains Mono", monospace;
+
+  /* --- Typography Scale --- */
+  --typography-display-mega-size: 72px;
+  --typography-display-mega-weight: 400;
+  --typography-display-mega-lh: 1.1;
+  --typography-display-mega-ls: -2.16px;
+
+  --typography-display-lg-size: 36px;
+  --typography-display-lg-weight: 400;
+  --typography-display-lg-lh: 1.2;
+  --typography-display-lg-ls: -0.72px;
+
+  --typography-display-md-size: 26px;
+  --typography-display-md-weight: 400;
+  --typography-display-md-lh: 1.25;
+  --typography-display-md-ls: -0.325px;
+
+  --typography-display-sm-size: 22px;
+  --typography-display-sm-weight: 400;
+  --typography-display-sm-lh: 1.3;
+  --typography-display-sm-ls: -0.11px;
+
+  --typography-title-md-size: 18px;
+  --typography-title-md-weight: 600;
+  --typography-title-md-lh: 1.4;
+  --typography-title-md-ls: 0;
+
+  --typography-title-sm-size: 16px;
+  --typography-title-sm-weight: 600;
+  --typography-title-sm-lh: 1.4;
+  --typography-title-sm-ls: 0;
+
+  --typography-body-md-size: 16px;
+  --typography-body-md-weight: 400;
+  --typography-body-md-lh: 1.5;
+  --typography-body-md-ls: 0;
+
+  --typography-body-tracked-size: 16px;
+  --typography-body-tracked-weight: 400;
+  --typography-body-tracked-lh: 1.5;
+  --typography-body-tracked-ls: 0.08px;
+
+  --typography-body-sm-size: 14px;
+  --typography-body-sm-weight: 400;
+  --typography-body-sm-lh: 1.5;
+  --typography-body-sm-ls: 0;
+
+  --typography-caption-size: 13px;
+  --typography-caption-weight: 400;
+  --typography-caption-lh: 1.4;
+  --typography-caption-ls: 0;
+
+  --typography-caption-uppercase-size: 11px;
+  --typography-caption-uppercase-weight: 600;
+  --typography-caption-uppercase-lh: 1.4;
+  --typography-caption-uppercase-ls: 0.88px;
+
+  --typography-code-size: 13px;
+  --typography-code-weight: 400;
+  --typography-code-lh: 1.5;
+  --typography-code-ls: 0;
+
+  --typography-button-size: 14px;
+  --typography-button-weight: 500;
+  --typography-button-lh: 1;
+  --typography-button-ls: 0;
+
+  --typography-nav-link-size: 14px;
+  --typography-nav-link-weight: 500;
+  --typography-nav-link-lh: 1.4;
+  --typography-nav-link-ls: 0;
+}
+
+/* ============================================================
+   2. RESET & BASE
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--typography-body-md-size);
+  font-weight: var(--typography-body-md-weight);
+  line-height: var(--typography-body-md-lh);
+  letter-spacing: var(--typography-body-md-ls);
+  background-color: var(--color-canvas);
+  color: var(--color-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   3. HEADING SCALE
+   ============================================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--color-ink);
+}
+
+h1 {
+  font-size: var(--typography-display-mega-size);
+  line-height: var(--typography-display-mega-lh);
+  letter-spacing: var(--typography-display-mega-ls);
+}
+h2 {
+  font-size: var(--typography-display-lg-size);
+  line-height: var(--typography-display-lg-lh);
+  letter-spacing: var(--typography-display-lg-ls);
+}
+h3 {
+  font-size: var(--typography-display-md-size);
+  line-height: var(--typography-display-md-lh);
+  letter-spacing: var(--typography-display-md-ls);
+}
+h4 {
+  font-size: var(--typography-display-sm-size);
+  line-height: var(--typography-display-sm-lh);
+  letter-spacing: var(--typography-display-sm-ls);
+}
+h5 {
+  font-size: var(--typography-title-md-size);
+  font-weight: var(--typography-title-md-weight);
+  line-height: var(--typography-title-md-lh);
+  letter-spacing: var(--typography-title-md-ls);
+}
+h6 {
+  font-size: var(--typography-title-sm-size);
+  font-weight: var(--typography-title-sm-weight);
+  line-height: var(--typography-title-sm-lh);
+  letter-spacing: var(--typography-title-sm-ls);
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-code);
+  font-size: var(--typography-code-size);
+  font-weight: var(--typography-code-weight);
+  line-height: var(--typography-code-lh);
+  letter-spacing: var(--typography-code-ls);
+}
+
+/* ============================================================
+   4. TYPOGRAPHY UTILITY CLASSES
+   ============================================================ */
+
+.type-display-mega {
+  font-family: var(--font-display);
+  font-size: var(--typography-display-mega-size);
+  font-weight: var(--typography-display-mega-weight);
+  line-height: var(--typography-display-mega-lh);
+  letter-spacing: var(--typography-display-mega-ls);
+  color: var(--color-ink);
+}
+.type-display-lg {
+  font-family: var(--font-display);
+  font-size: var(--typography-display-lg-size);
+  font-weight: var(--typography-display-lg-weight);
+  line-height: var(--typography-display-lg-lh);
+  letter-spacing: var(--typography-display-lg-ls);
+  color: var(--color-ink);
+}
+.type-display-md {
+  font-family: var(--font-display);
+  font-size: var(--typography-display-md-size);
+  font-weight: var(--typography-display-md-weight);
+  line-height: var(--typography-display-md-lh);
+  letter-spacing: var(--typography-display-md-ls);
+  color: var(--color-ink);
+}
+.type-display-sm {
+  font-family: var(--font-display);
+  font-size: var(--typography-display-sm-size);
+  font-weight: var(--typography-display-sm-weight);
+  line-height: var(--typography-display-sm-lh);
+  letter-spacing: var(--typography-display-sm-ls);
+  color: var(--color-ink);
+}
+.type-title-md {
+  font-family: var(--font-body);
+  font-size: var(--typography-title-md-size);
+  font-weight: var(--typography-title-md-weight);
+  line-height: var(--typography-title-md-lh);
+  letter-spacing: var(--typography-title-md-ls);
+  color: var(--color-ink);
+}
+.type-title-sm {
+  font-family: var(--font-body);
+  font-size: var(--typography-title-sm-size);
+  font-weight: var(--typography-title-sm-weight);
+  line-height: var(--typography-title-sm-lh);
+  letter-spacing: var(--typography-title-sm-ls);
+  color: var(--color-ink);
+}
+.type-body-md {
+  font-size: var(--typography-body-md-size);
+  font-weight: var(--typography-body-md-weight);
+  line-height: var(--typography-body-md-lh);
+  letter-spacing: var(--typography-body-md-ls);
+}
+.type-body-tracked {
+  font-size: var(--typography-body-tracked-size);
+  font-weight: var(--typography-body-tracked-weight);
+  line-height: var(--typography-body-tracked-lh);
+  letter-spacing: var(--typography-body-tracked-ls);
+}
+.type-body-sm {
+  font-size: var(--typography-body-sm-size);
+  font-weight: var(--typography-body-sm-weight);
+  line-height: var(--typography-body-sm-lh);
+  letter-spacing: var(--typography-body-sm-ls);
+}
+.type-caption {
+  font-size: var(--typography-caption-size);
+  font-weight: var(--typography-caption-weight);
+  line-height: var(--typography-caption-lh);
+  letter-spacing: var(--typography-caption-ls);
+  color: var(--color-muted);
+}
+.type-caption-uppercase {
+  font-size: var(--typography-caption-uppercase-size);
+  font-weight: var(--typography-caption-uppercase-weight);
+  line-height: var(--typography-caption-uppercase-lh);
+  letter-spacing: var(--typography-caption-uppercase-ls);
+  text-transform: uppercase;
+}
+.type-code {
+  font-family: var(--font-code);
+  font-size: var(--typography-code-size);
+  font-weight: var(--typography-code-weight);
+  line-height: var(--typography-code-lh);
+  letter-spacing: var(--typography-code-ls);
+}
+.type-button {
+  font-size: var(--typography-button-size);
+  font-weight: var(--typography-button-weight);
+  line-height: var(--typography-button-lh);
+  letter-spacing: var(--typography-button-ls);
+}
+.type-nav-link {
+  font-size: var(--typography-nav-link-size);
+  font-weight: var(--typography-nav-link-weight);
+  line-height: var(--typography-nav-link-lh);
+  letter-spacing: var(--typography-nav-link-ls);
+}
+
+/* ============================================================
+   5. COLOR UTILITY CLASSES
+   ============================================================ */
+
+.text-ink {
+  color: var(--color-ink);
+}
+.text-body {
+  color: var(--color-body);
+}
+.text-body-strong {
+  color: var(--color-body-strong);
+}
+.text-muted {
+  color: var(--color-muted);
+}
+.text-muted-soft {
+  color: var(--color-muted-soft);
+}
+.text-primary {
+  color: var(--color-accent);
+}
+.text-on-primary {
+  color: var(--color-on-primary);
+}
+.text-success {
+  color: var(--color-semantic-success);
+}
+.text-error {
+  color: var(--color-semantic-error);
+}
+
+.bg-canvas {
+  background-color: var(--color-canvas);
+}
+.bg-canvas-soft {
+  background-color: var(--color-canvas-soft);
+}
+.bg-card {
+  background-color: var(--color-surface-card);
+}
+.bg-surface-strong {
+  background-color: var(--color-surface-strong);
+}
+.bg-ink {
+  background-color: var(--color-ink);
+}
+.bg-primary {
+  background-color: var(--color-accent);
+}
+
+.border-hairline {
+  border: 1px solid var(--color-hairline);
+}
+.border-hairline-soft {
+  border: 1px solid var(--color-hairline-soft);
+}
+.border-hairline-strong {
+  border: 1px solid var(--color-hairline-strong);
+}
+
+/* ============================================================
+   6. LAYOUT
+   ============================================================ */
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--spacing-xl);
+}
+
+.section {
+  padding-block: var(--spacing-section);
+}
+
+/* ============================================================
+   7. COMPONENT CLASSES
+   ============================================================ */
+
+/* --- Buttons --- */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background-color: var(--color-accent);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
+  font-size: var(--typography-button-size);
+  font-weight: var(--typography-button-weight);
+  line-height: var(--typography-button-lh);
+  letter-spacing: var(--typography-button-ls);
+  padding: 0 var(--spacing-lg);
+  height: 38px;
+  border-radius: var(--rounded-md);
+  border: 1px solid rgb(var(--color-accent-raw) / 0.4);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    opacity 120ms ease;
+}
+.btn-primary:hover {
+  background-color: var(--color-accent-active);
+}
+.btn-primary:active {
+  background-color: var(--color-accent-active);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background-color: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--typography-button-size);
+  font-weight: var(--typography-button-weight);
+  line-height: var(--typography-button-lh);
+  letter-spacing: var(--typography-button-ls);
+  padding: 0 var(--spacing-lg);
+  height: 38px;
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--color-hairline-soft);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 120ms ease;
+}
+.btn-secondary:hover {
+  border-color: var(--color-hairline-strong);
+}
+
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  background-color: var(--color-ink);
+  color: var(--color-canvas);
+  font-family: var(--font-body);
+  font-size: var(--typography-button-size);
+  font-weight: var(--typography-button-weight);
+  line-height: var(--typography-button-lh);
+  letter-spacing: var(--typography-button-ls);
+  padding: 0 var(--spacing-md);
+  height: 44px;
+  border-radius: var(--rounded-md);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 120ms ease;
+}
+.btn-download:hover {
+  opacity: 0.88;
+}
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  font-family: var(--font-body);
+  font-size: var(--typography-button-size);
+  font-weight: var(--typography-button-weight);
+  line-height: var(--typography-button-lh);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.btn-text:hover {
+  color: var(--color-ink);
+}
+
+/* --- Cards --- */
+
+.card {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+  color: var(--color-ink);
+}
+
+.card-pricing {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-xl);
+}
+
+.card-pricing--featured {
+  background-color: var(--color-ink);
+  color: var(--color-canvas);
+  border-color: var(--color-ink);
+}
+.card-pricing--featured h2,
+.card-pricing--featured h3,
+.card-pricing--featured h4,
+.card-pricing--featured h5,
+.card-pricing--featured h6 {
+  color: var(--color-canvas);
+}
+
+.card-testimonial {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-lg);
+  color: var(--color-body);
+}
+
+/* --- Badge pill --- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-surface-strong);
+  color: var(--color-ink);
+  font-size: var(--typography-caption-uppercase-size);
+  font-weight: var(--typography-caption-uppercase-weight);
+  line-height: var(--typography-caption-uppercase-lh);
+  letter-spacing: var(--typography-caption-uppercase-ls);
+  text-transform: uppercase;
+  border-radius: var(--rounded-pill);
+  padding: var(--spacing-xxs) 10px;
+}
+
+/* --- Timeline pills --- */
+
+.timeline-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: var(--typography-caption-uppercase-size);
+  font-weight: var(--typography-caption-uppercase-weight);
+  line-height: var(--typography-caption-uppercase-lh);
+  letter-spacing: var(--typography-caption-uppercase-ls);
+  text-transform: uppercase;
+  border-radius: var(--rounded-pill);
+  padding: var(--spacing-xxs) 10px;
+  color: var(--color-ink);
+}
+.timeline-pill--thinking {
+  background-color: var(--color-timeline-thinking);
+}
+.timeline-pill--grep {
+  background-color: var(--color-timeline-grep);
+}
+.timeline-pill--read {
+  background-color: var(--color-timeline-read);
+}
+.timeline-pill--edit {
+  background-color: var(--color-timeline-edit);
+}
+.timeline-pill--done {
+  background-color: var(--color-timeline-done);
+  color: var(--color-on-primary);
+}
+
+/* --- Code block --- */
+
+.code-block {
+  background-color: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  padding: var(--spacing-md);
+  font-family: var(--font-code);
+  font-size: var(--typography-code-size);
+  font-weight: var(--typography-code-weight);
+  line-height: var(--typography-code-lh);
+  letter-spacing: var(--typography-code-ls);
+  color: var(--color-ink);
+  overflow-x: auto;
+}
+
+/* --- Form inputs --- */
+
+.input {
+  display: block;
+  width: 100%;
+  background-color: var(--color-surface-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--typography-body-sm-size);
+  font-weight: var(--typography-body-md-weight);
+  line-height: var(--typography-body-md-lh);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-md);
+  padding: 0 var(--spacing-base);
+  height: 38px;
+  outline: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.input::placeholder {
+  color: var(--color-muted-soft);
+}
+.input:hover {
+  border-color: var(--color-hairline-strong);
+}
+.input:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgb(var(--color-ink-raw) / 0.06);
+}
+
+/* --- Top navigation --- */
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-canvas);
+  height: 56px;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.top-nav__wordmark {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--typography-title-md-size);
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: auto;
+}
+.top-nav__link {
+  color: var(--color-muted);
+  font-size: var(--typography-nav-link-size);
+  font-weight: var(--typography-nav-link-weight);
+  line-height: var(--typography-nav-link-lh);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.top-nav__link:hover {
+  color: var(--color-ink);
+}
+.top-nav__link.active {
+  color: var(--color-ink);
+}
+
+/* --- Semantic banners (reemplaza los Card con bg solid) --- */
+
+.banner-success {
+  padding: var(--spacing-base);
+  border-radius: var(--rounded-lg);
+  border: 1px solid rgb(var(--color-semantic-success-raw) / 0.25);
+  background-color: rgb(var(--color-semantic-success-raw) / 0.06);
+  color: var(--color-semantic-success);
+}
+.banner-error {
+  padding: var(--spacing-base);
+  border-radius: var(--rounded-lg);
+  border: 1px solid rgb(var(--color-semantic-error-raw) / 0.25);
+  background-color: rgb(var(--color-semantic-error-raw) / 0.06);
+  color: var(--color-semantic-error);
+}
+
+/* --- Hero band --- */
+
+.hero-band {
+  background-color: var(--color-canvas);
+  padding-block: var(--spacing-section);
+  text-align: center;
+}
+.hero-band__subhead {
+  font-size: var(--typography-body-md-size);
+  color: var(--color-body);
+  max-width: 560px;
+  margin-inline: auto;
+  margin-top: var(--spacing-lg);
+}
+.hero-band__ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-base);
+  margin-top: var(--spacing-xl);
+  flex-wrap: wrap;
+}
+
+/* --- IDE mockup card --- */
+
+.ide-mockup-card {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+}
+.ide-pane {
+  background-color: var(--color-canvas-soft);
+  font-family: var(--font-code);
+  font-size: var(--typography-code-size);
+  line-height: var(--typography-code-lh);
+  color: var(--color-body);
+  border-radius: var(--rounded-md);
+  padding: var(--spacing-base);
+}
+
+/* --- CTA band --- */
+
+.cta-band {
+  background-color: var(--color-canvas);
+  text-align: center;
+  padding-block: 96px;
+}
+.cta-band h2 {
+  margin-bottom: var(--spacing-xl);
+}
+
+/* --- Footer --- */
+
+.footer {
+  background-color: var(--color-canvas);
+  border-top: 1px solid var(--color-hairline-soft);
+  padding: 64px var(--spacing-xxl) var(--spacing-xxl);
+}
+.footer__link {
+  display: block;
+  color: var(--color-muted);
+  font-size: var(--typography-body-sm-size);
+  font-weight: var(--typography-body-sm-weight);
+  line-height: var(--typography-body-sm-lh);
+  text-decoration: none;
+  transition: color 120ms ease;
+}
+.footer__link:hover {
+  color: var(--color-ink);
+}
+
+/* ============================================================
+   8. RESPONSIVE UTILITIES
+   ============================================================ */
+
+@media (max-width: 639px) {
+  .hidden-on-mobile {
+    display: none !important;
+  }
+}
+@media (min-width: 640px) {
+  .hidden-on-desktop {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   9. RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+@media (max-width: 1023px) {
+  h1,
+  .type-display-mega {
+    font-size: 56px;
+    letter-spacing: -1.4px;
+    line-height: 1.15;
+  }
+}
+
+@media (max-width: 639px) {
+  h1,
+  .type-display-mega {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .container {
+    padding-inline: var(--spacing-base);
+  }
+  .section {
+    padding-block: var(--spacing-xxl);
+  }
+  .cta-band {
+    padding-block: var(--spacing-section);
+  }
+  .footer {
+    padding: var(--spacing-xxl) var(--spacing-base);
+  }
+}
+
+/* ============================================================
+   10. SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-hairline-strong);
+  border-radius: var(--rounded-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-soft);
+}
+
+/* ============================================================
+   11. ACCESSIBILITY — Reduced Motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes vp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}

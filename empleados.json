@@ -1,0 +1,2418 @@
+[
+  {
+    "numero empleado": "4",
+    "nombre": "PACHECO ALCAYA MARIA GABRIELA",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA LUZ",
+    "referencia": "PARADA EN LA IGLESIA"
+  },
+  {
+    "numero empleado": "54",
+    "nombre": "URIAS SANCHEZ ARMANDO",
+    "turno": "27",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "645",
+    "nombre": "PACHECO CORDOBA MA DE LOS ANGELES",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA LUZ",
+    "referencia": "PARADA EN LA IGLESIA"
+  },
+  {
+    "numero empleado": "773",
+    "nombre": "ESPINOZA AGUILAR MARCELA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SAN ISIDRO",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "1102",
+    "nombre": "ACUÑA PEREZ JOSEFINA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "1106",
+    "nombre": "ANGELES MARCIAL ANALLELI",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PRADOS DEL ROSARIO PARADA EN LA ESCUELA"
+  },
+  {
+    "numero empleado": "1369",
+    "nombre": "VAZQUEZ CAMPOS HORTENSIA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "MONTENEGRO",
+    "referencia": "LONCHERIA LILI"
+  },
+  {
+    "numero empleado": "1444",
+    "nombre": "RIVERA ROBLES VERONICA",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "1467",
+    "nombre": "MEJIA MEJIA ANA MARIA JUANA",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "1473",
+    "nombre": "JUAREZ CALVO VERONICA CHRISTAL",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "1496",
+    "nombre": "SANCHEZ LOPEZ ELIUD",
+    "turno": "27",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "1526",
+    "nombre": "SILVA GUERRERO ALLISON AISLINN",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA DE CAMIONES EN FRENTE DEL TALLER DE MOTOS CRIS RAYDER"
+  },
+  {
+    "numero empleado": "1528",
+    "nombre": "PILAR BARCENAS GUADALUPE",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "1539",
+    "nombre": "GUTIERREZ LOPEZ CATALINA YESENIA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "1542",
+    "nombre": "PIMENTEL RUEDA MARIA DE JESUS",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "1671",
+    "nombre": "IVAN GUILLERMO AMADOR FRANCO",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LA CRUZ"
+  },
+  {
+    "numero empleado": "1677",
+    "nombre": "SOSA MEDRANO MA ISABEL",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "1715",
+    "nombre": "GARNICA SANCHEZ BEATRIZ",
+    "turno": "7",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "1719",
+    "nombre": "HURTADO BALDERAS ALEJANDRA",
+    "turno": "4",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "1731",
+    "nombre": "NARANJO HERNANDEZ JOSE MANUEL",
+    "turno": "5",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PRADOS DEL ROSARIO PARADA EN LA ESCUELA"
+  },
+  {
+    "numero empleado": "1757",
+    "nombre": "GALVAN GUEVARA JAVIER",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "1793",
+    "nombre": "GUTIERREZ LOPEZ GUADALUPE",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "1877",
+    "nombre": "SAGAHON MEZA ESPERANZA",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "1997",
+    "nombre": "ROBLES LEDESMA MARIA ERICA",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "1998",
+    "nombre": "LUGO BOLAÑOS MIGUEL",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "2025",
+    "nombre": "HERNANDEZ QUEZADA VERONICA JAHEL",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "2034",
+    "nombre": "ELEUTERIO ROMERO ROSA ISELA",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "2038",
+    "nombre": "FLORES GARCIA JAVIER ISRAEL",
+    "turno": "13",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "2043",
+    "nombre": "MEJIA MARTINEZ RUBEN",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "2091",
+    "nombre": "TREJO TREJO YEIMI",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "2095",
+    "nombre": "GUZMAN AGUILAR LILIA",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SANTA CATARINA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "2106",
+    "nombre": "ALEGRIA BALDERAS EVELIA",
+    "turno": "30",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA BARRETA",
+    "referencia": "TIENDA EN LA ENTRADA"
+  },
+  {
+    "numero empleado": "2154",
+    "nombre": "CAMPOS MEJIA HERNAN",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "2160",
+    "nombre": "GUZMAN ALFARO DAVID ALEXEI",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN LA BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "2201",
+    "nombre": "MARQUEZ HIPOLITO YAZMIN NAYELI",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "2215",
+    "nombre": "MANZO GUILLEN LUIS MARIO",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2227",
+    "nombre": "LEON TAPIA MARIO",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "2247",
+    "nombre": "BIBIANO GARCIA FLOR",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "2249",
+    "nombre": "LOPEZ HERRERA SARA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "ENFRENTE AL WATER HOUSE"
+  },
+  {
+    "numero empleado": "2254",
+    "nombre": "HERNANDEZ LOPEZ MARIA DE LOS REMEDIOS",
+    "turno": "30",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN STEREN"
+  },
+  {
+    "numero empleado": "2277",
+    "nombre": "PEREZ CORTES ELIZABETH",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES EN EL ASTURIANO AV SAN DANIEL"
+  },
+  {
+    "numero empleado": "2286",
+    "nombre": "CORTES VELAZQUEZ ANALLELY",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ PASEO DE LA CONSTITUCION FARMACIA DIAGNOSTICA"
+  },
+  {
+    "numero empleado": "2305",
+    "nombre": "VILLA SERVIN LORENA",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "RINCON OJO DE AGUA",
+    "referencia": "PARADA EN EL ENTRONQUE"
+  },
+  {
+    "numero empleado": "2315",
+    "nombre": "NIEVES MANDUJANO YOLANDA",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "2324",
+    "nombre": "AGUILLON HERNANDEZ MARIA LETICIA MARINA",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "2330",
+    "nombre": "LOYOLA CASTAÑON VICTOR",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2338",
+    "nombre": "VARGAS MEJIA SONIA ABIGAIL",
+    "turno": "4",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA LUZ",
+    "referencia": "PARADA EN EL PUENTE PEATONAL"
+  },
+  {
+    "numero empleado": "2341",
+    "nombre": "CORNEJO JUAREZ JOSE ALFREDO",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ PASEO DE LA CONSTITUCION FARMACIA DIAGNOSTICA"
+  },
+  {
+    "numero empleado": "2342",
+    "nombre": "LAZARO MARTINEZ ELEYDA ELIZABETH",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "2348",
+    "nombre": "ANGELES ROJAS EFREN",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "2350",
+    "nombre": "FLORES ORTIZ VALERIA MONSERRAT",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "2365",
+    "nombre": "PACHECO ALVAREZ MARISOL",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA LUZ",
+    "referencia": "PARADA EN LA CURVA DE LA RECICLADORA"
+  },
+  {
+    "numero empleado": "2391",
+    "nombre": "GAYOSSO CRUZ ERIKA",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2393",
+    "nombre": "LEDEZMA SOTELO MA. LOURDES",
+    "turno": "30",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PIRINEOS"
+  },
+  {
+    "numero empleado": "2400",
+    "nombre": "RESENDIZ SANCHEZ MARISOL",
+    "turno": "30",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "2401",
+    "nombre": "MORENO MEJIA AMALIA BERENICE",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "2420",
+    "nombre": "CABALLERO MARTINEZ ROSALIA",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES FRENTE A BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "2440",
+    "nombre": "GALLARDO DIAZ CIUNELY YETZABEL",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "2461",
+    "nombre": "ARTEAGA PEREZ CARLOS",
+    "turno": "30",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2479",
+    "nombre": "FLORES DOMINGUEZ CORAL ESTEFANIA",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "2494",
+    "nombre": "GARCIA GONZALEZ GUILLERMINA",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "2545",
+    "nombre": "VARGAS GUZMAN RAQUEL",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "2576",
+    "nombre": "MORALES LOPEZ OCTAVIO",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "2617",
+    "nombre": "GONZALEZ SUAREZ KARLA DIANE",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SANTA CATARINA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "2618",
+    "nombre": "ALVAREZ ROMERO MARIA GUADALUPE",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "COREA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "2635",
+    "nombre": "LOPEZ CARRILLO JONATHAN EDUARDO",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "2645",
+    "nombre": "BELTRAN RAMIREZ MA CONSUELO ASUCENA",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA MONJA",
+    "referencia": "EN LA TERRACERIA DE LA CURVA EN LA CASITA CON BARDA DE PIEDRA CON 2 POSTES DE LUZ"
+  },
+  {
+    "numero empleado": "2666",
+    "nombre": "LIRA REYNOSO JOSHUA SHADDAY",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2672",
+    "nombre": "SOLIS OSORIO MIREYA",
+    "turno": "30",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "2676",
+    "nombre": "CECILIANO GONZALEZ MARIA PUEBLITO AIDE",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "2698",
+    "nombre": "VALDIVIA FRANCO CARLOS ALAIN",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "2706",
+    "nombre": "ARREDONDO GATICA REBECA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2710",
+    "nombre": "JIMENEZ GARCIA SHEYLA ISABEL",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2714",
+    "nombre": "CORONA GONZALEZ LUIS MIGUEL",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "MONTENEGRO",
+    "referencia": "LONCHERIA LILI"
+  },
+  {
+    "numero empleado": "2725",
+    "nombre": "VALDEZ CAZARES RICARDO LORENZO",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "2734",
+    "nombre": "MARTINEZ COBOS OMAR",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES EN EL ASTURIANO AV SAN DANIEL"
+  },
+  {
+    "numero empleado": "2741",
+    "nombre": "GARCIA AVILES JAVIER",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "2756",
+    "nombre": "RAMIREZ ESPINOZA JUAN PABLO",
+    "turno": "31",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SAN ISIDRO",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "2777",
+    "nombre": "ROSAS ALMANZA MARIA ALEJANDRA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "2779",
+    "nombre": "CHAPARRO OÑATE JESUS",
+    "turno": "6",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PLAZA DEL SOL",
+    "referencia": "EN EL KFC"
+  },
+  {
+    "numero empleado": "2863",
+    "nombre": "MENDOZA CASTILLO BRENDA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "2874",
+    "nombre": "NATAREN AGUAS MARIA DEL CARMEN",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LA CRUZ"
+  },
+  {
+    "numero empleado": "2895",
+    "nombre": "PEDRAZA ALVAREZ CARMEN CECILIA",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "2912",
+    "nombre": "LEYTON CRUZ NANCY",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "FRENTE DE LA CARNICERIA \"LOS PADILLAS\""
+  },
+  {
+    "numero empleado": "2916",
+    "nombre": "BARON GARCIA KATIA",
+    "turno": "7",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "2932",
+    "nombre": "RAMIREZ ESPINOZA ANDREA CELESTE",
+    "turno": "7",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SAN ISIDRO",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "2934",
+    "nombre": "SILVAR FLORES MONICA CECILIA",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL OXXO DE LOS PILARES"
+  },
+  {
+    "numero empleado": "2942",
+    "nombre": "PADRON GONZALEZ FLOR EDITH",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "2943",
+    "nombre": "BRAVO ANDRADE MIRELLA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "2946",
+    "nombre": "MARTINEZ HERNANDEZ MAARA ELIZABETH",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "2949",
+    "nombre": "VARGAS ONTIVEROS YOSELINE",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "2950",
+    "nombre": "ACUENTECO AGUSTIN MARIA TERESA",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "2951",
+    "nombre": "RIVERA LANDA FILIBERTO",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "2981",
+    "nombre": "FLORES OLVERA MARIA FERNANDA",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "2994",
+    "nombre": "QUEZADA GUILLEN JULIO EVEREST",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "2996",
+    "nombre": "MARTINEZ ESPINO PATRICIA",
+    "turno": "30",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3079",
+    "nombre": "JUAREZ CALVO MARTHA GRISEL",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3093",
+    "nombre": "ROMAN ZAMORA LETICIA",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3105",
+    "nombre": "OCHOA ORTUÑO JOSE MA.",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3118",
+    "nombre": "SUAREZ ALANIS SABINO CRUZ",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SANTA CATARINA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "3143",
+    "nombre": "MENDOZA ESTUDILLO CARLOS",
+    "turno": "5",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "FRENTE AL ELECTRA"
+  },
+  {
+    "numero empleado": "3144",
+    "nombre": "GONZALEZ SANCHEZ NADIA YOSAHANDY",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "3163",
+    "nombre": "SILVA CARMONA MARIAN ITZEL",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3166",
+    "nombre": "NAVARRO SOLANO KELLY",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3168",
+    "nombre": "FLORES IBARRA VICTOR MANUEL",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PLAZA DEL SOL",
+    "referencia": "EN EL KFC"
+  },
+  {
+    "numero empleado": "3190",
+    "nombre": "HERNANDEZ DE LA CRUZ GUADALUPE",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3198",
+    "nombre": "MORON ARREDONDO JENNY SEVERA",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "3202",
+    "nombre": "ZAMANO CAMACHO MARIA DEL ROCIO",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3256",
+    "nombre": "ORTIZ FLORES ROMAN",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL OXXO DE LOS PILARES"
+  },
+  {
+    "numero empleado": "3257",
+    "nombre": "TAFOLLA RODRIGUEZ ARTURO VIDAL",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "3263",
+    "nombre": "CELESTINO HERNANDEZ RICARDO",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3266",
+    "nombre": "HERNANDEZ GALLARDO JOSE MARTIN",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3276",
+    "nombre": "CRUZ ESPINOZA LIDIA CONCEPCION",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "RINCON OJO DE AGUA",
+    "referencia": "PARADA EN EL ENTRONQUE"
+  },
+  {
+    "numero empleado": "3289",
+    "nombre": "CRUZ REYES ANTONIO",
+    "turno": "6",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LAS ROSAS"
+  },
+  {
+    "numero empleado": "3306",
+    "nombre": "ESCAMILLA VAZQUEZ KARLA HEIMI",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "3316",
+    "nombre": "PEREZ SANCHEZ LUIS ALBERTO",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3324",
+    "nombre": "ANGEL BLANCO RAUL ENRIQUE",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "3366",
+    "nombre": "TREJO REYES FRANCISCA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3375",
+    "nombre": "SANTIZ GOMEZ BELINDA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "3381",
+    "nombre": "JACINTO TEXMAYE BRENDA",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "3389",
+    "nombre": "HERNANDEZ MEJIA BLANCA",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE LA ALAMEDA"
+  },
+  {
+    "numero empleado": "3396",
+    "nombre": "TREJO GARCIA EUGENIO",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "ENFRENTE AL WATER HOUSE"
+  },
+  {
+    "numero empleado": "3398",
+    "nombre": "LEDESMA MORALES LYNDA JANETH",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PRADOS DEL ROSARIO PARADA EN LA ESCUELA"
+  },
+  {
+    "numero empleado": "3403",
+    "nombre": "MORALES ZUÑIGA JUAN FRANCISCO",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "3414",
+    "nombre": "PEREZ PEREZ JOSE RONALDO",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "FRENTE DE LA CARNICERIA \"LOS PADILLAS\""
+  },
+  {
+    "numero empleado": "3419",
+    "nombre": "GOMEZ OLVERA EVELIN",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "3432",
+    "nombre": "ARIZA BENITEZ ESTEPHANIE ELISBETH",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3466",
+    "nombre": "AGUILAR GUERRERO JOSE ALONSO",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA BARRETA",
+    "referencia": "TIENDA EN LA ENTRADA"
+  },
+  {
+    "numero empleado": "3471",
+    "nombre": "VARGAS VELAZQUEZ MARIA ELENA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "N/A",
+    "referencia": "N/A"
+  },
+  {
+    "numero empleado": "3473",
+    "nombre": "MURILLO TLAZALO PABLO",
+    "turno": "7",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3520",
+    "nombre": "SALINAS MARTINEZ ROSA MARIA",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES EN EL ASTURIANO AV SAN DANIEL"
+  },
+  {
+    "numero empleado": "3531",
+    "nombre": "MORA JUAREZ JOSE OSWALDO",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3534",
+    "nombre": "GUILLEN ALOR FELIPE",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "3548",
+    "nombre": "PEREZ CABELLO JUAN ANTONIO",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES FRENTE A BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "3551",
+    "nombre": "ZARRABAL DIAZ JORGE JAVIER",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES EN EL ASTURIANO AV SAN DANIEL"
+  },
+  {
+    "numero empleado": "3563",
+    "nombre": "PEREZ PLATON SANDRA ESTHER",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "3576",
+    "nombre": "VIZCAYA AGUILLON MARIA GUADALUPE",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "3582",
+    "nombre": "VILLAMAR HINOJOSA DEISY",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "3587",
+    "nombre": "AVILA ALDANA KEVIN ULISES",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL OXXO DE LOS PILARES"
+  },
+  {
+    "numero empleado": "3593",
+    "nombre": "DE LA CRUZ BECERRA ENRIQUE",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "3600",
+    "nombre": "ROSAS FLORES DANIEL DAVID",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "3610",
+    "nombre": "DIAZ GUTIERREZ JOSE GUADALUPE",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "3611",
+    "nombre": "GONZALEZ VILLANUEVA PAULINA MIREYA",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3624",
+    "nombre": "ALONSO MORENO GIOVANNA GUADALUPE",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3637",
+    "nombre": "AGUILAR VICENCIO DAVID",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "3650",
+    "nombre": "TELLES MORALES MAURICIO ADAN",
+    "turno": "7",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "3669",
+    "nombre": "DE LUNA CASTILLO ANA BERENICE",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SANTA CATARINA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "3671",
+    "nombre": "JIMENEZ ROMAN CRISTHIAN RICARDO",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "3672",
+    "nombre": "GALLARDO CHAVEZ ODILIA",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "FRENTE DE LA CARNICERIA \"LOS PADILLAS\""
+  },
+  {
+    "numero empleado": "3680",
+    "nombre": "MUÑOZ ESPINOZA ERIKA PATRICIA",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3694",
+    "nombre": "PEREZ BAHENA ALEJANDRA",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "3706",
+    "nombre": "VALLADARES MARTINEZ CRISTIAN",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES EN EL ASTURIANO AV SAN DANIEL"
+  },
+  {
+    "numero empleado": "3734",
+    "nombre": "CORTEZ HILARIO CARLOS ALBERTO",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "3737",
+    "nombre": "BAHENA AGUILAR DAVID",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "3745",
+    "nombre": "JIMENEZ DE LA CRUZ ELVIRA",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "3754",
+    "nombre": "HERNANDEZ CAMACHO LILIANA",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "3764",
+    "nombre": "GONZALEZ RAMIREZ ISRAEL",
+    "turno": "6",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA MONJA",
+    "referencia": "SOBRE CARR EN EL PUENTE PEATONAL"
+  },
+  {
+    "numero empleado": "3772",
+    "nombre": "MORENO ROMERO OSMAR",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3773",
+    "nombre": "PEREZ UGALDE KARLA MARIANA",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "TLALOC",
+    "referencia": "ESQ. SOMBRERETE, EN EL PUESTO DE PERIODICOS"
+  },
+  {
+    "numero empleado": "3776",
+    "nombre": "ROJAS SANCHEZ ELIZABETH",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "3780",
+    "nombre": "SUAREZ HERNANDEZ DANIEL SANTIAGO",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "3785",
+    "nombre": "FLORES OLVERA FERNANDO",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "3790",
+    "nombre": "GONZALEZ CARMONA GUADALUPE",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LAS ROSAS"
+  },
+  {
+    "numero empleado": "3796",
+    "nombre": "ALVARADO COSME ANGEL ALBERTO",
+    "turno": "30",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  },
+  {
+    "numero empleado": "3801",
+    "nombre": "MORALES PARRA EDUARDO",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "3803",
+    "nombre": "MARQUEZ EVANGELISTA YERANI",
+    "turno": "30",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "3809",
+    "nombre": "SIXTOS PINEDA LUIS ANGEL",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PLAZA DEL SOL",
+    "referencia": "EN EL KFC"
+  },
+  {
+    "numero empleado": "3816",
+    "nombre": "GALICIA ROJAS JONATAN",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PIRINEOS"
+  },
+  {
+    "numero empleado": "3818",
+    "nombre": "CALZADA HERNANDEZ MARIAM XIMENA",
+    "turno": "16",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3831",
+    "nombre": "ARTEAGA MEJIA SARAHI",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "3836",
+    "nombre": "CORONEL GALVÁN DALILA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3837",
+    "nombre": "GARCIA  LOPEZ MARIANA PAOLA",
+    "turno": "30",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "3846",
+    "nombre": "GONZALEZ VARGAS KATHERINE NAOMI",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "3870",
+    "nombre": "SANCHEZ LUNA MOIRA DARELI",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "3881",
+    "nombre": "GARCIA  DE LA CRUZ VICTORIA EDITH",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3882",
+    "nombre": "RICO RODRIGUEZ MARIA BIBIANA",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "3883",
+    "nombre": "AGUILAR HERNANDEZ SAMARA ODETTE",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA FRENTE AL BARCO DE CHILOS"
+  },
+  {
+    "numero empleado": "3897",
+    "nombre": "GONZALEZ GALLARETA VIANNEY",
+    "turno": "30",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "TRANSITO FRENTE AL OXXO"
+  },
+  {
+    "numero empleado": "3899",
+    "nombre": "URIBE VELAZQUEZ MARINA",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CONCORDIA DONDE SALE LA RUTA L"
+  },
+  {
+    "numero empleado": "3909",
+    "nombre": "MORELOS MARTINEZ NATIVIDAD",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "3930",
+    "nombre": "LUNA  SANCHEZ ALDO ALFREDO",
+    "turno": "16",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SANTA CATARINA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "3932",
+    "nombre": "CASTAÑEDA HERNANDEZ ARELI ",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "3939",
+    "nombre": "MORALES AMADOR JUAN MANUEL",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA DE CAMIONES EN FRENTE DEL TALLER DE MOTOS CRIS RAYDER"
+  },
+  {
+    "numero empleado": "3942",
+    "nombre": "SANTANA ZEPEDA FRANCISCA",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "3945",
+    "nombre": "LOPEZ  OLVERA JUAN DIEGO",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "3957",
+    "nombre": "SALVADOR URBINA LAURA NANCY",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "CRUZ ROJA MEXICANA"
+  },
+  {
+    "numero empleado": "3959",
+    "nombre": "LOPEZ YAÑEZ DIEGO",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "3960",
+    "nombre": "GALVEZ LAZARO JUAN MANUEL",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES FRENTE A BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "3965",
+    "nombre": "BAUTISTA RESENDIZ ALICIA",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "3983",
+    "nombre": "MARTINEZ HERNANDEZ CLAUDIA",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA EN LA CALLE YUCA Y BLV MONTENEGRO"
+  },
+  {
+    "numero empleado": "3997",
+    "nombre": "VILLA RAMIREZ IRIS",
+    "turno": "30",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "COREA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "3999",
+    "nombre": "LUNA VELAZQUEZ MA. ESTHER",
+    "turno": "30",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "RINCON OJO DE AGUA",
+    "referencia": "PARADA EN EL ENTRONQUE"
+  },
+  {
+    "numero empleado": "4000",
+    "nombre": "MARQUEZ MORENO ALONDRA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "COREA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "4010",
+    "nombre": "HERNANDEZ HERNANDEZ ADAN  ULISES",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "4017",
+    "nombre": "CRUZ NAVARRETE DIANA ALHELI",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4020",
+    "nombre": "HERNANDEZ HERNANDEZ JAVIER",
+    "turno": "31",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "4028",
+    "nombre": "MEDINA SOTO MARIA DOLORES",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE LA ALAMEDA"
+  },
+  {
+    "numero empleado": "4040",
+    "nombre": "VAZQUEZ IRETA SOFIA GUADALUPE ",
+    "turno": "30",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "4041",
+    "nombre": "HERNANDEZ GARCIA  JOVANIC TOMAS ",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "4042",
+    "nombre": "MUÑOZ SERVIN XIMENA ",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "OJO DE AGUA",
+    "referencia": "PARADA ENTRADA A LA COMUNIDAD SOBRE CARRETARERA"
+  },
+  {
+    "numero empleado": "4044",
+    "nombre": "BARRIENTOS MONROY DIEGO",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4046",
+    "nombre": "MARTINEZ OLVERA ARACELI",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. CALLE AMARGURA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "4049",
+    "nombre": "GUADARRAMA VELAZQUEZ MARIA DE JESUS",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4052",
+    "nombre": "ZUÑIGA ORTIZ INGRID AILIN",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA MONJA",
+    "referencia": "EN LA TERRACERIA DE LA CURVA EN LA CASITA CON BARDA DE PIEDRA CON 2 POSTES DE LUZ"
+  },
+  {
+    "numero empleado": "4054",
+    "nombre": "ESCOBEDO  DE LA CRUZ MARIA DANIELA",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "CALLE INDEPENDENCIA, PARADA DE CAMIONES PRIMARIA EMILIANO ZAPATA"
+  },
+  {
+    "numero empleado": "4061",
+    "nombre": "CRUZ SALINAS MARIA EUGENIA",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4063",
+    "nombre": "HERNANDEZ CABRERA JUANA",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4065",
+    "nombre": "SERRANO  RODRIGUEZ JOSE ALEJANDRO",
+    "turno": "13",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "4068",
+    "nombre": "SANCHEZ ORTIZ EFRAIN",
+    "turno": "5",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "4075",
+    "nombre": "ESTRELLA SAUCEDO JUANA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "4077",
+    "nombre": "VILLANUEVA LUCIANO MARIA DEL CARMEN",
+    "turno": "4",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "4078",
+    "nombre": "SUSANO TEODORO YOSELIN",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "4083",
+    "nombre": "GARCIA RAMIREZ ZITLALXOCHITL",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "4084",
+    "nombre": "NUÑEZ RIVERA PAOLA GIOVANNA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "4088",
+    "nombre": "ARRIAGA RAMIREZ YOHALI NARCEDALIA",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "4091",
+    "nombre": "MONTIEL JIMENEZ MARIA YESSICA",
+    "turno": "30",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "4092",
+    "nombre": "TLAPALCOYOA PEREZ SUSANA",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BELEN, EN LA LLANTERA LOS VEGA/TIENDA NETO"
+  },
+  {
+    "numero empleado": "4096",
+    "nombre": "MARTINEZ REMIGIO ARTURO",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "4097",
+    "nombre": "HERNANDEZ GARCIA DIEGO IVAN",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "MONTENEGRO",
+    "referencia": "LONCHERIA LILI"
+  },
+  {
+    "numero empleado": "4098",
+    "nombre": "HERNANDEZ VITE CESAR ARMANDO",
+    "turno": "4",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "4103",
+    "nombre": "MONTES DE OCA HERNANDEZ LORENA",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4106",
+    "nombre": "ZEPEDA MONTES DE OCA EMMANUEL ANTONIO",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN LA BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "4108",
+    "nombre": "MARTINEZ GOMEZ DANIELA",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "4111",
+    "nombre": "HERNANDEZ PEREZ CARLOS LORENZO",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "4112",
+    "nombre": "MARTINEZ  SOTO MARIA BRENDA",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4114",
+    "nombre": "BELTRAN  MENDOZA MARIA FERNANDA",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA BARRETA",
+    "referencia": "TIENDA EN LA ENTRADA"
+  },
+  {
+    "numero empleado": "4115",
+    "nombre": "REYES MONROY FRANCISCO ALEJANDRO",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "4116",
+    "nombre": "PAEZ ACEVEDO ITZEL",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "4117",
+    "nombre": "GUZMAN MENDOZA LAURA ROMINA",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "4120",
+    "nombre": "RAMIREZ CHAVEZ ANGEL GIOVANNI",
+    "turno": "30",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4123",
+    "nombre": "JIMENEZ GARCIA AXEL JONATAN",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LA CRUZ"
+  },
+  {
+    "numero empleado": "4125",
+    "nombre": "RUIZ DE VICENTE JUANA ABIGAIL ",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "4128",
+    "nombre": "ESTRADA ELIZALDE MARTHA",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA EN LA ESCUELA 5 DE MAYO"
+  },
+  {
+    "numero empleado": "4129",
+    "nombre": "HERNANDEZ CITALAN JOSE DAVID",
+    "turno": "30",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "AV. PEDREGAL",
+    "referencia": "SEGUNDA PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "4135",
+    "nombre": "ESPINOZA MENDOZA MARCOS ",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA FRENTE AL BARCO DE CHILOS"
+  },
+  {
+    "numero empleado": "4137",
+    "nombre": "HERNANDEZ HUERTA MARIA DE LOURDES",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA MONJA",
+    "referencia": "EN LA TERRACERIA DE LA CURVA EN LA CASITA CON BARDA DE PIEDRA CON 2 POSTES DE LUZ"
+  },
+  {
+    "numero empleado": "4138",
+    "nombre": "VARGAS VAZQUEZ NADIA IVONNE",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "LA MONJA",
+    "referencia": "SOBRE CARR EN EL PUENTE PEATONAL"
+  },
+  {
+    "numero empleado": "4141",
+    "nombre": "CAMPOS BAUTISTA RODRIGO",
+    "turno": "5",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LAS ROSAS"
+  },
+  {
+    "numero empleado": "4142",
+    "nombre": "LUGO  DE JESUS DANIEL MARTIN",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL OXXO DE LOS PILARES"
+  },
+  {
+    "numero empleado": "4143",
+    "nombre": "SANCHEZ GARCIA DIANA LIZBETH",
+    "turno": "30",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "ENFRENTE AL WATER HOUSE"
+  },
+  {
+    "numero empleado": "4144",
+    "nombre": "OLMEDO BAUTISTA JOSE ELIAS ",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL CIDESI"
+  },
+  {
+    "numero empleado": "4145",
+    "nombre": "VILLA SOLANO AMIN",
+    "turno": "30",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "COREA",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "4146",
+    "nombre": "MARQUEZ HERRERA AMAIRANI",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "ENFRENTE AL WATER HOUSE"
+  },
+  {
+    "numero empleado": "4147",
+    "nombre": "GONZALEZ MENDEZ SANDY ANAYELI",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "TRANSITO FRENTE AL OXXO"
+  },
+  {
+    "numero empleado": "4149",
+    "nombre": "TORRES PAZ EDGAR GIOVANY",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL OXXO DE LOS PILARES"
+  },
+  {
+    "numero empleado": "4152",
+    "nombre": "MARTINEZ DEL ANGEL LOURDES",
+    "turno": "3",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "4154",
+    "nombre": "DOMINGUEZ SANTOS FLORA",
+    "turno": "30",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4158",
+    "nombre": "SANCHEZ DARIO IVAN ALDAIR",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LA CRUZ"
+  },
+  {
+    "numero empleado": "4160",
+    "nombre": "HERNANDEZ PATIÑO TAIDE",
+    "turno": "2",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA FRENTE AL BARCO DE CHILOS"
+  },
+  {
+    "numero empleado": "4162",
+    "nombre": "CORDOBA OLGUIN MAHRAY",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "4163",
+    "nombre": "MENDOZA RUIZ MA. REMEDIOS CANDELARIA",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4165",
+    "nombre": "RANGEL GARDUÑO ELIZABETH",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4168",
+    "nombre": "ANTONIO GARCIA ERIKA YAZMIN",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "PUERTO CARROZA",
+    "referencia": "PARADA DE AUTOBUSES SOBRE CARRETERA"
+  },
+  {
+    "numero empleado": "4169",
+    "nombre": "LUNA JIMENEZ JENNIFER AMERICA",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "4172",
+    "nombre": "AGUILAR HIDALGO LISBET",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "FRACC. MONTENEGRO",
+    "referencia": "PARADA DE CAMIONES HUIZACHE"
+  },
+  {
+    "numero empleado": "4175",
+    "nombre": "RAMIREZ MEDINA ALEJANDRO IVAN",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PRADOS DEL ROSARIO PARADA EN LA ESCUELA"
+  },
+  {
+    "numero empleado": "4176",
+    "nombre": "LUNA CASTILLO PAMELA",
+    "turno": "2",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "4177",
+    "nombre": "RENDON GARCIA NAYELI ISABEL",
+    "turno": "4",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "FRENTE DE LA CARNICERIA \"LOS PADILLAS\""
+  },
+  {
+    "numero empleado": "4178",
+    "nombre": "ROSALES MARTINEZ MELINA ISABEL",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PIRINEOS"
+  },
+  {
+    "numero empleado": "4179",
+    "nombre": "VALENCIA GALINDO ZENON ESTEBAN",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "AV. PEDREGAL",
+    "referencia": "SEGUNDA PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "4180",
+    "nombre": "HERNANDEZ VILLA MARIA FERNANDA",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "OBRERA",
+    "referencia": "PARADA DE CAMIONES EN EL OXXO DE LA CALLE COAHUILA"
+  },
+  {
+    "numero empleado": "4183",
+    "nombre": "PEREZ CORDOVA AMPARO",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4184",
+    "nombre": "MARTINEZ MARTINEZ ALEJANDRA",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PASEO QUERETARO ESQ. PLAN DE SAN LUIS"
+  },
+  {
+    "numero empleado": "4185",
+    "nombre": "SANTOS ENCARNACION JUAN JOSE",
+    "turno": "1",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "4187",
+    "nombre": "NAVA VELAZQUEZ GONZALO EDUARDO",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4188",
+    "nombre": "ROSALES DE JESUS  SILVIA",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4189",
+    "nombre": "LUNA SANDOVAL ISRAEL",
+    "turno": "5",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "N/A",
+    "referencia": "N/A"
+  },
+  {
+    "numero empleado": "4190",
+    "nombre": "AVILA GONZALEZ LAURA SUSANA",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PLAZA DEL SOL",
+    "referencia": "EN EL KFC"
+  },
+  {
+    "numero empleado": "4192",
+    "nombre": "BALDERAS HERNANDEZ RENE",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "PROL. BERNARDO QUINTANA",
+    "referencia": "PARADA EN LA ESQUINA DEL CAMINO A SAN PEDRO MARTIN"
+  },
+  {
+    "numero empleado": "4193",
+    "nombre": "GAYTAN RAMIREZ MARIA ISABEL",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4194",
+    "nombre": "SALDIVAR AGUILAR ALAN",
+    "turno": "4",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "MONTENEGRO",
+    "referencia": "LONCHERIA LILI"
+  },
+  {
+    "numero empleado": "4195",
+    "nombre": "GALVAN MARTINEZ CLAUDIA VERONICA",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES FRENTE A BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "4197",
+    "nombre": "CONSTANTINO VELASCO CARMEN ",
+    "turno": "31",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4200",
+    "nombre": "MENDEZ MOLINA RAUL ABRAHAM",
+    "turno": "4",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "4201",
+    "nombre": "BAYLON SANCHEZ MARIO ANGEL",
+    "turno": "5",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "SANTA ROSA",
+    "referencia": "EN EL PUENTE DE LA CRUZ"
+  },
+  {
+    "numero empleado": "4203",
+    "nombre": "CALIXTO GOMEZ KRYSTAL",
+    "turno": "2",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN LA BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "4205",
+    "nombre": "HUESCAS MARTINEZ DANIELA ",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4208",
+    "nombre": "MARTINEZ AGUILAR EMILIA",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "ESQ. BLVD. DE LA NACION, EN EL OXXO"
+  },
+  {
+    "numero empleado": "4209",
+    "nombre": "SERRANO AGUILAR EMANUEL",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4212",
+    "nombre": "VALLADARES GOMEZ ALEXIS JORDANY",
+    "turno": "2",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "4213",
+    "nombre": "RESENDIZ OSORIO HORACIO JAVIER",
+    "turno": "31",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "4215",
+    "nombre": "RAMOS ORTIZ LUIS ANGEL",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4216",
+    "nombre": "MEXICANO RODRIGUEZ MARIA JANETH",
+    "turno": "3",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "4217",
+    "nombre": "HERNANDEZ GONZALEZ JESUS EMMANUEL",
+    "turno": "2",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SAN ISIDRO",
+    "referencia": "PARADA DE CAMIONES"
+  },
+  {
+    "numero empleado": "4218",
+    "nombre": "PEREZ PACHECO SAMANTHA KARITINA",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DEL MA. TERESA"
+  },
+  {
+    "numero empleado": "4219",
+    "nombre": "COELLO CRISTINO DIANA LAURA",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "4221",
+    "nombre": "VAZQUEZ TORRES JIMENA",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "PUERTO AGUIRRE",
+    "referencia": "PARADA EN LA TORTILLERIA"
+  },
+  {
+    "numero empleado": "4222",
+    "nombre": "VALDES GUEVARA ELIZABETH",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES FRENTE A BODEGA AURRERA"
+  },
+  {
+    "numero empleado": "4224",
+    "nombre": "ESCOLASTICO LOPEZ JESUS ABNER",
+    "turno": "1",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4225",
+    "nombre": "AMADOR MARTINEZ STEFANIA",
+    "turno": "3",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES SECUNDARIA"
+  },
+  {
+    "numero empleado": "4226",
+    "nombre": "CALDERON GOMEZ ALEXIS",
+    "turno": "1",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL CIDESI"
+  },
+  {
+    "numero empleado": "4227",
+    "nombre": "GONZALEZ CRUZ ADRIAN",
+    "turno": "3",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA EN LA PANADERIA LECAROZ"
+  },
+  {
+    "numero empleado": "4228",
+    "nombre": "LEON GARCIA MARCOS",
+    "turno": "5",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PARADA DE AUTOBUSES DE COPPEL"
+  },
+  {
+    "numero empleado": "4229",
+    "nombre": "DEL ANGEL CAMACHO LIZBETH DANIELA",
+    "turno": "1",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "SALITRE",
+    "referencia": "FRENTE AL JARDIN"
+  },
+  {
+    "numero empleado": "4230",
+    "nombre": "HERNANDEZ LOPEZ JOSE ANTONIO",
+    "turno": "2",
+    "ruta": "R4-SANTA ROSA",
+    "colonia": "HDA SANTA ROSA",
+    "referencia": "ENFRENTE AL WATER HOUSE"
+  },
+  {
+    "numero empleado": "4231",
+    "nombre": "TABOADA GARCIA EMMANUEL",
+    "turno": "5",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "PARADA DE CAMIONES ESQ. MAYAS"
+  },
+  {
+    "numero empleado": "4232",
+    "nombre": "PACHECO BAYLON ALEJANDRA",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PEÑAFLOR",
+    "referencia": "BODEGA AURRERA, PEÑAFLOR"
+  },
+  {
+    "numero empleado": "4234",
+    "nombre": "ARCADIO CRUZ INGRID ALEJANDRA",
+    "turno": "5",
+    "ruta": "R5- QUERETARO-AV. DE LA LUZ",
+    "colonia": "AV. DE LA LUZ",
+    "referencia": "ESQ. MATLAZINCAS EN LA FARMACIA GUADALAJARA"
+  },
+  {
+    "numero empleado": "4235",
+    "nombre": "AMADOR RICO HUMBERTO JESUS",
+    "turno": "5",
+    "ruta": "R3- SAN JOSE ITURBIDE 2",
+    "colonia": "BUENAVISTA",
+    "referencia": "PARADA DE AUTOBUSES DE LA SECUNDARIA"
+  },
+  {
+    "numero empleado": "4237",
+    "nombre": "JIMENEZ GUTIERREZ MARIA CRUZ",
+    "turno": "3",
+    "ruta": "R1- QUERETARO- PIE DE LA CUESTA",
+    "colonia": "PIE DE LA CUESTA",
+    "referencia": "EN EL CIDESI"
+  },
+  {
+    "numero empleado": "4238",
+    "nombre": "VELASCO PEREZ ADRIAN ELI",
+    "turno": "1",
+    "ruta": "R2- SAN JOSE ITURBIDE",
+    "colonia": "SAN JOSE ITURBIDE",
+    "referencia": "PRADOS DEL ROSARIO PARADA EN LA ESCUELA"
+  },
+  {
+    "numero empleado": "4239",
+    "nombre": "CALTZONTZI RUIZ VERONICA",
+    "turno": "1",
+    "ruta": "R6- AV. DE LA LUZ - PASEOS QUERETARO",
+    "colonia": "PASEOS QUERETARO",
+    "referencia": "PARADA DE CAMIONES FRENTE AL INSPIRE GYM"
+  }
+]
