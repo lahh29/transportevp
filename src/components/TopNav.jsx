@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─── Rutas de navegación ─── */
 const NAV_LINKS = [
-  { label: 'Chofer',  path: '/chofer'  },
+  { label: 'Historial',  path: '/chofer#registros'  },
   { label: 'Empresa', path: '/empresa' },
 ];
 
@@ -37,7 +37,7 @@ export const TopNav = () => {
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path.split('#')[0];
 
   /* ── Render ── */
   return (
