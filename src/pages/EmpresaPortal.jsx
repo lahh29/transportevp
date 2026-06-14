@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -9,7 +10,7 @@ import { QrGenerateModal } from '../components/QrGenerateModal';
 import {
   Upload, Users, Search, Edit2, Trash2, ChevronLeft, ChevronRight,
   UserPlus, Image as ImageIcon, QrCode, Unlock, MoreHorizontal, X as XIcon,
-  MoreVertical,
+  MoreVertical, Printer,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -112,6 +113,7 @@ const IconAction = ({ icon: Icon, onClick, title, testId }) => (
 
 /* ─── Componente principal ────────────────────────────────── */
 export const EmpresaPortal = () => {
+  const navigate = useNavigate();
   const [employees,         setEmployees]         = useState([]);
   const [loading,           setLoading]           = useState(true);
   const [isModalOpen,       setIsModalOpen]       = useState(false);
@@ -311,6 +313,15 @@ export const EmpresaPortal = () => {
                         >
                           <QrCode size={15} strokeWidth={1.75} />
                           Generar QRs
+                        </button>
+                        <button
+                          type="button" role="menuitem"
+                          className="vp-emp-dropdown-item"
+                          onClick={() => { setBulkMenuOpen(false); navigate('/empresa/imprimir-qr'); }}
+                          data-testid="bulk-print-qr"
+                        >
+                          <Printer size={15} strokeWidth={1.75} />
+                          Imprimir credenciales
                         </button>
                         <button
                           type="button" role="menuitem"

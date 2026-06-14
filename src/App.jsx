@@ -9,6 +9,7 @@ import { ChoferLogin } from './pages/ChoferLogin';
 import { EmpleadoLogin } from './pages/EmpleadoLogin';
 import { EmpleadoDashboard } from './pages/EmpleadoDashboard';
 import { Landing } from './pages/Landing';
+import { QrPrintPage } from './pages/QrPrintPage';
 
 // Wrapper to conditionally show TopNav (hide on login and landing)
 const Layout = ({ children }) => {
@@ -38,7 +39,7 @@ const Layout = ({ children }) => {
         }}
       />
       {!isAuthView && <TopNav />}
-      <main style={isAuthView ? { padding: 0 } : { padding: '32px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <main className={isAuthView ? '' : 'vp-app-main'} style={isAuthView ? { padding: 0 } : { padding: '32px 24px', maxWidth: '1200px', margin: '0 auto' }}>
         {children}
       </main>
     </div>
@@ -64,6 +65,12 @@ function App() {
           <Route path="/empresa" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <EmpresaPortal />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/empresa/imprimir-qr" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <QrPrintPage />
             </ProtectedRoute>
           } />
           

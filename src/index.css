@@ -973,6 +973,26 @@ samp {
 /* Reducir movimiento si el usuario lo prefiere */
 @media (prefers-reduced-motion: reduce) {
   [data-sonner-toast] {
+
+/* ============================================================
+   Print overrides — anular padding del Layout y el TopNav
+   ============================================================ */
+@media print {
+  body, html {
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .app-container > header,
+  .app-container > nav,
+  [data-sonner-toaster] { display: none !important; }
+  .vp-app-main {
+    padding: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+}
+
     transition: none !important;
     animation-duration: 0.01ms !important;
   }
