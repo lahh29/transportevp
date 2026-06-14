@@ -9,6 +9,7 @@ import { QrGenerateModal } from '../components/QrGenerateModal';
 import {
   Upload, Users, Search, Edit2, Trash2, ChevronLeft, ChevronRight,
   UserPlus, Image as ImageIcon, QrCode, Unlock, MoreHorizontal, X as XIcon,
+  MoreVertical,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -125,6 +126,7 @@ export const EmpresaPortal = () => {
   });
   const [searchQuery, setSearchQuery]   = useState('');
   const [currentPage, setCurrentPage]   = useState(1);
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
 
   /* ── Fetch ── */
   const fetchEmployees = async () => {
@@ -266,10 +268,75 @@ export const EmpresaPortal = () => {
             </div>
 
             <div style={S.headerActions}>
-              <IconAction icon={QrCode}    onClick={() => setIsQrModalOpen(true)}    title="Generar QRs" testId="action-qr" />
-              <IconAction icon={ImageIcon} onClick={() => setIsPhotoModalOpen(true)} title="Cargar fotos" testId="action-photos" />
-              <IconAction icon={Upload}    onClick={() => setIsUploadModalOpen(true)} title="Cargar JSON"  testId="action-upload" />
+              {/* Menú "Acciones" (bulk) — agrupa QR/Fotos/JSON */}
+              <div style={{ position: 'relative' }}>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => setBulkMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={bulkMenuOpen}
+                  aria-label="Acciones masivas"
+                  data-testid="action-bulk-menu"
+                  style={{
+                    ...S.iconAction,
+                    background: bulkMenuOpen ? 'var(--color-canvas-soft)' : 'transparent',
+                    color: bulkMenuOpen ? 'var(--color-ink)' : 'var(--color-muted)',
+                  }}
+                >
+                  <MoreVertical size={16} strokeWidth={1.75} />
+                </motion.button>
 
+                <AnimatePresence>
+                  {bulkMenuOpen && (
+                    <>
+                      <div
+                        aria-hidden="true"
+                        onClick={() => setBulkMenuOpen(false)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 9 }}
+                      />
+                      <motion.div
+                        role="menu"
+                        initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: -4 }}
+                        transition={{ duration: 0.14 }}
+                        style={S.dropdown}
+                      >
+                        <button
+                          type="button" role="menuitem"
+                          className="vp-emp-dropdown-item"
+                          onClick={() => { setBulkMenuOpen(false); setIsQrModalOpen(true); }}
+                          data-testid="bulk-qr"
+                        >
+                          <QrCode size={15} strokeWidth={1.75} />
+                          Generar QRs
+                        </button>
+                        <button
+                          type="button" role="menuitem"
+                          className="vp-emp-dropdown-item"
+                          onClick={() => { setBulkMenuOpen(false); setIsPhotoModalOpen(true); }}
+                          data-testid="bulk-photos"
+                        >
+                          <ImageIcon size={15} strokeWidth={1.75} />
+                          Cargar fotos
+                        </button>
+                        <button
+                          type="button" role="menuitem"
+                          className="vp-emp-dropdown-item"
+                          onClick={() => { setBulkMenuOpen(false); setIsUploadModalOpen(true); }}
+                          data-testid="bulk-upload"
+                        >
+                          <Upload size={15} strokeWidth={1.75} />
+                          Cargar JSON
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* CTA primario */}
               <motion.button
                 type="button"
                 whileHover={{ y: -1 }}
