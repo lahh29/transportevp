@@ -8,6 +8,7 @@ import { AuthField } from '../components/AuthField';
 import { AuthButton } from '../components/AuthButton';
 import { LoginTransition } from '../components/LoginTransition';
 import { notify, toast } from '../lib/notify';
+import { MAPA_TURNOS } from '../lib/turnos';
 
 /* ============================================================
    LOGIN — Colaborador (flujo NIP 4 dígitos)
@@ -18,12 +19,6 @@ import { notify, toast } from '../lib/notify';
      4. Confirmar NIP
      5. Ingresar NIP (si ya existe)
    ============================================================ */
-
-const MAPA_TURNOS = {
-  '1': '1', '2': '2', '3': '3', '4': '4',
-  '6': '2', '7': '2', '13': '2', '16': '3',
-  '26': '1', '30': '2', '31': '2', '35': '1', '36': '2',
-};
 
 const stepMotion = {
   initial: { opacity: 0, x: 16 },

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Search, Printer, ArrowLeft, X as XIcon, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { notify } from '../lib/notify';
+import { TURNOS_REALES, normalizeTurno } from '../lib/turnos';
 
 /* ============================================================
    QR PRINT PAGE — Hoja carta con credenciales tipo CR80
@@ -59,7 +60,7 @@ const QrCard = ({ emp }) => {
         <div className="vp-qr-meta">
           <span className="vp-qr-meta-cell"><b>RUTA</b> {ruta.code}</span>
           <span className="vp-qr-meta-sep" aria-hidden="true">·</span>
-          <span className="vp-qr-meta-cell"><b>TURNO</b> {emp.turno || '—'}</span>
+          <span className="vp-qr-meta-cell"><b>TURNO</b> {normalizeTurno(emp.turno)}</span>
         </div>
       </div>
     </article>
@@ -104,7 +105,7 @@ export const QrPrintPage = () => {
         String(e.numero_empleado || '').toLowerCase().includes(q)
       )) return false;
       if (rutaFilter && parseRuta(e.ruta).code !== rutaFilter) return false;
-      if (turnoFilter && String(e.turno || '') !== turnoFilter) return false;
+      if (turnoFilter && normalizeTurno(e.turno) !== turnoFilter) return false;
       return true;
     });
   }, [employees, query, rutaFilter, turnoFilter]);
@@ -119,8 +120,13 @@ export const QrPrintPage = () => {
   }, [employees]);
 
   const turnoOptions = useMemo(() => {
-    const set = new Set(employees.map((e) => String(e.turno || '').trim()).filter(Boolean));
-    return Array.from(set).sort();
+    // Solo turnos reales (1-4) que existan en la BD tras la normalización
+    const set = new Set(
+      employees
+        .map((e) => normalizeTurno(e.turno))
+        .filter((t) => TURNOS_REALES.includes(t))
+    );
+    return TURNOS_REALES.filter((t) => set.has(t));
   }, [employees]);
 
   /* ── Acciones ── */
