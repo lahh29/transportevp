@@ -13,7 +13,7 @@ import { notify } from '../lib/notify';
    • B/N puro: keywords CSS `black` / `white` (no hex, no grises)
    ============================================================ */
 
-const ITEMS_PER_PAGE_PRINT = 10; // 2 columnas × 5 filas
+const ITEMS_PER_PAGE_PRINT = 6; // 2 columnas × 3 filas
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 const parseRuta = (ruta) => {
@@ -332,21 +332,23 @@ const PrintStyles = () => (
     .vp-print-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 4mm;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 5mm;
+      width: 100%;
     }
 
-    /* ── Credencial (CR80-ish) ─────────────────────────────── */
+    /* ── Credencial (CR80 ampliada — 6 por hoja) ───────────── */
     .vp-qr-card {
       box-sizing: border-box;
       width: 100%;
-      min-height: 48mm;
-      padding: 3mm;
-      border: 1.2pt solid black;
-      border-radius: 2.5mm;
+      min-height: 78mm;
+      padding: 5mm;
+      border: 1.5pt solid black;
+      border-radius: 3mm;
       background: white;
       display: grid;
-      grid-template-columns: 36mm 1fr;
-      gap: 3mm;
+      grid-template-columns: 50mm 1fr;
+      gap: 5mm;
       align-items: center;
       page-break-inside: avoid;
       break-inside: avoid;
@@ -354,14 +356,14 @@ const PrintStyles = () => (
     }
 
     .vp-qr-frame {
-      width: 36mm;
-      height: 36mm;
+      width: 50mm;
+      height: 50mm;
       background: white;
       border: 1pt solid black;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1mm;
+      padding: 1.5mm;
     }
 
     .vp-qr-img {
@@ -374,16 +376,16 @@ const PrintStyles = () => (
 
     .vp-qr-missing {
       font-family: var(--font-display);
-      font-size: 9pt;
+      font-size: 10pt;
       font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       color: black;
     }
 
     .vp-qr-data {
       display: flex;
       flex-direction: column;
-      gap: 1mm;
+      gap: 1.5mm;
       min-width: 0;
       color: black;
     }
@@ -391,9 +393,9 @@ const PrintStyles = () => (
     .vp-qr-num {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 8pt;
+      font-size: 10pt;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       font-variant-numeric: tabular-nums;
       color: black;
     }
@@ -401,9 +403,9 @@ const PrintStyles = () => (
     .vp-qr-surname {
       margin: 0;
       font-family: var(--font-body);
-      font-size: 8pt;
+      font-size: 10pt;
       font-weight: 500;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       color: black;
       overflow: hidden;
@@ -414,7 +416,7 @@ const PrintStyles = () => (
     .vp-qr-name {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 11pt;
+      font-size: 14pt;
       font-weight: 700;
       letter-spacing: -0.01em;
       text-transform: uppercase;
@@ -430,18 +432,18 @@ const PrintStyles = () => (
     .vp-qr-meta {
       display: flex;
       align-items: center;
-      gap: 1.5mm;
-      margin-top: 1mm;
-      padding-top: 1mm;
-      border-top: 0.5pt solid black;
+      gap: 2mm;
+      margin-top: 1.5mm;
+      padding-top: 2mm;
+      border-top: 0.75pt solid black;
       font-family: var(--font-body);
-      font-size: 7pt;
+      font-size: 9pt;
       color: black;
     }
     .vp-qr-meta b {
       font-family: var(--font-display);
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       margin-right: 0.5mm;
     }
     .vp-qr-meta-sep {
@@ -462,9 +464,11 @@ const PrintStyles = () => (
       }
       /* Vista compacta en pantalla: una columna en móvil */
       @media (max-width: 640px) {
-        .vp-print-grid { grid-template-columns: 1fr; gap: var(--spacing-sm); }
-        .vp-qr-card { min-height: auto; grid-template-columns: 28mm 1fr; }
-        .vp-qr-frame { width: 28mm; height: 28mm; }
+        .vp-print-grid { grid-template-columns: 1fr; grid-template-rows: none; gap: var(--spacing-sm); }
+        .vp-qr-card { min-height: auto; grid-template-columns: 32mm 1fr; padding: 4mm; }
+        .vp-qr-frame { width: 32mm; height: 32mm; }
+        .vp-qr-name { font-size: 12pt; }
+        .vp-qr-num, .vp-qr-surname { font-size: 9pt; }
       }
     }
 
