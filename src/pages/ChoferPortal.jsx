@@ -94,7 +94,7 @@ const parseRuta = (ruta) => {
 };
 
 const RUTA_COLORS = {
-  R1: { bg: 'rgb(245 78 0 / 0.1)',   text: 'var(--color-accent)' },
+  R1: { bg: 'rgb(var(--color-accent-raw) / 0.1)',   text: 'var(--color-accent)' },
   R2: { bg: 'rgb(26 35 126 / 0.1)',  text: '#1a237e' },
   R3: { bg: 'rgb(0 130 120 / 0.1)',  text: '#008278' },
   R4: { bg: 'rgb(130 0 80 / 0.1)',   text: '#820050' },

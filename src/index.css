@@ -21,9 +21,9 @@
   --color-surface-card: rgb(var(--color-surface-card-raw));
   --color-surface-strong: rgb(var(--color-surface-strong-raw));
 
-  /* --- Accent (Cursor Orange) --- */
-  --color-accent-raw: 245 78 0; /* #f54e00 — use scarcely      */
-  --color-accent-active-raw: 208 66 0; /* #d04200 — press state       */
+  /* --- Accent (ViñoPlastic Royal Blue) --- */
+  --color-accent-raw: 26 35 126; /* #1a237e — azul rey corporativo */
+  --color-accent-active-raw: 13 22 100; /* #0d1664 — press state */
 
   --color-accent: rgb(var(--color-accent-raw));
   --color-accent-active: rgb(var(--color-accent-active-raw));

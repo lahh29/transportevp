@@ -1,17 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF6B2B" />
-      <stop offset="100%" stop-color="#D04200" />
+      <stop offset="0%" stop-color="#2C3FB5" />
+      <stop offset="100%" stop-color="#0D1664" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#F54E00" flood-opacity="0.3" />
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1A237E" flood-opacity="0.3" />
     </filter>
   </defs>
-  
+
   <!-- Background (Dark Mode / High Contrast) -->
   <rect width="512" height="512" fill="#26251E" rx="120" />
-  
+
   <!-- "V" Shape / Road Perspective -->
   <g filter="url(#shadow)" transform="translate(0, 20)">
     <path d="M 140 160 L 256 360 L 372 160 L 310 160 L 256 250 L 202 160 Z" fill="url(#gradient)" />
