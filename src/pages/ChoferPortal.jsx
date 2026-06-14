@@ -160,6 +160,170 @@ const RutaSelectionPanel = ({ onSelect, rutasActivas, loading }) => (
   </motion.div>
 );
 
+/* ─── Sub-componentes top-level del RegistrosPanel ────────── */
+const REG_ANIM = {
+  initial: { opacity: 0, x: 24 },
+  animate: { opacity: 1, x: 0 },
+  exit:    { opacity: 0, x: -24 },
+  transition: { duration: 0.22, ease: [0.22, 0.61, 0.36, 1] },
+};
+
+const REG_LIST_ITEM = (i) => ({
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay: Math.min(i, 8) * 0.035, duration: 0.18, ease: 'easeOut' },
+});
+
+/* ─── Header del drill-down (con botón Atrás) ─────────────── */
+const RegHeader = ({ title, sub, onBack, showBack }) => (
+  <header style={regStyles.header}>
+    {showBack && (
+      <button
+        type="button"
+        onClick={onBack}
+        data-testid="reg-back-btn"
+        aria-label="Volver al nivel anterior"
+        style={regStyles.backBtn}
+      >
+        <ChevronLeft size={16} strokeWidth={2} />
+        <span>Atrás</span>
+      </button>
+    )}
+    <h2 style={regStyles.title}>{title}</h2>
+    {sub && <p style={regStyles.sub}>{sub}</p>}
+  </header>
+);
+
+/* ─── Card genérico de drill (semanas/días) ───────────────── */
+const RegCard = ({ onClick, left, sub, right, accent, testId }) => (
+  <motion.button
+    whileTap={{ scale: 0.985 }}
+    onClick={onClick}
+    data-testid={testId}
+    style={regStyles.card}
+  >
+    {accent && (
+      <div style={regStyles.accentBox} aria-hidden="true">{accent}</div>
+    )}
+    <div style={regStyles.cardBody}>
+      <p style={regStyles.cardLeft}>{left}</p>
+      {sub && <p style={regStyles.cardSub}>{sub}</p>}
+    </div>
+    <div style={regStyles.cardRight}>
+      {right && <span style={regStyles.countPill}>{right}</span>}
+      <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" style={{ color: 'var(--color-muted-soft)' }} />
+    </div>
+  </motion.button>
+);
+
+/* ─── Empty state ─────────────────────────────────────────── */
+const RegEmpty = () => (
+  <div role="status" data-testid="reg-empty" style={regStyles.empty}>
+    <div style={regStyles.emptyIcon} aria-hidden="true">
+      <Bus size={26} strokeWidth={1.5} />
+    </div>
+    <p style={regStyles.emptyTitle}>Sin registros</p>
+    <p style={regStyles.emptySub}>Los abordajes aparecerán aquí cuando los escanees.</p>
+  </div>
+);
+
+/* ─── Item individual de empleado (NIVEL 3) ───────────────── */
+const RegItem = ({ reg, i }) => {
+  const emp = reg.empleados;
+  const time = new Date(reg.fecha_hora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const isRejected = reg.estado === 'rechazado_ruta' || reg.estado === 'rechazado_qr';
+  const isFakeQR   = reg.estado === 'rechazado_qr';
+  const isWarning  = reg.estado === 'dia_descanso' || reg.estado === 'fuera_horario';
+
+  let badgeText = '';
+  if (isFakeQR) badgeText = 'QR Inválido';
+  else if (isRejected) badgeText = 'Ruta Incorrecta';
+  else if (reg.estado === 'dia_descanso') badgeText = 'Día Descanso';
+  else if (reg.estado === 'fuera_horario') badgeText = 'Fuera de Horario';
+
+  // Sanitiza JSON crudo en QRs inválidos legacy
+  let qrLabel = reg.qr_leido || 'Código Desconocido';
+  if (isFakeQR && typeof qrLabel === 'string' && qrLabel.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(qrLabel);
+      qrLabel = parsed?.numero_empleado != null ? `# ${parsed.numero_empleado}` : 'QR Desconocido';
+    } catch {
+      qrLabel = 'QR Ilegible';
+    }
+  }
+
+  // Tonos según estado (todos por tokens semánticos)
+  const tone = isRejected ? 'error' : isWarning ? 'warning' : 'success';
+  const toneVar = `var(--color-semantic-${tone})`;
+  const toneRaw = `var(--color-semantic-${tone}-raw)`;
+
+  return (
+    <motion.article
+      {...REG_LIST_ITEM(i)}
+      data-testid={`reg-item-${reg.id || i}`}
+      style={{
+        ...regStyles.item,
+        background: isRejected || isWarning
+          ? `rgb(${toneRaw} / 0.04)`
+          : 'var(--color-surface-card)',
+        borderColor: isRejected || isWarning
+          ? `rgb(${toneRaw} / 0.22)`
+          : 'var(--color-hairline-soft)',
+      }}
+    >
+      <div
+        aria-hidden="true"
+        style={{
+          ...regStyles.itemIcon,
+          background: `rgb(${toneRaw} / 0.12)`,
+          color: toneVar,
+        }}
+      >
+        {isFakeQR
+          ? <XCircle size={16} strokeWidth={2} />
+          : tone === 'success'
+            ? <span style={regStyles.initials}>{getInitials(emp?.nombre)}</span>
+            : <span style={regStyles.initials}>{getInitials(emp?.nombre)}</span>
+        }
+      </div>
+
+      <div style={regStyles.itemBody}>
+        <p style={{
+          ...regStyles.itemName,
+          color: isRejected ? toneVar : 'var(--color-ink)',
+          textDecoration: isRejected ? 'line-through' : 'none',
+        }}>
+          {isFakeQR ? qrLabel : (emp?.nombre || 'Desconocido')}
+        </p>
+        <div style={regStyles.itemMeta}>
+          <span style={regStyles.itemNum}>
+            {isFakeQR ? '—' : `#${emp?.numero_empleado || '—'}`}
+          </span>
+          {badgeText && (
+            <span
+              data-testid={`reg-item-badge-${tone}`}
+              style={{
+                ...regStyles.itemBadge,
+                background: toneVar,
+                color: isWarning ? 'var(--color-ink)' : 'var(--color-on-primary)',
+              }}
+            >
+              {badgeText}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <time
+        dateTime={reg.fecha_hora}
+        style={regStyles.itemTime}
+      >
+        {time}
+      </time>
+    </motion.article>
+  );
+};
+
 /* ─── Componente drill-down de Registros ──────────────────── */
 const RegistrosPanel = ({ registros, loading }) => {
   // drillPath: [] | ['ruta', rutaName] | ['ruta', rutaName, 'week', weekKey] | ['ruta', rutaName, 'week', weekKey, 'day', dayKey]
@@ -219,9 +383,8 @@ const RegistrosPanel = ({ registros, loading }) => {
       if (!map[t]) map[t] = [];
       map[t].push(reg);
     });
-    // Orden por prioridad de anomalía dentro de cada turno:
+    // Orden por prioridad de anomalía:
     // 1. Ruta Incorrecta · 2. QR Inválido · 3. Fuera de Horario · 4. Día Descanso · 5. Autorizado
-    // Dentro de cada prioridad, por hora más reciente primero.
     Object.keys(map).forEach(t => {
       map[t].sort((a, b) => {
         const pa = PRIORITY[a.estado] ?? 99;
@@ -233,13 +396,12 @@ const RegistrosPanel = ({ registros, loading }) => {
     return map;
   }, [dayRegs]);
 
-  // Turnos ordenados: los que tienen anomalías arriba, luego ascendente numérico
+  // Turnos ordenados: anomalías arriba, luego ascendente numérico
   const turnosOrdered = useMemo(() => {
     return Object.keys(byTurno).sort((a, b) => {
       const anomA = byTurno[a].filter(r => r.estado !== 'autorizado').length;
       const anomB = byTurno[b].filter(r => r.estado !== 'autorizado').length;
-      if ((anomA > 0) !== (anomB > 0)) return anomB - anomA; // turnos con anomalías primero
-      // luego orden natural (números primero, "Sin turno" al final)
+      if ((anomA > 0) !== (anomB > 0)) return anomB - anomA;
       const na = parseInt(a, 10), nb = parseInt(b, 10);
       if (!isNaN(na) && !isNaN(nb)) return na - nb;
       if (!isNaN(na)) return -1;
@@ -248,252 +410,170 @@ const RegistrosPanel = ({ registros, loading }) => {
     });
   }, [byTurno]);
 
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: 'var(--spacing-xxl)', color: 'var(--color-muted)', fontFamily: 'var(--font-body)' }}>
-      Cargando registros…
-    </div>
-  );
-
-  const Card = ({ onClick, left, right, sub, accent }) => (
-    <motion.button
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      style={{
-        width: '100%', background: 'var(--color-surface-card)',
-        border: '1px solid var(--color-hairline-soft)', borderRadius: 'var(--rounded-xl)',
-        padding: 'var(--spacing-base) var(--spacing-lg)', display: 'flex',
-        alignItems: 'center', gap: 'var(--spacing-base)', cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-      }}
-    >
-      {accent && (
-        <div style={{
-          width: '40px', height: '40px', borderRadius: 'var(--rounded-lg)', flexShrink: 0,
-          background: 'rgb(var(--color-accent-raw) / 0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {accent}
-        </div>
-      )}
-      <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-        <p style={{ margin: 0, fontSize: 'var(--typography-body-sm-size)', fontWeight: 'var(--typography-title-sm-weight)', fontFamily: 'var(--font-body)', color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {left}
-        </p>
-        {sub && <p style={{ margin: '2px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>{sub}</p>}
+  if (loading) {
+    return (
+      <div role="status" aria-busy="true" style={regStyles.loadingWrap}>
+        {[0, 1, 2].map(k => (
+          <div key={k} style={regStyles.skeletonCard} />
+        ))}
+        <style>{`@keyframes vp-reg-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
-        {right && <span style={{ fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-accent)', background: 'rgb(var(--color-accent-raw) / 0.08)', padding: '2px 8px', borderRadius: 'var(--rounded-pill)' }}>{right}</span>}
-        <ChevronRight size={16} color="var(--color-muted)" />
-      </div>
-    </motion.button>
-  );
-
-  const Header = ({ title, sub }) => (
-    <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-      {level > 0 && (
-        <button onClick={back} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-accent)', fontFamily: 'var(--font-body)', fontSize: 'var(--typography-body-sm-size)', fontWeight: 500, marginBottom: 'var(--spacing-xs)', padding: 0 }}>
-          <ChevronLeft size={16} /> Atrás
-        </button>
-      )}
-      <h2 style={{ margin: 0, fontSize: 'var(--typography-display-sm-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)', textTransform: 'capitalize' }}>{title}</h2>
-      {sub && <p style={{ margin: '4px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>{sub}</p>}
-    </div>
-  );
+    );
+  }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'var(--spacing-lg)', paddingBottom: 'var(--spacing-xxl)' }}>
+    <section style={regStyles.panel} data-testid="registros-panel" aria-label="Historial de abordajes">
       <AnimatePresence mode="wait">
 
-        {/* NIVEL 0 – Rutas */}
+        {/* NIVEL 0 — Rutas */}
         {level === 0 && (
-          <motion.div key="rutas" {...slideIn}>
-            <Header title="Historial de Abordajes" sub="Selecciona una ruta para ver el detalle" />
-              {Object.keys(byRuta).length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 'var(--spacing-xxl)', color: 'var(--color-muted)', background: 'var(--color-surface-card)', borderRadius: 'var(--rounded-xl)', border: '1px dashed var(--color-hairline-strong)' }}>
-                <Bus size={40} style={{ opacity: 0.2, marginBottom: 'var(--spacing-base)' }} />
-                <p style={{ margin: 0, fontFamily: 'var(--font-body)', fontSize: 'var(--typography-body-sm-size)' }}>No hay registros aún.</p>
-                <p style={{ margin: '4px 0 0', fontFamily: 'var(--font-body)', fontSize: 'var(--typography-caption-size)' }}>Los abordajes escaneados aparecerán aquí.</p>
-              </div>
+          <motion.div key="rutas" {...REG_ANIM}>
+            <RegHeader
+              title="Historial"
+              sub="Selecciona una ruta para ver el detalle"
+              showBack={false}
+            />
+            {Object.keys(byRuta).length === 0 ? (
+              <RegEmpty />
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                {Object.entries(byRuta).sort().map(([ruta, regs]) => {
+              <ul style={regStyles.list} role="list">
+                {Object.entries(byRuta).sort().map(([ruta, regs], i) => {
                   const { code, desc } = parseRuta(ruta);
                   const color = getRutaColor(code);
                   return (
-                    <motion.button key={ruta} whileTap={{ scale: 0.97 }} onClick={() => push('ruta', ruta)}
-                      style={{ width: '100%', background: 'var(--color-surface-card)', border: '1px solid var(--color-hairline-soft)', borderRadius: 'var(--rounded-xl)', padding: 'var(--spacing-base)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-base)', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', textAlign: 'left' }}
-                    >
-                      {/* Badge de ruta */}
-                      <div style={{ width: '48px', height: '48px', borderRadius: 'var(--rounded-lg)', flexShrink: 0, background: color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--typography-caption-uppercase-size)', fontWeight: 'var(--typography-caption-uppercase-weight)', letterSpacing: 'var(--typography-caption-uppercase-ls)', color: color.text }}>{code}</span>
-                      </div>
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 'var(--typography-body-sm-size)', fontWeight: 'var(--typography-title-sm-weight)', fontFamily: 'var(--font-body)', color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {desc}
-                        </p>
-                        <p style={{ margin: '3px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>
-                          {regs.length} abordaje{regs.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      {/* Contador + chevron */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
-                        <span style={{ fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', fontWeight: 600, color: color.text, background: color.bg, padding: '2px 8px', borderRadius: 'var(--rounded-pill)' }}>{regs.length}</span>
-                        <ChevronRight size={16} color="var(--color-muted)" />
-                      </div>
-                    </motion.button>
+                    <motion.li key={ruta} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
+                      <button
+                        type="button"
+                        onClick={() => push('ruta', ruta)}
+                        data-testid={`reg-ruta-${code}`}
+                        style={regStyles.rutaCard}
+                      >
+                        <div
+                          aria-hidden="true"
+                          style={{ ...regStyles.rutaBadge, background: color.bg }}
+                        >
+                          <span style={{ ...regStyles.rutaBadgeText, color: color.text }}>
+                            {code}
+                          </span>
+                        </div>
+                        <div style={regStyles.cardBody}>
+                          <p style={regStyles.cardLeft} title={desc}>{desc}</p>
+                          <p style={regStyles.cardSub}>
+                            {regs.length} abordaje{regs.length !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <div style={regStyles.cardRight}>
+                          <span
+                            style={{
+                              ...regStyles.countPill,
+                              background: color.bg,
+                              color: color.text,
+                            }}
+                          >
+                            {regs.length}
+                          </span>
+                          <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" style={{ color: 'var(--color-muted-soft)' }} />
+                        </div>
+                      </button>
+                    </motion.li>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </motion.div>
         )}
 
-        {/* NIVEL 1 – Semanas */}
+        {/* NIVEL 1 — Semanas */}
         {level === 1 && (
-          <motion.div key="semanas" {...slideIn}>
-            <Header title={currentRuta} sub="Selecciona una semana" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-              {Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0])).map(([weekKey, regs]) => (
-                <Card key={weekKey} onClick={() => push('week', weekKey)}
-                  left={formatWeekLabel(weekKey)}
-                  sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
-                  right={`${regs.length}`}
-                  accent={<Calendar size={18} color="var(--color-accent)" />}
-                />
+          <motion.div key="semanas" {...REG_ANIM}>
+            <RegHeader
+              title={currentRuta}
+              sub="Selecciona una semana"
+              showBack
+              onBack={back}
+            />
+            <ul style={regStyles.list} role="list">
+              {Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0])).map(([weekKey, regs], i) => (
+                <motion.li key={weekKey} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
+                  <RegCard
+                    onClick={() => push('week', weekKey)}
+                    left={formatWeekLabel(weekKey)}
+                    sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
+                    right={regs.length}
+                    accent={<Calendar size={16} strokeWidth={1.75} style={{ color: 'var(--color-accent)' }} />}
+                    testId={`reg-week-${weekKey}`}
+                  />
+                </motion.li>
               ))}
-            </div>
+            </ul>
           </motion.div>
         )}
 
-        {/* NIVEL 2 – Días */}
+        {/* NIVEL 2 — Días */}
         {level === 2 && (
-          <motion.div key="dias" {...slideIn}>
-            <Header title={formatWeekLabel(currentWeek)} sub="Selecciona un día" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-              {Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0])).map(([dayKey, regs]) => (
-                <Card key={dayKey} onClick={() => push('day', dayKey)}
-                  left={formatDayLabel(dayKey)}
-                  sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
-                  right={`${regs.length}`}
-                  accent={<Clock size={18} color="var(--color-accent)" />}
-                />
+          <motion.div key="dias" {...REG_ANIM}>
+            <RegHeader
+              title={formatWeekLabel(currentWeek)}
+              sub="Selecciona un día"
+              showBack
+              onBack={back}
+            />
+            <ul style={regStyles.list} role="list">
+              {Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0])).map(([dayKey, regs], i) => (
+                <motion.li key={dayKey} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
+                  <RegCard
+                    onClick={() => push('day', dayKey)}
+                    left={formatDayLabel(dayKey)}
+                    sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
+                    right={regs.length}
+                    accent={<Clock size={16} strokeWidth={1.75} style={{ color: 'var(--color-accent)' }} />}
+                    testId={`reg-day-${dayKey}`}
+                  />
+                </motion.li>
               ))}
-            </div>
+            </ul>
           </motion.div>
         )}
 
-        {/* NIVEL 3 – Turnos + Empleados (ordenados por prioridad de anomalía) */}
+        {/* NIVEL 3 — Turnos + Empleados (ordenados por prioridad) */}
         {level === 3 && (
-          <motion.div key="turnos" {...slideIn}>
-            <Header title={formatDayLabel(currentDay)} sub={`${dayRegs.length} empleado${dayRegs.length !== 1 ? 's' : ''} abordaron · ordenados por prioridad`} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          <motion.div key="turnos" {...REG_ANIM}>
+            <RegHeader
+              title={formatDayLabel(currentDay)}
+              sub={`${dayRegs.length} empleado${dayRegs.length !== 1 ? 's' : ''} · orden por prioridad`}
+              showBack
+              onBack={back}
+            />
+            <div style={regStyles.turnosWrap}>
               {turnosOrdered.map(turno => {
                 const regs = byTurno[turno];
                 const anomalies = regs.filter(r => r.estado !== 'autorizado').length;
                 return (
-                <div key={turno}>
-                  {/* Cabecera de turno */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-sm)' }}>
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--typography-caption-uppercase-size)', fontWeight: 'var(--typography-caption-uppercase-weight)', letterSpacing: 'var(--typography-caption-uppercase-ls)', textTransform: 'uppercase', color: 'var(--color-muted)' }}>
-                      Turno {turno}
-                    </span>
-                    {anomalies > 0 && (
-                      <span style={{
-                        fontFamily: 'var(--font-body)',
-                        fontSize: 'var(--typography-caption-size)',
-                        lineHeight: 1,
-                        background: 'rgb(var(--color-semantic-error-raw) / 0.1)',
-                        color: 'var(--color-semantic-error)',
-                        padding: '2px var(--spacing-xs)',
-                        borderRadius: 'var(--rounded-pill)',
-                        fontWeight: 600,
-                      }} title={`${anomalies} incidencia${anomalies !== 1 ? 's' : ''}`}>
-                        {anomalies} ⚠
-                      </span>
-                    )}
-                    <div style={{ flex: 1, height: '1px', background: 'var(--color-hairline-soft)' }} />
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--typography-caption-size)', color: 'var(--color-muted)', fontVariantNumeric: 'tabular-nums' }}>{regs.length}</span>
-                  </div>
-                  {/* Lista de empleados */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-                    {regs.map((reg, i) => {
-                      const emp = reg.empleados;
-                      const time = new Date(reg.fecha_hora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                      const isRejected = reg.estado === 'rechazado_ruta' || reg.estado === 'rechazado_qr';
-                      const isFakeQR = reg.estado === 'rechazado_qr';
-                      const isWarning = reg.estado === 'dia_descanso' || reg.estado === 'fuera_horario';
-                      
-                      let badgeText = '';
-                      if (isFakeQR) badgeText = 'QR Inválido';
-                      else if (isRejected) badgeText = 'Ruta Incorrecta';
-                      else if (reg.estado === 'dia_descanso') badgeText = 'Día Descanso';
-                      else if (reg.estado === 'fuera_horario') badgeText = 'Fuera de Horario';
-
-                      // Sanitiza el texto del QR inválido: si trae JSON, mostrar de forma legible
-                      let qrLabel = reg.qr_leido || 'Código Desconocido';
-                      if (isFakeQR && typeof qrLabel === 'string' && qrLabel.trim().startsWith('{')) {
-                        try {
-                          const parsed = JSON.parse(qrLabel);
-                          if (parsed?.numero_empleado != null) qrLabel = `# ${parsed.numero_empleado}`;
-                          else qrLabel = 'QR Desconocido';
-                        } catch {
-                          qrLabel = 'QR Ilegible';
-                        }
-                      }
-
-                      // Estilos según el estado
-                      let bgColor = 'var(--color-surface-card)';
-                      let borderColor = 'var(--color-hairline-soft)';
-                      let iconBg = 'rgb(var(--color-accent-raw) / 0.08)';
-                      let iconColor = 'var(--color-accent)';
-                      let textColor = 'var(--color-ink)';
-                      let badgeBg = 'var(--color-accent)';
-
-                      if (isRejected) {
-                        bgColor = 'rgb(var(--color-semantic-error-raw) / 0.04)';
-                        borderColor = 'rgb(var(--color-semantic-error-raw) / 0.2)';
-                        iconBg = 'rgb(var(--color-semantic-error-raw) / 0.1)';
-                        iconColor = 'var(--color-semantic-error)';
-                        textColor = 'var(--color-semantic-error)';
-                        badgeBg = 'var(--color-semantic-error)';
-                      } else if (isWarning) {
-                        bgColor = 'rgb(var(--color-semantic-warning-raw) / 0.05)';
-                        borderColor = 'rgb(var(--color-semantic-warning-raw) / 0.3)';
-                        iconBg = 'rgb(var(--color-semantic-warning-raw) / 0.15)';
-                        iconColor = 'var(--color-semantic-warning)';
-                        badgeBg = 'var(--color-semantic-warning)';
-                      }
-
-                      return (
-                        <motion.div key={reg.id || i}
-                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                          style={{ background: bgColor, borderRadius: 'var(--rounded-lg)', padding: 'var(--spacing-sm) var(--spacing-base)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', border: `1px solid ${borderColor}` }}
+                  <section key={turno} aria-labelledby={`turno-${turno}`} data-testid={`reg-turno-${turno}`}>
+                    <div style={regStyles.turnoHeader}>
+                      <h3 id={`turno-${turno}`} style={regStyles.turnoTitle}>
+                        Turno {turno}
+                      </h3>
+                      {anomalies > 0 && (
+                        <span
+                          style={regStyles.turnoAlertChip}
+                          title={`${anomalies} incidencia${anomalies !== 1 ? 's' : ''}`}
+                          aria-label={`${anomalies} incidencias en este turno`}
+                          data-testid={`reg-turno-alert-${turno}`}
                         >
-                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', fontWeight: 'var(--typography-title-sm-weight)', color: iconColor }}>
-                            {isFakeQR ? <XCircle size={18} /> : getInitials(emp?.nombre)}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 'var(--typography-body-sm-size)', fontWeight: 'var(--typography-title-sm-weight)', fontFamily: 'var(--font-body)', color: textColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: isRejected ? 'line-through' : 'none' }}>
-                              {isFakeQR ? qrLabel : (emp?.nombre || 'Desconocido')}
-                            </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xxs)', marginTop: '2px', flexWrap: 'wrap' }}>
-                              <p style={{ margin: 0, fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>
-                                {isFakeQR ? '---' : `#${emp?.numero_empleado || '---'}`}
-                              </p>
-                              {badgeText && (
-                                <span style={{ fontSize: 'var(--typography-caption-size)', lineHeight: 1, background: badgeBg, color: isWarning ? 'var(--color-ink)' : 'var(--color-on-primary)', padding: '2px var(--spacing-xs)', borderRadius: 'var(--rounded-pill)', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
-                                  {badgeText}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <span style={{ fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)', flexShrink: 0 }}>{time}</span>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </div>
+                          {anomalies} <span aria-hidden="true">⚠</span>
+                        </span>
+                      )}
+                      <div style={regStyles.turnoDivider} aria-hidden="true" />
+                      <span style={regStyles.turnoCount}>{regs.length}</span>
+                    </div>
+
+                    <div style={regStyles.itemList}>
+                      {regs.map((reg, i) => (
+                        <RegItem key={reg.id || `${turno}-${i}`} reg={reg} i={i} />
+                      ))}
+                    </div>
+                  </section>
                 );
               })}
             </div>
@@ -501,8 +581,345 @@ const RegistrosPanel = ({ registros, loading }) => {
         )}
 
       </AnimatePresence>
-    </div>
+    </section>
   );
+};
+
+/* ============================================================
+   STYLES — RegistrosPanel · 100% tokens · mobile-first
+   ============================================================ */
+const regStyles = {
+  panel: {
+    position: 'absolute',
+    inset: 0,
+    overflowY: 'auto',
+    padding: 'var(--spacing-base)',
+    paddingBottom: 'max(var(--spacing-xxl), calc(env(safe-area-inset-bottom) + var(--spacing-xl)))',
+    WebkitOverflowScrolling: 'touch',
+  },
+
+  /* Header */
+  header: {
+    marginBottom: 'var(--spacing-lg)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-xs)',
+  },
+  backBtn: {
+    alignSelf: 'flex-start',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xxs)',
+    minHeight: '2rem',
+    padding: 'var(--spacing-xxs) var(--spacing-xs) var(--spacing-xxs) 0',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    fontWeight: 500,
+    color: 'var(--color-accent)',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  title: {
+    margin: 0,
+    fontFamily: 'var(--font-display)',
+    fontSize: 'clamp(var(--typography-title-md-size), 5vw, var(--typography-display-sm-size))',
+    fontWeight: 'var(--typography-title-md-weight)',
+    color: 'var(--color-ink)',
+    textTransform: 'capitalize',
+    letterSpacing: '-0.02em',
+    lineHeight: 1.15,
+  },
+  sub: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    lineHeight: 'var(--typography-caption-lh)',
+  },
+
+  /* List */
+  list: {
+    listStyle: 'none',
+    margin: 0,
+    padding: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-sm)',
+  },
+
+  /* Card genérica */
+  card: {
+    width: '100%',
+    minHeight: '4rem',
+    background: 'var(--color-surface-card)',
+    border: '1px solid var(--color-hairline-soft)',
+    borderRadius: 'var(--rounded-xl)',
+    padding: 'var(--spacing-sm) var(--spacing-base)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-sm)',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'border-color 160ms ease, transform 120ms ease',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  accentBox: {
+    width: '2.5rem',
+    height: '2.5rem',
+    borderRadius: 'var(--rounded-md)',
+    flexShrink: 0,
+    background: 'rgb(var(--color-accent-raw) / 0.1)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: {
+    flex: 1,
+    minWidth: 0,
+    textAlign: 'left',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+  },
+  cardLeft: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    fontWeight: 'var(--typography-title-sm-weight)',
+    color: 'var(--color-ink)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.2,
+  },
+  cardSub: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    lineHeight: 'var(--typography-caption-lh)',
+  },
+  cardRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xs)',
+    flexShrink: 0,
+  },
+  countPill: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    fontWeight: 600,
+    color: 'var(--color-accent)',
+    background: 'rgb(var(--color-accent-raw) / 0.08)',
+    padding: '2px var(--spacing-xs)',
+    borderRadius: 'var(--rounded-pill)',
+    fontVariantNumeric: 'tabular-nums',
+    lineHeight: 1.4,
+  },
+
+  /* Ruta card (NIVEL 0) */
+  rutaCard: {
+    width: '100%',
+    minHeight: '4rem',
+    background: 'var(--color-surface-card)',
+    border: '1px solid var(--color-hairline-soft)',
+    borderRadius: 'var(--rounded-xl)',
+    padding: 'var(--spacing-sm) var(--spacing-base)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-sm)',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'border-color 160ms ease, transform 120ms ease',
+    WebkitTapHighlightColor: 'transparent',
+  },
+  rutaBadge: {
+    width: '3rem',
+    height: '3rem',
+    borderRadius: 'var(--rounded-md)',
+    flexShrink: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rutaBadgeText: {
+    fontFamily: 'var(--font-display)',
+    fontSize: 'var(--typography-caption-uppercase-size)',
+    fontWeight: 'var(--typography-caption-uppercase-weight)',
+    letterSpacing: 'var(--typography-caption-uppercase-ls)',
+  },
+
+  /* Turno (NIVEL 3) */
+  turnosWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-lg)',
+  },
+  turnoHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xs)',
+    marginBottom: 'var(--spacing-sm)',
+  },
+  turnoTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-uppercase-size)',
+    fontWeight: 'var(--typography-caption-uppercase-weight)',
+    letterSpacing: 'var(--typography-caption-uppercase-ls)',
+    textTransform: 'uppercase',
+    color: 'var(--color-muted)',
+  },
+  turnoAlertChip: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    lineHeight: 1,
+    background: 'rgb(var(--color-semantic-error-raw) / 0.1)',
+    color: 'var(--color-semantic-error)',
+    padding: '2px var(--spacing-xs)',
+    borderRadius: 'var(--rounded-pill)',
+    fontWeight: 600,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '2px',
+  },
+  turnoDivider: {
+    flex: 1,
+    height: '1px',
+    background: 'var(--color-hairline-soft)',
+  },
+  turnoCount: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    fontVariantNumeric: 'tabular-nums',
+  },
+
+  /* Item de empleado */
+  itemList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-xs)',
+  },
+  item: {
+    border: '1px solid var(--color-hairline-soft)',
+    borderRadius: 'var(--rounded-lg)',
+    padding: 'var(--spacing-sm) var(--spacing-base)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-sm)',
+  },
+  itemIcon: {
+    width: '2.25rem',
+    height: '2.25rem',
+    borderRadius: '50%',
+    flexShrink: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    fontWeight: 'var(--typography-title-sm-weight)',
+  },
+  itemBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  itemName: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    fontWeight: 'var(--typography-title-sm-weight)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.25,
+  },
+  itemMeta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xxs)',
+    marginTop: '2px',
+    flexWrap: 'wrap',
+  },
+  itemNum: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    fontVariantNumeric: 'tabular-nums',
+  },
+  itemBadge: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    lineHeight: 1,
+    padding: '2px var(--spacing-xs)',
+    borderRadius: 'var(--rounded-pill)',
+    fontWeight: 600,
+  },
+  itemTime: {
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    flexShrink: 0,
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: '0.02em',
+  },
+
+  /* Empty */
+  empty: {
+    textAlign: 'center',
+    padding: 'var(--spacing-xxl) var(--spacing-lg)',
+    background: 'var(--color-surface-card)',
+    borderRadius: 'var(--rounded-xl)',
+    border: '1px dashed var(--color-hairline-strong)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 'var(--spacing-xs)',
+  },
+  emptyIcon: {
+    width: '3rem',
+    height: '3rem',
+    borderRadius: '50%',
+    background: 'var(--color-canvas-soft)',
+    color: 'var(--color-muted-soft)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 'var(--spacing-xs)',
+  },
+  emptyTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    fontWeight: 'var(--typography-title-sm-weight)',
+    color: 'var(--color-ink)',
+  },
+  emptySub: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-muted)',
+    lineHeight: 'var(--typography-caption-lh)',
+  },
+
+  /* Loading */
+  loadingWrap: {
+    padding: 'var(--spacing-lg) var(--spacing-base)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-sm)',
+  },
+  skeletonCard: {
+    height: '4rem',
+    borderRadius: 'var(--rounded-xl)',
+    background: 'var(--color-hairline-soft)',
+    animation: 'vp-reg-pulse 1.4s ease-in-out infinite',
+  },
 };
 
 
