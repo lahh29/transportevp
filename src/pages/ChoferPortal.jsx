@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, ScanLine, List, Camera, LogOut, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin, X, RefreshCw, Building2 } from 'lucide-react';
+import { CheckCircle, XCircle, ScanLine, List, Camera, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin, X, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PortalHeader } from '../components/PortalHeader';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
 const getInitials = (nombre) => {
@@ -527,11 +528,6 @@ export const ChoferPortal = () => {
   const timerRef = useRef(null);
   const isScanningRef = useRef(false);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => window.location.reload(true), 300);
-  };
   const qrRef = useRef(null);
 
   useEffect(() => {
@@ -974,15 +970,13 @@ export const ChoferPortal = () => {
         }
       `}</style>
 
-      {/* Header */}
-      <header style={{ padding: 'var(--spacing-sm) var(--spacing-base)', background: 'var(--color-surface-card)', borderBottom: '1px solid var(--color-hairline-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-sm)', zIndex: 10 }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: 'var(--typography-title-md-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Portal Abordaje</h1>
-          <p style={{ margin: '2px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>ViñoPlastic Transporte</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
-          {isAdmin && (
+      {/* Header cohesivo con TopNav de Empresa */}
+      <PortalHeader
+        subtitle="Portal Abordaje · Transporte"
+        onBrandClick={() => navigate(isAdmin ? '/empresa' : '/chofer')}
+        onLogout={async () => { await supabase.auth.signOut(); navigate('/'); }}
+        extras={
+          isAdmin && (
             <motion.button
               whileTap={{ scale: 0.93 }}
               onClick={() => navigate('/empresa')}
@@ -990,7 +984,7 @@ export const ChoferPortal = () => {
               title="Volver a Empresa"
               aria-label="Volver al portal de Empresa"
               style={{
-                height: '40px', minWidth: '40px', padding: '0 var(--spacing-sm)',
+                height: '36px', minWidth: '36px', padding: '0 var(--spacing-sm)',
                 borderRadius: 'var(--rounded-pill)',
                 background: 'rgb(var(--color-accent-raw) / 0.1)',
                 border: '1px solid rgb(var(--color-accent-raw) / 0.25)',
@@ -1002,33 +996,12 @@ export const ChoferPortal = () => {
                 fontWeight: 600,
               }}
             >
-              <Building2 size={16} />
+              <Building2 size={14} />
               <span className="vp-hide-sm">Empresa</span>
             </motion.button>
-          )}
-
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            animate={{ rotate: isRefreshing ? 180 : 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            onClick={handleRefresh}
-            title="Actualizar aplicación"
-            aria-label="Actualizar aplicación"
-            data-testid="refresh-btn"
-            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgb(var(--color-accent-raw) / 0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <RefreshCw size={18} color="var(--color-accent)" />
-          </motion.button>
-
-          <button
-            onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
-            title="Cerrar sesión"
-            aria-label="Cerrar sesión"
-            data-testid="logout-btn"
-            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgb(var(--color-semantic-error-raw) / 0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <LogOut size={18} color="var(--color-semantic-error)" />
-          </button>
-        </div>
-      </header>
+          )
+        }
+      />
 
       {/* Content */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>

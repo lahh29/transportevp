@@ -85,11 +85,12 @@ export const TopNav = () => {
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          height: '56px',
+          minHeight: '56px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 24px',
+          gap: 'var(--spacing-sm)',
+          padding: 'var(--spacing-xs) var(--spacing-lg)',
           background: 'var(--color-canvas)',
           borderBottom: '1px solid var(--color-hairline-soft)',
         }}
@@ -97,19 +98,34 @@ export const TopNav = () => {
         {/* ── Brand ── */}
         <button
           onClick={() => navigate('/empresa')}
+          data-testid="topnav-brand"
           style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontSize: '15px', fontWeight: 600, letterSpacing: '-0.01em',
-            color: 'var(--color-ink)',
+            textAlign: 'left',
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px',
+            minWidth: 0, overflow: 'hidden',
           }}
         >
-          Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
+          <span style={{
+            fontSize: '15px', fontWeight: 600, letterSpacing: '-0.01em',
+            color: 'var(--color-ink)', fontFamily: 'var(--font-display)', lineHeight: 1.1,
+          }}>
+            Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
+          </span>
+          <span style={{
+            fontSize: 'var(--typography-caption-size)',
+            fontFamily: 'var(--font-body)',
+            color: 'var(--color-muted)',
+            lineHeight: 'var(--typography-caption-lh)',
+          }}>
+            Recursos Humanos
+          </span>
         </button>
 
         {/* ── Desktop nav ── */}
         <nav
           className="topnav-desktop-only"
-          style={{ display: 'flex', alignItems: 'center', gap: '28px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-lg)' }}
         >
           {NAV_LINKS.map(({ label, path }) => (
             <button
@@ -126,16 +142,19 @@ export const TopNav = () => {
 
           {/* Actualizar */}
           <motion.button
-            whileHover={{ y: -1 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.93 }}
             animate={{ rotate: isRefreshing ? 180 : 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             onClick={handleRefresh}
             title="Actualizar aplicación"
+            aria-label="Actualizar aplicación"
+            data-testid="topnav-refresh"
             style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
-              display: 'flex', alignItems: 'center',
-              color: 'var(--color-muted)',
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: 'rgb(var(--color-accent-raw) / 0.08)',
+              border: 'none', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--color-accent)',
             }}
           >
             <RefreshCw size={16} />
@@ -143,14 +162,16 @@ export const TopNav = () => {
 
           {/* Logout */}
           <motion.button
-            whileHover={{ y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            whileTap={{ scale: 0.93 }}
             onClick={handleLogout}
             title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            data-testid="topnav-logout"
             style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
-              display: 'flex', alignItems: 'center',
+              width: '36px', height: '36px', borderRadius: '50%',
+              background: 'rgb(var(--color-semantic-error-raw) / 0.08)',
+              border: 'none', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               color: 'var(--color-semantic-error)',
             }}
           >

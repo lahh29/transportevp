@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { LogOut, MapPin, Clock, QrCode, RefreshCw, AlertTriangle } from 'lucide-react';
+import { MapPin, Clock, QrCode, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PortalHeader } from '../components/PortalHeader';
 
 /* ─── Helpers ─── */
 const getInitials = (nombre) => {
@@ -255,72 +256,28 @@ export const EmpleadoDashboard = () => {
     navigate('/empleado/login');
   };
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => window.location.reload(true), 300);
-  };
-
   if (loading)    return <LoadingSkeleton />;
   if (!empleado)  return null;
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: 'var(--color-canvas)',
-      padding: '16px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      display: 'flex', flexDirection: 'column', alignItems: 'stretch',
     }}>
 
-      {/* ── Header ── */}
-      <header style={{
-        width: '100%', maxWidth: '400px',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 0', marginBottom: '20px',
+      {/* ── Header cohesivo ── */}
+      <PortalHeader
+        subtitle="Acceso Personal"
+        onBrandClick={() => navigate('/empleado/dashboard')}
+        onLogout={handleLogout}
+      />
+
+      <div style={{
+        flex: 1,
+        padding: 'var(--spacing-base)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
       }}>
-        <span style={{
-          fontSize: '15px', fontWeight: 600,
-          color: 'var(--color-ink)', letterSpacing: '-0.01em',
-        }}>
-          Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
-        </span>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            animate={{ rotate: isRefreshing ? 180 : 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            onClick={handleRefresh}
-            title="Actualizar aplicación"
-            style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              border: 'none',
-              background: 'rgb(var(--color-accent-raw) / 0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--color-accent)',
-              cursor: 'pointer',
-            }}
-          >
-            <RefreshCw size={16} />
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.93 }}
-            onClick={handleLogout}
-            title="Cerrar sesión"
-            style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              border: 'none',
-              background: 'rgb(var(--color-semantic-error-raw) / 0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--color-semantic-error)',
-              cursor: 'pointer',
-            }}
-          >
-            <LogOut size={16} />
-          </motion.button>
-        </div>
-      </header>
 
       {/* ── Card principal ── */}
       <motion.div
@@ -335,6 +292,7 @@ export const EmpleadoDashboard = () => {
           padding: '24px 20px',
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           gap: '24px',
+          marginTop: 'var(--spacing-lg)',
         }}
       >
         {/* Encabezado: Izq (Foto+Nombre), Der (Cards ruta/turno) */}
@@ -445,13 +403,16 @@ export const EmpleadoDashboard = () => {
 
       {/* Pie de página */}
       <p style={{
-        marginTop: '24px',
-        fontSize: '11px', color: 'var(--color-muted-soft)',
+        marginTop: 'var(--spacing-lg)',
+        marginBottom: 'var(--spacing-base)',
+        fontSize: 'var(--typography-caption-size)',
+        color: 'var(--color-muted-soft)',
         textAlign: 'center',
       }}>
         Planta Querétaro · {new Date().getFullYear()}
       </p>
 
+      </div>
     </div>
   );
 };
