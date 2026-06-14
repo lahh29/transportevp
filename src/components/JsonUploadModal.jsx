@@ -38,8 +38,8 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
         }
 
         const formattedJson = json.map(item => ({
-          numero_empleado: String(item.numero_empleado || item['numero empleado'] || ''),
-          nombre:      item.nombre      || '',
+          numero_empleado: String(item.numero_empleado || item['numero empleado'] || '').trim(),
+          nombre:      (item.nombre      || '').trim(),
           turno:       item.turno       || null,
           ruta:        item.ruta        || null,
           colonia:     item.colonia     || null,

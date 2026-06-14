@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, ScanLine, List, Camera, LogOut, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin, X, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, ScanLine, List, Camera, LogOut, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin, X, RefreshCw, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -377,6 +377,18 @@ const RegistrosPanel = ({ registros, loading }) => {
                       else if (reg.estado === 'dia_descanso') badgeText = 'Día Descanso';
                       else if (reg.estado === 'fuera_horario') badgeText = 'Fuera de Horario';
 
+                      // Sanitiza el texto del QR inválido: si trae JSON, mostrar de forma legible
+                      let qrLabel = reg.qr_leido || 'Código Desconocido';
+                      if (isFakeQR && typeof qrLabel === 'string' && qrLabel.trim().startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(qrLabel);
+                          if (parsed?.numero_empleado != null) qrLabel = `# ${parsed.numero_empleado}`;
+                          else qrLabel = 'QR Desconocido';
+                        } catch {
+                          qrLabel = 'QR Ilegible';
+                        }
+                      }
+
                       // Estilos según el estado
                       let bgColor = 'var(--color-surface-card)';
                       let borderColor = 'var(--color-hairline-soft)';
@@ -410,14 +422,14 @@ const RegistrosPanel = ({ registros, loading }) => {
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <p style={{ margin: 0, fontSize: 'var(--typography-body-sm-size)', fontWeight: 'var(--typography-title-sm-weight)', fontFamily: 'var(--font-body)', color: textColor, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: isRejected ? 'line-through' : 'none' }}>
-                              {isFakeQR ? (reg.qr_leido || 'Código Desconocido') : (emp?.nombre || 'Desconocido')}
+                              {isFakeQR ? qrLabel : (emp?.nombre || 'Desconocido')}
                             </p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '1px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xxs)', marginTop: '2px', flexWrap: 'wrap' }}>
                               <p style={{ margin: 0, fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>
                                 {isFakeQR ? '---' : `#${emp?.numero_empleado || '---'}`}
                               </p>
                               {badgeText && (
-                                <span style={{ fontSize: '10px', background: badgeBg, color: isWarning ? '#000' : '#fff', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                                <span style={{ fontSize: 'var(--typography-caption-size)', lineHeight: 1, background: badgeBg, color: isWarning ? 'var(--color-ink)' : 'var(--color-on-primary)', padding: '2px var(--spacing-xs)', borderRadius: 'var(--rounded-pill)', fontWeight: 600, fontFamily: 'var(--font-body)' }}>
                                   {badgeText}
                                 </span>
                               )}
@@ -458,6 +470,7 @@ export const ChoferPortal = () => {
   const [loadingRegistros, setLoadingRegistros] = useState(false);
   
   const [session, setSession] = useState(null);
+  const isAdmin = session?.user?.user_metadata?.role === 'admin';
   const timerRef = useRef(null);
   const isScanningRef = useRef(false);
 
@@ -690,7 +703,34 @@ export const ChoferPortal = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
 
       try {
-        const { data: emp, error: empError } = await supabase.from('empleados').select('*').eq('id', decodedText).single();
+        // ─── Parsear el contenido del QR ──────────────────
+        // Los QR generados contienen JSON: {"numero_empleado":"4"}
+        // Mantenemos compatibilidad con QRs antiguos que pudieran contener
+        // directamente el id (UUID) o el número de empleado en texto plano.
+        let lookupField = 'id';
+        let lookupValue = decodedText;
+        const trimmed = String(decodedText).trim();
+
+        if (trimmed.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (parsed && parsed.numero_empleado != null) {
+              lookupField = 'numero_empleado';
+              lookupValue = String(parsed.numero_empleado).trim();
+            } else if (parsed && parsed.id != null) {
+              lookupField = 'id';
+              lookupValue = String(parsed.id).trim();
+            }
+          } catch {
+            // QR con texto no-JSON: lo dejamos como UUID/id
+          }
+        } else if (/^\d+$/.test(trimmed)) {
+          // QR con solo dígitos → asumimos número de empleado
+          lookupField = 'numero_empleado';
+          lookupValue = trimmed;
+        }
+
+        const { data: emp, error: empError } = await supabase.from('empleados').select('*').eq(lookupField, lookupValue).maybeSingle();
         const now = new Date();
         const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
@@ -857,27 +897,64 @@ export const ChoferPortal = () => {
           border: none !important;
         }
         #reader__scan_region img, #reader__dashboard { display: none !important; }
+
+        /* Helpers responsivos */
+        .vp-hide-sm { display: inline; }
+        @media (max-width: 360px) {
+          .vp-hide-sm { display: none; }
+        }
       `}</style>
 
       {/* Header */}
-      <header style={{ padding: 'var(--spacing-base) var(--spacing-lg)', background: 'var(--color-surface-card)', borderBottom: '1px solid var(--color-hairline-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: 'var(--typography-title-md-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>Portal Abordaje</h1>
-          <p style={{ margin: '2px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>ViñoPlastic Transporte</p>
+      <header style={{ padding: 'var(--spacing-sm) var(--spacing-base)', background: 'var(--color-surface-card)', borderBottom: '1px solid var(--color-hairline-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--spacing-sm)', zIndex: 10 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: 'var(--typography-title-md-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Portal Abordaje</h1>
+          <p style={{ margin: '2px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>ViñoPlastic Transporte</p>
         </div>
-        
-        <div style={{ display: 'flex', gap: '8px' }}>
+
+        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexShrink: 0 }}>
+          {isAdmin && (
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              onClick={() => navigate('/empresa')}
+              data-testid="back-to-empresa-btn"
+              title="Volver a Empresa"
+              aria-label="Volver al portal de Empresa"
+              style={{
+                height: '40px', minWidth: '40px', padding: '0 var(--spacing-sm)',
+                borderRadius: 'var(--rounded-pill)',
+                background: 'rgb(var(--color-accent-raw) / 0.1)',
+                border: '1px solid rgb(var(--color-accent-raw) / 0.25)',
+                cursor: 'pointer', display: 'inline-flex',
+                alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xxs)',
+                color: 'var(--color-accent)',
+                fontFamily: 'var(--font-body)',
+                fontSize: 'var(--typography-caption-size)',
+                fontWeight: 600,
+              }}
+            >
+              <Building2 size={16} />
+              <span className="vp-hide-sm">Empresa</span>
+            </motion.button>
+          )}
+
           <motion.button
             whileTap={{ scale: 0.93 }}
             animate={{ rotate: isRefreshing ? 180 : 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             onClick={handleRefresh}
             title="Actualizar aplicación"
+            aria-label="Actualizar aplicación"
+            data-testid="refresh-btn"
             style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgb(var(--color-accent-raw) / 0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <RefreshCw size={18} color="var(--color-accent)" />
           </motion.button>
 
-          <button onClick={async () => { await supabase.auth.signOut(); navigate('/'); }} title="Cerrar sesión"
+          <button
+            onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
+            title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            data-testid="logout-btn"
             style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgb(var(--color-semantic-error-raw) / 0.08)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <LogOut size={18} color="var(--color-semantic-error)" />
           </button>
@@ -909,9 +986,9 @@ export const ChoferPortal = () => {
                   <div style={{ position: 'absolute', top: 'var(--spacing-lg)', left: 'var(--spacing-lg)', right: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'auto' }}>
                     
                     {/* Etiqueta de ruta (Minimalista) */}
-                    <div style={{ background: getRutaColor(parseRuta(selectedRoute).code).bg, padding: '6px 14px', borderRadius: 'var(--rounded-full)', display: 'flex', alignItems: 'center', gap: '8px', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ background: getRutaColor(parseRuta(selectedRoute).code).bg, padding: 'var(--spacing-xxs) var(--spacing-sm)', borderRadius: 'var(--rounded-pill)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getRutaColor(parseRuta(selectedRoute).code).text, boxShadow: `0 0 8px ${getRutaColor(parseRuta(selectedRoute).code).text}` }} />
-                      <span style={{ color: '#fff', fontSize: 'var(--typography-body-sm-size)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.5px' }}>
+                      <span style={{ color: 'var(--color-on-primary)', fontSize: 'var(--typography-body-sm-size)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.5px' }}>
                         {parseRuta(selectedRoute).code}
                       </span>
                     </div>
@@ -920,10 +997,10 @@ export const ChoferPortal = () => {
                     <button 
                       onClick={handleEndRoute}
                       disabled={isFinishing}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 'var(--rounded-full)', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}
+                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-on-primary)', borderRadius: 'var(--rounded-full)', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}
                       aria-label="Cerrar cámara"
                     >
-                      {isFinishing ? <span style={{ fontSize: '10px' }}>...</span> : <X size={20} />}
+                      {isFinishing ? <span style={{ fontSize: 'var(--typography-caption-size)' }}>…</span> : <X size={20} />}
                     </button>
                   </div>
                 </div>
@@ -933,7 +1010,7 @@ export const ChoferPortal = () => {
                   {scanResult && (
                     <motion.div initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.9 }}
                       style={{ position: 'absolute', bottom: 'var(--spacing-xl)', left: 'var(--spacing-base)', right: 'var(--spacing-base)', zIndex: 10, background: 'var(--color-surface-card)', borderRadius: 'var(--rounded-xl)', padding: 'var(--spacing-base)', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: `2px solid var(--color-semantic-${scanResult.uiColor})`, display: 'flex', alignItems: 'center', gap: 'var(--spacing-base)' }}>
-                      <div style={{ width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0, background: `var(--color-semantic-${scanResult.uiColor})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: scanResult.uiColor === 'warning' ? '#000' : '#fff' }}>
+                      <div style={{ width: '56px', height: '56px', borderRadius: '50%', flexShrink: 0, background: `var(--color-semantic-${scanResult.uiColor})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: scanResult.uiColor === 'warning' ? 'var(--color-ink)' : 'var(--color-on-primary)' }}>
                         {scanResult.isValid ? <CheckCircle size={32} /> : <XCircle size={32} />}
                       </div>
                       <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -972,16 +1049,40 @@ export const ChoferPortal = () => {
       </div>
 
       {/* Bottom Nav */}
-      <nav style={{ background: 'var(--color-surface-card)', padding: 'var(--spacing-sm) var(--spacing-lg)', paddingBottom: 'max(var(--spacing-sm), env(safe-area-inset-bottom))', borderTop: '1px solid var(--color-hairline-soft)', display: 'flex', zIndex: 10 }}>
+      <nav style={{ background: 'var(--color-surface-card)', padding: 'var(--spacing-xs) var(--spacing-base)', paddingBottom: 'max(var(--spacing-xs), env(safe-area-inset-bottom))', borderTop: '1px solid var(--color-hairline-soft)', display: 'flex', zIndex: 10 }} role="tablist" aria-label="Navegación inferior">
         {[
           { id: 'scanner',   icon: <Camera size={22} />,  label: 'Escanear'  },
           { id: 'registros', icon: <List   size={22} />,  label: 'Registros' },
-        ].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, background: 'none', border: 'none', padding: 'var(--spacing-xs)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: activeTab === tab.id ? 'var(--color-accent)' : 'var(--color-muted)', cursor: 'pointer', transition: 'color 0.2s ease' }}>
-            {tab.icon}
-            <span style={{ fontSize: 'var(--typography-caption-uppercase-size)', fontWeight: 'var(--typography-caption-uppercase-weight)', fontFamily: 'var(--font-body)', letterSpacing: 'var(--typography-caption-uppercase-ls)' }}>{tab.label}</span>
-          </button>
-        ))}
+        ].map(tab => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={active}
+              data-testid={`tab-${tab.id}`}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1, background: 'none', border: 'none',
+                padding: 'var(--spacing-xs) var(--spacing-xxs)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: 'var(--spacing-xxs)',
+                color: active ? 'var(--color-accent)' : 'var(--color-muted)',
+                cursor: 'pointer',
+                transition: 'color 0.2s ease',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              {tab.icon}
+              <span style={{
+                fontSize: 'var(--typography-caption-uppercase-size)',
+                fontWeight: active ? 700 : 'var(--typography-caption-uppercase-weight)',
+                letterSpacing: 'var(--typography-caption-uppercase-ls)',
+                textTransform: 'uppercase',
+              }}>{tab.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
