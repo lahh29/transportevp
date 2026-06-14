@@ -342,13 +342,13 @@ const PrintStyles = () => (
       box-sizing: border-box;
       width: 100%;
       min-height: 78mm;
-      padding: 5mm;
+      padding: 4mm;
       border: 1.5pt solid black;
       border-radius: 3mm;
       background: white;
       display: grid;
-      grid-template-columns: 50mm 1fr;
-      gap: 5mm;
+      grid-template-columns: 38mm minmax(0, 1fr);
+      gap: 3mm;
       align-items: center;
       page-break-inside: avoid;
       break-inside: avoid;
@@ -356,14 +356,14 @@ const PrintStyles = () => (
     }
 
     .vp-qr-frame {
-      width: 50mm;
-      height: 50mm;
+      width: 38mm;
+      height: 38mm;
       background: white;
       border: 1pt solid black;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5mm;
+      padding: 1mm;
     }
 
     .vp-qr-img {
@@ -376,7 +376,7 @@ const PrintStyles = () => (
 
     .vp-qr-missing {
       font-family: var(--font-display);
-      font-size: 10pt;
+      font-size: 9pt;
       font-weight: 700;
       letter-spacing: 0.08em;
       color: black;
@@ -385,7 +385,7 @@ const PrintStyles = () => (
     .vp-qr-data {
       display: flex;
       flex-direction: column;
-      gap: 1.5mm;
+      gap: 1mm;
       min-width: 0;
       color: black;
     }
@@ -393,9 +393,9 @@ const PrintStyles = () => (
     .vp-qr-num {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 10pt;
+      font-size: 9pt;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
       font-variant-numeric: tabular-nums;
       color: black;
     }
@@ -403,9 +403,9 @@ const PrintStyles = () => (
     .vp-qr-surname {
       margin: 0;
       font-family: var(--font-body);
-      font-size: 10pt;
+      font-size: 9pt;
       font-weight: 500;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       color: black;
       overflow: hidden;
@@ -416,35 +416,42 @@ const PrintStyles = () => (
     .vp-qr-name {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 14pt;
+      font-size: 12pt;
       font-weight: 700;
       letter-spacing: -0.01em;
       text-transform: uppercase;
       line-height: 1.1;
       color: black;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      word-break: break-word;
+      overflow-wrap: anywhere;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .vp-qr-meta {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 2mm;
+      gap: 1.5mm;
       margin-top: 1.5mm;
-      padding-top: 2mm;
-      border-top: 0.75pt solid black;
+      padding-top: 1.5mm;
+      border-top: 0.5pt solid black;
       font-family: var(--font-body);
-      font-size: 9pt;
+      font-size: 8pt;
       color: black;
+    }
+    .vp-qr-meta-cell {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 1mm;
+      white-space: nowrap;
     }
     .vp-qr-meta b {
       font-family: var(--font-display);
       font-weight: 700;
-      letter-spacing: 0.1em;
-      margin-right: 0.5mm;
+      letter-spacing: 0.08em;
     }
     .vp-qr-meta-sep {
       opacity: 0.6;
@@ -465,10 +472,9 @@ const PrintStyles = () => (
       /* Vista compacta en pantalla: una columna en móvil */
       @media (max-width: 640px) {
         .vp-print-grid { grid-template-columns: 1fr; grid-template-rows: none; gap: var(--spacing-sm); }
-        .vp-qr-card { min-height: auto; grid-template-columns: 32mm 1fr; padding: 4mm; }
+        .vp-qr-card { min-height: auto; grid-template-columns: 32mm minmax(0, 1fr); padding: 3mm; gap: 3mm; }
         .vp-qr-frame { width: 32mm; height: 32mm; }
-        .vp-qr-name { font-size: 12pt; }
-        .vp-qr-num, .vp-qr-surname { font-size: 9pt; }
+        .vp-qr-name { font-size: 11pt; }
       }
     }
 
