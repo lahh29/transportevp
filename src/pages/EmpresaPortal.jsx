@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { EmployeeWizard } from '../components/EmployeeWizard';
 import { JsonUploadModal } from '../components/JsonUploadModal';
 import { PhotoUploadModal } from '../components/PhotoUploadModal';
+import { PhotoCoverageChip } from '../components/PhotoCoverageChip';
 import { QrGenerateModal } from '../components/QrGenerateModal';
 import {
   Upload, Users, Search, Edit2, Trash2, ChevronLeft, ChevronRight,
@@ -260,13 +261,20 @@ export const EmpresaPortal = () => {
         {/* ── Header ── */}
         <header style={S.headerBlock}>
           <div style={S.headerRow}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 id="empresa-title" style={S.h1}>
-                Colaboradores
-              </h1>
-              <p style={S.h1Sub} data-testid="empresa-count">
-                {loading ? '—' : `${employees.length} empleado${employees.length === 1 ? '' : 's'} registrado${employees.length === 1 ? '' : 's'}`}
-              </p>
+            <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+              <div>
+                <h1 id="empresa-title" style={S.h1}>
+                  Colaboradores
+                </h1>
+                <p style={S.h1Sub} data-testid="empresa-count">
+                  {loading ? '—' : `${employees.length} empleado${employees.length === 1 ? '' : 's'} registrado${employees.length === 1 ? '' : 's'}`}
+                </p>
+              </div>
+              <PhotoCoverageChip
+                employees={employees}
+                loading={loading}
+                onUpload={() => setIsPhotoModalOpen(true)}
+              />
             </div>
 
             <div style={S.headerActions}>
