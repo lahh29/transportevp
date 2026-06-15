@@ -36,6 +36,8 @@ const splitName = (full) => {
 const QrCard = ({ emp }) => {
   const { apellidos, nombres } = splitName(emp.nombre);
   const ruta = parseRuta(emp.ruta);
+  const turno = normalizeTurno(emp.turno);
+  const serial = `CR-${emp.numero_empleado}-${ruta.code}T${turno}`.toUpperCase();
 
   return (
     <article
@@ -43,26 +45,74 @@ const QrCard = ({ emp }) => {
       className="vp-qr-card"
       aria-label={`Credencial de ${emp.nombre}`}
     >
-      {/* QR */}
-      <div className="vp-qr-frame" aria-hidden="true">
-        {emp.qr_code ? (
-          <img src={emp.qr_code} alt="" className="vp-qr-img" />
-        ) : (
-          <div className="vp-qr-missing">SIN QR</div>
-        )}
-      </div>
+      {/* Esquinas decorativas (4 marcas tipo registro de impresión) */}
+      <span className="vp-qr-corner vp-qr-corner--tl" aria-hidden="true" />
+      <span className="vp-qr-corner vp-qr-corner--tr" aria-hidden="true" />
+      <span className="vp-qr-corner vp-qr-corner--bl" aria-hidden="true" />
+      <span className="vp-qr-corner vp-qr-corner--br" aria-hidden="true" />
 
-      {/* Datos */}
-      <div className="vp-qr-data">
-        <p className="vp-qr-num">#{emp.numero_empleado}</p>
-        {apellidos && <p className="vp-qr-surname">{apellidos}</p>}
-        <p className="vp-qr-name">{nombres}</p>
-        <div className="vp-qr-meta">
-          <span className="vp-qr-meta-cell"><b>RUTA</b> {ruta.code}</span>
-          <span className="vp-qr-meta-sep" aria-hidden="true">·</span>
-          <span className="vp-qr-meta-cell"><b>TURNO</b> {normalizeTurno(emp.turno)}</span>
+      {/* ── Header (banda negra con marca) ── */}
+      <header className="vp-qr-head" aria-hidden="true">
+        <div className="vp-qr-brand">
+          <span className="vp-qr-brand-mark">VP</span>
+          <div className="vp-qr-brand-text">
+            <span className="vp-qr-brand-name">VIÑO·PLASTIC</span>
+            <span className="vp-qr-brand-tag">Acceso Transporte</span>
+          </div>
+        </div>
+        <div className="vp-qr-head-chevrons">
+          <span /><span /><span />
+        </div>
+      </header>
+
+      {/* ── Body ── */}
+      <div className="vp-qr-body">
+        {/* QR + watermark de número */}
+        <div className="vp-qr-frame-wrap" aria-hidden="true">
+          <div className="vp-qr-frame">
+            <span className="vp-qr-brackets vp-qr-brackets--tl" />
+            <span className="vp-qr-brackets vp-qr-brackets--tr" />
+            <span className="vp-qr-brackets vp-qr-brackets--bl" />
+            <span className="vp-qr-brackets vp-qr-brackets--br" />
+            {emp.qr_code ? (
+              <img src={emp.qr_code} alt="" className="vp-qr-img" />
+            ) : (
+              <div className="vp-qr-missing">SIN QR</div>
+            )}
+          </div>
+          <p className="vp-qr-scanhint">ESCANEAR</p>
+        </div>
+
+        {/* Identidad */}
+        <div className="vp-qr-data">
+          <div className="vp-qr-numrow">
+            <span className="vp-qr-numlabel">N°</span>
+            <span className="vp-qr-num">{emp.numero_empleado}</span>
+          </div>
+
+          {apellidos && <p className="vp-qr-surname">{apellidos}</p>}
+          <p className="vp-qr-name">{nombres}</p>
+
+          {/* Badges invertidos (negros) — ruta y turno */}
+          <div className="vp-qr-meta">
+            <span className="vp-qr-badge">
+              <span className="vp-qr-badge-label">RUTA</span>
+              <span className="vp-qr-badge-value">{ruta.code}</span>
+            </span>
+            <span className="vp-qr-badge vp-qr-badge--alt">
+              <span className="vp-qr-badge-label">TURNO</span>
+              <span className="vp-qr-badge-value">{turno}</span>
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* ── Footer (serial + dots) ── */}
+      <footer className="vp-qr-foot" aria-hidden="true">
+        <span className="vp-qr-foot-dots"><span /><span /><span /><span /><span /></span>
+        <span className="vp-qr-foot-serial">{serial}</span>
+        <span className="vp-qr-foot-dots vp-qr-foot-dots--rev"><span /><span /><span /><span /><span /></span>
+      </footer>
     </article>
   );
 };
@@ -343,90 +393,245 @@ const PrintStyles = () => (
       width: 100%;
     }
 
-    /* ── Credencial (CR80 ampliada — 6 por hoja) ───────────── */
+    /* ============================================================
+       CREDENCIAL — diseño "boarding pass / transport pass"
+       B&W puro · keywords CSS \`black\` / \`white\` · sin grises
+       ============================================================ */
     .vp-qr-card {
+      position: relative;
       box-sizing: border-box;
       width: 100%;
-      min-height: 78mm;
-      padding: 4mm;
+      min-height: 82mm;
+      background: white;
+      color: black;
       border: 1.5pt solid black;
       border-radius: 3mm;
-      background: white;
-      display: grid;
-      grid-template-columns: 38mm minmax(0, 1fr);
-      gap: 3mm;
-      align-items: center;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       page-break-inside: avoid;
       break-inside: avoid;
-      color: black;
     }
 
+    /* Marcas de registro en las esquinas (impresión) */
+    .vp-qr-corner {
+      position: absolute;
+      width: 4mm; height: 4mm;
+      pointer-events: none;
+    }
+    .vp-qr-corner::before,
+    .vp-qr-corner::after {
+      content: '';
+      position: absolute;
+      background: black;
+    }
+    .vp-qr-corner::before { width: 4mm; height: 0.4pt; }
+    .vp-qr-corner::after  { width: 0.4pt; height: 4mm; }
+    .vp-qr-corner--tl { top: 1mm;    left: 1mm;    }
+    .vp-qr-corner--tr { top: 1mm;    right: 1mm;   }
+    .vp-qr-corner--bl { bottom: 1mm; left: 1mm;    }
+    .vp-qr-corner--br { bottom: 1mm; right: 1mm;   }
+
+    /* ── Header (banda negra) ── */
+    .vp-qr-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2mm;
+      padding: 2mm 4mm;
+      background: black;
+      color: white;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .vp-qr-brand {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      min-width: 0;
+    }
+    .vp-qr-brand-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 5.5mm; height: 5.5mm;
+      border: 0.6pt solid white;
+      border-radius: 1mm;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 7pt;
+      letter-spacing: -0.02em;
+      color: white;
+    }
+    .vp-qr-brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+      gap: 0.5mm;
+      min-width: 0;
+    }
+    .vp-qr-brand-name {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 8pt;
+      letter-spacing: 0.04em;
+      color: white;
+    }
+    .vp-qr-brand-tag {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 5.5pt;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: white;
+      opacity: 0.85;
+    }
+    .vp-qr-head-chevrons {
+      display: inline-flex;
+      gap: 1mm;
+      flex-shrink: 0;
+    }
+    .vp-qr-head-chevrons span {
+      display: block;
+      width: 1.5mm; height: 3mm;
+      background: white;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      clip-path: polygon(0 0, 60% 0, 100% 50%, 60% 100%, 0 100%, 40% 50%);
+    }
+    .vp-qr-head-chevrons span:nth-child(1) { opacity: 0.35; }
+    .vp-qr-head-chevrons span:nth-child(2) { opacity: 0.65; }
+    .vp-qr-head-chevrons span:nth-child(3) { opacity: 1; }
+
+    /* ── Body ── */
+    .vp-qr-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 38mm minmax(0, 1fr);
+      gap: 4mm;
+      padding: 4mm;
+      align-items: center;
+    }
+
+    /* QR frame con corchetes tipo cámara */
+    .vp-qr-frame-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1mm;
+    }
     .vp-qr-frame {
+      position: relative;
       width: 38mm;
       height: 38mm;
       background: white;
-      border: 1pt solid black;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1mm;
+      padding: 2mm;
+      box-sizing: border-box;
     }
+    .vp-qr-brackets {
+      position: absolute;
+      width: 4mm; height: 4mm;
+      pointer-events: none;
+    }
+    .vp-qr-brackets::before,
+    .vp-qr-brackets::after {
+      content: '';
+      position: absolute;
+      background: black;
+    }
+    .vp-qr-brackets--tl { top: 0; left: 0; }
+    .vp-qr-brackets--tl::before { top: 0; left: 0; width: 4mm; height: 0.6pt; }
+    .vp-qr-brackets--tl::after  { top: 0; left: 0; width: 0.6pt; height: 4mm; }
+    .vp-qr-brackets--tr { top: 0; right: 0; }
+    .vp-qr-brackets--tr::before { top: 0; right: 0; width: 4mm; height: 0.6pt; }
+    .vp-qr-brackets--tr::after  { top: 0; right: 0; width: 0.6pt; height: 4mm; }
+    .vp-qr-brackets--bl { bottom: 0; left: 0; }
+    .vp-qr-brackets--bl::before { bottom: 0; left: 0; width: 4mm; height: 0.6pt; }
+    .vp-qr-brackets--bl::after  { bottom: 0; left: 0; width: 0.6pt; height: 4mm; }
+    .vp-qr-brackets--br { bottom: 0; right: 0; }
+    .vp-qr-brackets--br::before { bottom: 0; right: 0; width: 4mm; height: 0.6pt; }
+    .vp-qr-brackets--br::after  { bottom: 0; right: 0; width: 0.6pt; height: 4mm; }
 
     .vp-qr-img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
-      filter: grayscale(100%) contrast(1.2);
+      filter: grayscale(100%) contrast(1.25);
     }
-
     .vp-qr-missing {
       font-family: var(--font-display);
       font-size: 9pt;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       color: black;
     }
+    .vp-qr-scanhint {
+      margin: 0;
+      font-family: var(--font-body);
+      font-size: 5.5pt;
+      font-weight: 600;
+      letter-spacing: 0.32em;
+      color: black;
+      text-transform: uppercase;
+    }
 
+    /* Identidad */
     .vp-qr-data {
       display: flex;
       flex-direction: column;
       gap: 1mm;
       min-width: 0;
-      color: black;
     }
-
-    .vp-qr-num {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: 9pt;
+    .vp-qr-numrow {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 1.5mm;
+      margin-bottom: 0.5mm;
+    }
+    .vp-qr-numlabel {
+      font-family: var(--font-body);
+      font-size: 6pt;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.18em;
+      color: black;
+      text-transform: uppercase;
+      padding: 0.5mm 1.2mm;
+      border: 0.5pt solid black;
+      border-radius: 0.8mm;
+    }
+    .vp-qr-num {
+      font-family: var(--font-display);
+      font-size: 14pt;
+      font-weight: 800;
+      letter-spacing: -0.01em;
       font-variant-numeric: tabular-nums;
       color: black;
+      line-height: 1;
     }
-
     .vp-qr-surname {
       margin: 0;
       font-family: var(--font-body);
-      font-size: 9pt;
+      font-size: 7.5pt;
       font-weight: 500;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: black;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
     .vp-qr-name {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 12pt;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+      font-size: 13pt;
+      font-weight: 800;
+      letter-spacing: -0.015em;
       text-transform: uppercase;
-      line-height: 1.1;
+      line-height: 1.05;
       color: black;
       word-break: break-word;
       overflow-wrap: anywhere;
@@ -435,32 +640,87 @@ const PrintStyles = () => (
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-
     .vp-qr-meta {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
       gap: 1.5mm;
-      margin-top: 1.5mm;
-      padding-top: 1.5mm;
-      border-top: 0.5pt solid black;
-      font-family: var(--font-body);
-      font-size: 8pt;
-      color: black;
+      margin-top: 2mm;
+      flex-wrap: wrap;
     }
-    .vp-qr-meta-cell {
+    .vp-qr-badge {
       display: inline-flex;
-      align-items: baseline;
-      gap: 1mm;
-      white-space: nowrap;
+      align-items: stretch;
+      border: 0.6pt solid black;
+      border-radius: 1mm;
+      overflow: hidden;
     }
-    .vp-qr-meta b {
+    .vp-qr-badge-label {
+      background: black;
+      color: white;
+      padding: 0.6mm 1.5mm;
       font-family: var(--font-display);
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: 6pt;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      display: inline-flex;
+      align-items: center;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    .vp-qr-meta-sep {
-      opacity: 0.6;
+    .vp-qr-badge-value {
+      background: white;
+      color: black;
+      padding: 0.6mm 1.8mm;
+      font-family: var(--font-display);
+      font-size: 8pt;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      display: inline-flex;
+      align-items: center;
+    }
+    .vp-qr-badge--alt .vp-qr-badge-label { background: white; color: black; border-right: 0.5pt solid black; }
+    .vp-qr-badge--alt .vp-qr-badge-value { background: black; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* ── Footer (serial + dots) ── */
+    .vp-qr-foot {
+      display: flex;
+      align-items: center;
+      gap: 2mm;
+      padding: 1.5mm 4mm;
+      border-top: 0.5pt dashed black;
+      background: white;
+    }
+    .vp-qr-foot-dots {
+      display: inline-flex;
+      gap: 0.8mm;
+      flex-shrink: 0;
+    }
+    .vp-qr-foot-dots span {
+      display: block;
+      width: 0.8mm; height: 0.8mm;
+      background: black;
+      border-radius: 50%;
+    }
+    .vp-qr-foot-dots span:nth-child(1) { opacity: 0.25; }
+    .vp-qr-foot-dots span:nth-child(2) { opacity: 0.5;  }
+    .vp-qr-foot-dots span:nth-child(3) { opacity: 0.75; }
+    .vp-qr-foot-dots--rev span:nth-child(1) { opacity: 1;    }
+    .vp-qr-foot-dots--rev span:nth-child(2) { opacity: 0.75; }
+    .vp-qr-foot-dots--rev span:nth-child(3) { opacity: 0.5;  }
+    .vp-qr-foot-dots--rev span:nth-child(4) { opacity: 0.25; }
+    .vp-qr-foot-dots--rev span:nth-child(5) { opacity: 0.1;  }
+    .vp-qr-foot-serial {
+      flex: 1;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 6.5pt;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: black;
+      font-variant-numeric: tabular-nums;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* ── Pantalla (preview) ────────────────────────────────── */
@@ -475,18 +735,18 @@ const PrintStyles = () => (
         margin: 0 auto;
         box-shadow: 0 1px 0 var(--color-hairline-soft);
       }
-      /* Vista compacta en pantalla: una columna en móvil */
+      /* En móvil: una columna y QR un pelín más pequeño */
       @media (max-width: 640px) {
         .vp-print-grid { grid-template-columns: 1fr; grid-template-rows: none; gap: var(--spacing-sm); }
-        .vp-qr-card { min-height: auto; grid-template-columns: 32mm minmax(0, 1fr); padding: 3mm; gap: 3mm; }
-        .vp-qr-frame { width: 32mm; height: 32mm; }
-        .vp-qr-name { font-size: 11pt; }
+        .vp-qr-body   { grid-template-columns: 32mm minmax(0, 1fr); gap: 3mm; padding: 3mm; }
+        .vp-qr-frame  { width: 32mm; height: 32mm; }
+        .vp-qr-name   { font-size: 11pt; }
+        .vp-qr-num    { font-size: 12pt; }
       }
     }
 
     /* ── Impresión ─────────────────────────────────────────── */
     @media print {
-      /* Reset global: oculta TODO lo de la página… */
       html, body {
         background: white !important;
         margin: 0 !important;
@@ -494,25 +754,16 @@ const PrintStyles = () => (
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      body * {
-        visibility: hidden !important;
-      }
+      body * { visibility: hidden !important; }
 
-      /* …excepto el área de print y sus descendientes */
       .vp-print-area,
-      .vp-print-area * {
-        visibility: visible !important;
-      }
+      .vp-print-area * { visibility: visible !important; }
 
-      /* Posicionar el área desde el origen de la página */
       .vp-print-area {
         position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        right: 0 !important;
+        left: 0 !important; top: 0 !important; right: 0 !important;
         width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        margin: 0 !important; padding: 0 !important;
         gap: 0 !important;
       }
 
@@ -536,7 +787,12 @@ const PrintStyles = () => (
         border-color: black !important;
         box-shadow: none !important;
       }
-
+      .vp-qr-head,
+      .vp-qr-badge-label,
+      .vp-qr-badge--alt .vp-qr-badge-value {
+        background: black !important;
+        color: white !important;
+      }
       .vp-qr-img {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
