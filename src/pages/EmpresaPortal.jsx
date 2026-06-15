@@ -549,7 +549,7 @@ export const EmpresaPortal = () => {
         />
       </Modal>
 
-      <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} title="Carga de fotos" testId="modal-photos">
+      <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} title="Carga de fotos" size="lg" testId="modal-photos">
         <PhotoUploadModal
           onCancel={() => setIsPhotoModalOpen(false)}
           onComplete={() => { setIsPhotoModalOpen(false); fetchEmployees(); }}

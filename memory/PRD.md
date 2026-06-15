@@ -14,57 +14,36 @@ Sistema web (Vite + React + Supabase) para gestión de transporte de personal en
 - **empleado** (`/empleado/dashboard`): consulta su QR.
 
 ## Sistema de Diseño (tokens)
-- Paleta: canvas crema cálido (`#f8f7f4`) + ink (`#26251e`) + **accent Azul Rey (`#1a237e`)** corporativo
+- Paleta: canvas crema cálido + ink + **accent Azul Rey (`#1a237e`)**
 - Fonts: `Inter` (body) + `JetBrains Mono` (display via tokens)
-- Tokens unificados: `--color-*`, `--spacing-*`, `--rounded-*`, `--typography-*`
-- Mobile-first: `clamp()` + `100dvh` + `env(safe-area-inset-*)` en todos los layouts
-- Cero hex codes / fonts / sizes hardcoded en pages
+- Tokens: `--color-*`, `--spacing-*`, `--rounded-*`, `--typography-*`
+- Mobile-first: `clamp()` + `100dvh` + `env(safe-area-inset-*)`
+- Cero hex / fonts / sizes hardcoded en pages
 
-## Componentes compartidos
-- `PortalHeader` — header sticky cohesivo (admin/chofer/empleado)
-- `AuthShell` — layout común de logins
-- `AuthField` — input semántico con icono + suffix
-- `AuthButton` — CTA primario con loading state
-- `TopNav` — header de Empresa con nav links + actions
-- `LogoMockup` — marca con SVG + wordmark VIÑO · PLASTIC
+## Implementado en esta sesión (Ene 2026) — Carga de fotos v2
+### `PhotoUploadModal` completamente rediseñado
+- **Flujo en 5 fases:** `picking → validating → reviewing → uploading → done`
+- **Pre-chequeo en Supabase** (`empleados.in(numero_empleado, [...])`):
+  - Marca cada archivo como **Nuevo**, **Reemplaza**, **No existe** o **Inválido**
+  - Alerta visual con conteo antes de subir (omite los no válidos)
+- **Barra de progreso global** con `role="progressbar"` + porcentaje en vivo
+- **Estado por archivo** con badge tonal: en cola / subiendo (overlay spinner sobre thumbnail) / subida / error / omitido
+- **Thumbnails** de cada imagen (URL.createObjectURL + revoke en unmount)
+- **Validación local:** tipo de archivo (jpg/png/webp/heic) + tamaño (máx 8 MB) + número de empleado en el nombre (regex `^\s*(\d+)`)
+- **Subida concurrente** (concurrencia = 4) — mucho más rápido que el bucle serial original
+- **Cancelar a media subida** (AbortFlag via ref)
+- **Reintentar solo los fallidos** desde la pantalla de resumen
+- **Detección de reemplazo:** si el empleado ya tenía `foto_url`, se etiqueta como "Reemplaza"
+- **Modal `size="lg"`** para acomodar la lista
+- **A11y:** `role="alert"`, `aria-live`, `aria-busy`, `aria-valuenow`, `prefers-reduced-motion`, focus management heredado de `Modal`
+- **100% tokens** — sin hex / fonts / tamaños hardcodeados; usa `--color-semantic-success/error/warning`, `--color-accent-raw / 0.X`, `--rounded-full`, `--spacing-*`, `--typography-*`
+- **data-testid** en todo elemento interactivo y de estado (`photo-dropzone`, `photo-progress-bar`, `photo-progress-pct`, `photo-progress-count`, `photo-modal-confirm`, `photo-modal-cancel-upload`, `photo-modal-retry`, `photo-modal-finish`, `photo-file-status-*`, `photo-summary-ready`, `photo-summary-notfound`, …)
 
-## Implementado en esta sesión (Ene 2026)
-### Bug fixes
-- Fix QR scan: parseo JSON + lookup por `numero_empleado` (raíz del bug)
-- Sanitización de QR Inválido en panel Registros (`# 4` en lugar de JSON crudo)
-- Caché PWA verificado (no era regresión)
-
-### Mejoras de funcionalidad
-- Botón "Empresa" en ChoferPortal sólo para admins
-- Avisos del scanner mejorados: duración por severidad, vibración háptica, barra countdown, tap-cerrar
-- Registros ordenados por prioridad (`rechazado_ruta` → `rechazado_qr` → `fuera_horario` → `dia_descanso` → `autorizado`)
-- Turnos con anomalías arriba; chip `N ⚠` en cabeceras
-
-### Cohesión visual (rediseños completos)
-- **Landing** rediseñada minimalista (3 roles en list rows con flecha)
-- **Login admin / ChoferLogin / EmpleadoLogin** refactorizados con `AuthShell` (-67%, -52% líneas)
-- **EmpleadoLogin** mantiene flujo NIP multi-step (5 pasos) cohesivo
-- **EmpresaPortal** TopNav unificado con tokens y mismo branding
-- **ChoferPortal** header con PortalHeader, bottom-nav con tokens y a11y
-- **EmpleadoDashboard** rediseñado: avatar + identidad + StatTiles + QR + banner — todo tokens
-- **LogoMockup** ahora muestra VIÑO·PLASTIC (no solo PLASTIC)
-- **Cambio de paleta** naranja → azul rey corporativo `#1a237e`
-- **logo.svg** del PWA actualizado a degradado azul
-
-### Calidad técnica
-- Bundle: 1027 KB → 300 KB gzip
-- 100% `data-testid` en interactivos
-- ARIA: `aria-label`, `aria-busy`, `aria-required`, `role=alert/list/status`, `aria-labelledby`
-- `prefers-reduced-motion` respetado en toda la app
-- Build limpio sin errores
-
-## Vulnerabilidad conocida (P1 — para próxima iteración)
-- `/empleado/dashboard` sólo protege con `localStorage.empleado_id` (sin token de sesión)
-- Solución acordada: Opción A (session token + validación contra BD), aplazada a próxima iteración
+### Bundle
+- Build limpio · 1,095 KB → **315 KB gzip** · sin nuevas dependencias
 
 ## Backlog
-- P1: Reforzar auth empleado (Opción A — session token)
-- P2: Sustituir `MOCK_REGISTROS` por datos reales cuando Supabase tenga volumen
+- P1: Reforzar auth empleado (session token)
 - P2: Code-splitting del bundle (1MB → chunks)
-- P2: Toggle "Solo ver anomalías" en panel de Registros
-- P3: Resolver warnings ESLint `react/no-unstable-nested-components` en `RegistrosPanel`
+- P2: Sustituir `MOCK_REGISTROS` por datos reales
+- P3: Resolver warnings ESLint en `RegistrosPanel`
