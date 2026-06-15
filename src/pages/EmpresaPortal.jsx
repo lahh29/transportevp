@@ -136,7 +136,7 @@ export const EmpresaPortal = () => {
     const { data, error } = await supabase
       .from('empleados')
       .select('*')
-      .order('nombre', { ascending: true });
+      .order('numero_empleado', { ascending: true });
     if (error) console.error('Error fetching employees:', error);
     else setEmployees(data || []);
     setLoading(false);
