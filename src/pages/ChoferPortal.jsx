@@ -1,448 +1,346 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { supabase } from '../lib/supabaseClient';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, ScanLine, List, Camera, ChevronRight, ChevronLeft, Bus, Calendar, Users, Clock, MapPin, X, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  CheckCircle, XCircle, ScanLine, ChevronRight,
+  X, Building2,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PortalHeader } from '../components/PortalHeader';
 import { notify } from '../lib/notify';
-
-/* ─── Helpers ─────────────────────────────────────────────── */
-const getInitials = (nombre) => {
-  if (!nombre) return '?';
-  const parts = nombre.trim().split(/\s+/);
-  return parts.length === 1 ? parts[0][0].toUpperCase() : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-};
-
-const getWeekKey = (dateStr) => {
-  const d = new Date(dateStr);
-  const day = d.getDay(); // 0=dom, 1=lun...
-  const diff = day === 0 ? -6 : 1 - day; // desplazar al lunes
-  const mon = new Date(d);
-  mon.setDate(d.getDate() + diff);
-  // Usar fecha LOCAL para evitar desfase por UTC vs UTC-6
-  const y = mon.getFullYear();
-  const m = String(mon.getMonth() + 1).padStart(2, '0');
-  const dd = String(mon.getDate()).padStart(2, '0');
-  return `${y}-${m}-${dd}`;
-};
-
-const SHIFT_SCHEDULE = {
-  '1': ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
-  '2': ['Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
-  '3': ['Viernes', 'Sábado', 'Domingo', 'Lunes', 'Martes'],
-  '4': ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves'],
-};
-
-const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-
-// Prioridad de anomalías para ordenar registros: menor número = más crítico
-const PRIORITY = {
-  rechazado_ruta: 1, // Ruta Incorrecta — el chofer rechazó a alguien de otra ruta
-  rechazado_qr:   2, // QR no registrado
-  fuera_horario:  3, // Fuera de la ventana de horario del turno
-  dia_descanso:   4, // Intento de abordar en día de descanso
-  autorizado:     5, // Acceso normal
-};
-
-// Número de semana ISO 8601 (lunes = primer día)
-const getISOWeek = (dateOrStr) => {
-  const d = new Date(dateOrStr instanceof Date ? dateOrStr : dateOrStr + 'T12:00:00');
-  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-  const w1 = new Date(d.getFullYear(), 0, 4);
-  return 1 + Math.round(((d - w1) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
-};
-
-const formatWeekLabel = (weekKey) => {
-  const mon = new Date(weekKey + 'T12:00:00'); // noon local para evitar salto de día
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6);
-  const weekNum = getISOWeek(mon);
-  const monStr = mon.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-  const sunStr = sun.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-  return `Semana ${weekNum} · ${monStr} – ${sunStr}`;
-};
-
-const getDayKey = (dateStr) => {
-  const d = new Date(dateStr);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${dd}`; // fecha local, no UTC
-};
-
-const formatDayLabel = (dayKey) => {
-  const d = new Date(dayKey + 'T12:00:00'); // noon local para no saltar de día
-  return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
-};
-
-/* ─── Slide animation preset ──────────────────────────────── */
-const slideIn = {
-  initial: { opacity: 0, x: 32 },
-  animate: { opacity: 1, x: 0 },
-  exit:    { opacity: 0, x: -32 },
-  transition: { duration: 0.22, ease: 'easeOut' },
-};
-
-/* ─── Parsear nombre de ruta ──────────────────────────────── */
-// Ej: "R1- QUERETARO- PIE DE LA CUESTA" → { code: 'R1', desc: 'QUERETARO - PIE DE LA CUESTA' }
-const parseRuta = (ruta) => {
-  if (!ruta || ruta === 'Sin ruta') return { code: '?', desc: ruta || 'Sin ruta' };
-  const match = ruta.match(/^(R\d+)[-\s]+(.+)$/i);
-  if (!match) return { code: '?', desc: ruta };
-  const desc = match[2].replace(/-/g, ' - ').replace(/\s{2,}/g, ' ').trim();
-  return { code: match[1].toUpperCase(), desc };
-};
-
-const RUTA_COLORS = {
-  R1: { bg: 'rgb(var(--color-accent-raw) / 0.1)',   text: 'var(--color-accent)' },
-  R2: { bg: 'rgb(26 35 126 / 0.1)',  text: '#1a237e' },
-  R3: { bg: 'rgb(0 130 120 / 0.1)',  text: '#008278' },
-  R4: { bg: 'rgb(130 0 80 / 0.1)',   text: '#820050' },
-  R5: { bg: 'rgb(200 130 0 / 0.1)',  text: '#a06400' },
-  R6: { bg: 'rgb(40 120 40 / 0.1)',  text: '#287828' },
-};
-const getRutaColor = (code) => RUTA_COLORS[code] || { bg: 'rgb(var(--color-accent-raw) / 0.1)', text: 'var(--color-accent)' };
-
-const RUTAS_LIST = [
-  'R1- QUERETARO- PIE DE LA CUESTA',
-  'R2- SAN JOSE ITURBIDE',
-  'R3- SAN JOSE ITURBIDE 2',
-  'R4-SANTA ROSA',
-  'R5- QUERETARO-AV. DE LA LUZ',
-  'R6- AV. DE LA LUZ - PASEOS QUERETARO',
-];
+import {
+  RUTAS_LIST,
+  DAY_NAMES,
+  SHIFT_SCHEDULE,
+  SHIFT_HOURS,
+  SHIFT_TOLERANCE,
+  SCAN_CONFIG,
+  TAP_TARGET,
+  APP_ROUTES,
+  parseRuta,
+  getRutaColor,
+  resolveTurno,
+} from '../lib/choferConfig';
+import { safeStorage, STORAGE_KEYS } from '../lib/safeStorage';
+import { offlineQueue, wireOfflineFlush } from '../lib/offlineQueue';
+import { useReducedMotion } from '../lib/useReducedMotion';
 
 /* ─── Pantalla de Selección de Ruta ───────────────────────── */
-const RutaSelectionPanel = ({ onSelect, rutasActivas, loading }) => (
-  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-    style={{ position: 'absolute', inset: 0, padding: 'var(--spacing-lg)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)', overflowY: 'auto' }}
-  >
-    <div style={{ marginBottom: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}>
-      <h2 style={{ margin: 0, fontSize: 'var(--typography-display-sm-size)', fontWeight: 'var(--typography-title-md-weight)', fontFamily: 'var(--font-display)', color: 'var(--color-ink)' }}>Selecciona tu ruta</h2>
-      <p style={{ margin: '4px 0 0', fontSize: 'var(--typography-body-sm-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>¿Qué ruta vas a manejar hoy?</p>
-    </div>
-
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)', paddingBottom: 'var(--spacing-xxl)' }}>
-      {loading ? (
-        <div style={{ textAlign: 'center', color: 'var(--color-muted)', padding: 'var(--spacing-xl)' }}>Cargando rutas...</div>
-      ) : (
-        RUTAS_LIST.map((ruta) => {
-          const { code, desc } = parseRuta(ruta);
-          const color = getRutaColor(code);
-          const enUso = rutasActivas.includes(ruta);
-
-          return (
-            <motion.button key={ruta} whileTap={enUso ? {} : { scale: 0.97 }} onClick={() => !enUso && onSelect(ruta)}
-              disabled={enUso}
-              style={{
-                width: '100%', background: enUso ? 'var(--color-canvas)' : 'var(--color-surface-card)',
-                border: `1px solid ${enUso ? 'var(--color-hairline-soft)' : 'var(--color-hairline-strong)'}`,
-                borderRadius: 'var(--rounded-xl)', padding: 'var(--spacing-base)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-base)',
-                cursor: enUso ? 'not-allowed' : 'pointer', opacity: enUso ? 0.6 : 1, textAlign: 'left',
-                boxShadow: enUso ? 'none' : '0 2px 8px rgba(0,0,0,0.04)'
-              }}
-            >
-              <div style={{ width: '48px', height: '48px', borderRadius: 'var(--rounded-lg)', flexShrink: 0, background: enUso ? 'var(--color-hairline-soft)' : color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--typography-caption-uppercase-size)', fontWeight: 'var(--typography-caption-uppercase-weight)', color: enUso ? 'var(--color-muted)' : color.text }}>{code}</span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 'var(--typography-body-sm-size)', fontWeight: 'var(--typography-title-sm-weight)', fontFamily: 'var(--font-body)', color: enUso ? 'var(--color-muted)' : 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {desc}
-                </p>
-                {enUso && <p style={{ margin: '3px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-semantic-error)' }}>En uso por otro chofer</p>}
-              </div>
-              <ChevronRight size={18} color={enUso ? "var(--color-hairline-strong)" : "var(--color-muted)"} />
-            </motion.button>
-          );
-        })
-      )}
-    </div>
-  </motion.div>
-);
-
-/* ─── Sub-componentes top-level del RegistrosPanel ────────── */
-const REG_ANIM = {
-  initial: { opacity: 0, x: 24 },
-  animate: { opacity: 1, x: 0 },
-  exit:    { opacity: 0, x: -24 },
-  transition: { duration: 0.22, ease: [0.22, 0.61, 0.36, 1] },
-};
-
-const REG_LIST_ITEM = (i) => ({
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  transition: { delay: Math.min(i, 8) * 0.035, duration: 0.18, ease: 'easeOut' },
-});
-
-/* ─── Header del drill-down (con botón Atrás) ─────────────── */
-const RegHeader = ({ title, sub, onBack, showBack }) => (
-  <header style={regStyles.header}>
-    {showBack && (
-      <button
-        type="button"
-        onClick={onBack}
-        data-testid="reg-back-btn"
-        aria-label="Volver al nivel anterior"
-        style={regStyles.backBtn}
-      >
-        <ChevronLeft size={16} strokeWidth={2} />
-        <span>Atrás</span>
-      </button>
-    )}
-    <h2 style={regStyles.title}>{title}</h2>
-    {sub && <p style={regStyles.sub}>{sub}</p>}
-  </header>
-);
-
-/* ─── Card genérico de drill (semanas/días) ───────────────── */
-const RegCard = ({ onClick, left, sub, right, accent, testId }) => (
-  <motion.button
-    whileTap={{ scale: 0.985 }}
-    onClick={onClick}
-    data-testid={testId}
-    style={regStyles.card}
-  >
-    {accent && (
-      <div style={regStyles.accentBox} aria-hidden="true">{accent}</div>
-    )}
-    <div style={regStyles.cardBody}>
-      <p style={regStyles.cardLeft}>{left}</p>
-      {sub && <p style={regStyles.cardSub}>{sub}</p>}
-    </div>
-    <div style={regStyles.cardRight}>
-      {right && <span style={regStyles.countPill}>{right}</span>}
-      <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" style={{ color: 'var(--color-muted-soft)' }} />
-    </div>
-  </motion.button>
-);
-
-/* ─── Empty state ─────────────────────────────────────────── */
-const RegEmpty = () => (
-  <div role="status" data-testid="reg-empty" style={regStyles.empty}>
-    <div style={regStyles.emptyIcon} aria-hidden="true">
-      <Bus size={26} strokeWidth={1.5} />
-    </div>
-    <p style={regStyles.emptyTitle}>Sin registros</p>
-    <p style={regStyles.emptySub}>Los abordajes aparecerán aquí cuando los escanees.</p>
-  </div>
-);
-
-/* ─── Item individual de empleado (NIVEL 3) ───────────────── */
-const RegItem = ({ reg, i }) => {
-  const emp = reg.empleados;
-  const time = new Date(reg.fecha_hora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-  const isRejected = reg.estado === 'rechazado_ruta' || reg.estado === 'rechazado_qr';
-  const isFakeQR   = reg.estado === 'rechazado_qr';
-  const isWarning  = reg.estado === 'dia_descanso' || reg.estado === 'fuera_horario';
-
-  let badgeText = '';
-  if (isFakeQR) badgeText = 'QR Inválido';
-  else if (isRejected) badgeText = 'Ruta Incorrecta';
-  else if (reg.estado === 'dia_descanso') badgeText = 'Día Descanso';
-  else if (reg.estado === 'fuera_horario') badgeText = 'Fuera de Horario';
-
-  // Sanitiza JSON crudo en QRs inválidos legacy
-  let qrLabel = reg.qr_leido || 'Código Desconocido';
-  if (isFakeQR && typeof qrLabel === 'string' && qrLabel.trim().startsWith('{')) {
-    try {
-      const parsed = JSON.parse(qrLabel);
-      qrLabel = parsed?.numero_empleado != null ? `# ${parsed.numero_empleado}` : 'QR Desconocido';
-    } catch {
-      qrLabel = 'QR Ilegible';
-    }
-  }
-
-  // Tonos según estado (todos por tokens semánticos)
-  const tone = isRejected ? 'error' : isWarning ? 'warning' : 'success';
-  const toneVar = `var(--color-semantic-${tone})`;
-  const toneRaw = `var(--color-semantic-${tone}-raw)`;
-
+const RutaSelectionPanel = ({ onSelect, rutasActivas, loading, reducedMotion }) => {
+  const anim = reducedMotion
+    ? {}
+    : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -20 } };
   return (
-    <motion.article
-      {...REG_LIST_ITEM(i)}
-      data-testid={`reg-item-${reg.id || i}`}
+    <motion.section
+      {...anim}
+      aria-labelledby="ruta-heading"
       style={{
-        ...regStyles.item,
-        background: isRejected || isWarning
-          ? `rgb(${toneRaw} / 0.04)`
-          : 'var(--color-surface-card)',
-        borderColor: isRejected || isWarning
-          ? `rgb(${toneRaw} / 0.22)`
-          : 'var(--color-hairline-soft)',
+        position: 'absolute',
+        inset: 0,
+        padding: 'max(var(--spacing-lg), env(safe-area-inset-top)) var(--spacing-lg) max(var(--spacing-xxl), env(safe-area-inset-bottom))',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--spacing-lg)',
+        overflowY: 'auto',
       }}
     >
-      <div
-        aria-hidden="true"
+      <header style={{ marginBottom: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}>
+        <h1
+          id="ruta-heading"
+          style={{
+            margin: 0,
+            fontSize: 'var(--typography-display-sm-size)',
+            fontWeight: 'var(--typography-title-md-weight)',
+            fontFamily: 'var(--font-display)',
+            color: 'var(--color-ink)',
+          }}
+        >
+          Selecciona tu ruta
+        </h1>
+        <p
+          style={{
+            margin: '4px 0 0',
+            fontSize: 'var(--typography-body-sm-size)',
+            fontFamily: 'var(--font-body)',
+            color: 'var(--color-muted)',
+          }}
+        >
+          ¿Qué ruta vas a manejar hoy?
+        </p>
+      </header>
+
+      <ul
+        role="list"
+        aria-label="Rutas disponibles"
         style={{
-          ...regStyles.itemIcon,
-          background: `rgb(${toneRaw} / 0.12)`,
-          color: toneVar,
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-sm)',
         }}
       >
-        {isFakeQR
-          ? <XCircle size={16} strokeWidth={2} />
-          : tone === 'success'
-            ? <span style={regStyles.initials}>{getInitials(emp?.nombre)}</span>
-            : <span style={regStyles.initials}>{getInitials(emp?.nombre)}</span>
-        }
-      </div>
+        {loading ? (
+          <li
+            role="status"
+            aria-live="polite"
+            style={{ textAlign: 'center', color: 'var(--color-muted)', padding: 'var(--spacing-xl)' }}
+          >
+            Cargando rutas…
+          </li>
+        ) : (
+          RUTAS_LIST.map((ruta) => {
+            const { code, desc } = parseRuta(ruta);
+            const color = getRutaColor(code);
+            const enUso = rutasActivas.includes(ruta);
 
-      <div style={regStyles.itemBody}>
-        <p style={{
-          ...regStyles.itemName,
-          color: isRejected ? toneVar : 'var(--color-ink)',
-          textDecoration: isRejected ? 'line-through' : 'none',
-        }}>
-          {isFakeQR ? qrLabel : (emp?.nombre || 'Desconocido')}
-        </p>
-        <div style={regStyles.itemMeta}>
-          <span style={regStyles.itemNum}>
-            {isFakeQR ? '—' : `#${emp?.numero_empleado || '—'}`}
-          </span>
-          {badgeText && (
-            <span
-              data-testid={`reg-item-badge-${tone}`}
-              style={{
-                ...regStyles.itemBadge,
-                background: toneVar,
-                color: isWarning ? 'var(--color-ink)' : 'var(--color-on-primary)',
-              }}
-            >
-              {badgeText}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <time
-        dateTime={reg.fecha_hora}
-        style={regStyles.itemTime}
-      >
-        {time}
-      </time>
-    </motion.article>
+            return (
+              <li key={ruta} style={{ margin: 0 }}>
+                <motion.button
+                  type="button"
+                  whileTap={enUso || reducedMotion ? {} : { scale: 0.97 }}
+                  onClick={() => !enUso && onSelect(ruta)}
+                  disabled={enUso}
+                  data-testid={`ruta-option-${code}`}
+                  aria-label={enUso ? `Ruta ${code} ${desc}, en uso por otro chofer` : `Seleccionar ruta ${code} ${desc}`}
+                  style={{
+                    width: '100%',
+                    minHeight: `${TAP_TARGET.cozy + 24}px`,
+                    background: enUso ? 'var(--color-canvas)' : 'var(--color-surface-card)',
+                    border: `1px solid ${enUso ? 'var(--color-hairline-soft)' : 'var(--color-hairline-strong)'}`,
+                    borderRadius: 'var(--rounded-xl)',
+                    padding: 'var(--spacing-base)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--spacing-base)',
+                    cursor: enUso ? 'not-allowed' : 'pointer',
+                    opacity: enUso ? 0.6 : 1,
+                    textAlign: 'left',
+                    boxShadow: enUso ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: 'var(--rounded-lg)',
+                      flexShrink: 0,
+                      background: enUso ? 'var(--color-hairline-soft)' : color.bg,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontSize: 'var(--typography-caption-uppercase-size)',
+                        fontWeight: 'var(--typography-caption-uppercase-weight)',
+                        color: enUso ? 'var(--color-muted)' : color.text,
+                      }}
+                    >
+                      {code}
+                    </span>
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 'var(--typography-body-sm-size)',
+                        fontWeight: 'var(--typography-title-sm-weight)',
+                        fontFamily: 'var(--font-body)',
+                        color: enUso ? 'var(--color-muted)' : 'var(--color-ink)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {desc}
+                    </span>
+                    {enUso && (
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: '3px',
+                          fontSize: 'var(--typography-caption-size)',
+                          fontFamily: 'var(--font-body)',
+                          color: 'var(--color-semantic-error)',
+                        }}
+                      >
+                        En uso por otro chofer
+                      </span>
+                    )}
+                  </span>
+                  <ChevronRight
+                    size={18}
+                    color={enUso ? 'var(--color-hairline-strong)' : 'var(--color-muted)'}
+                    aria-hidden="true"
+                  />
+                </motion.button>
+              </li>
+            );
+          })
+        )}
+      </ul>
+    </motion.section>
   );
 };
-
-
 
 /* ─── Portal Principal ────────────────────────────────────── */
 export const ChoferPortal = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  
-  // Rutas y Scanner
+  const reducedMotion = useReducedMotion();
+
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [rutasActivas, setRutasActivas] = useState([]);
   const [loadingRutas, setLoadingRutas] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
-  
-  
-  
   const [session, setSession] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+
   const isAdmin = session?.user?.user_metadata?.role === 'admin';
+
   const timerRef = useRef(null);
   const isScanningRef = useRef(false);
-
   const qrRef = useRef(null);
+  const lastScanRef = useRef({ text: null, at: 0 }); // dedupe re-escaneos
+  const cancelledRef = useRef(false);                // ignora callbacks tras desmontar
 
+  /* ── Sesión + listener de auth state (item 7 mejorado) ───────── */
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, s) => setSession(s));
+    return () => sub?.subscription?.unsubscribe?.();
   }, []);
 
-  // Fetch rutas activas
-  const fetchRutasActivas = async () => {
+  /* ── Cola offline (item 8) ───────────────────────────────────── */
+  useEffect(() => {
+    const off = wireOfflineFlush(({ ok }) => {
+      if (ok > 0) notify.success(`Sincronizados ${ok} registros pendientes`);
+    });
+    return off;
+  }, []);
+
+  /* ── Fetch rutas activas ─────────────────────────────────────── */
+  const fetchRutasActivas = useCallback(async () => {
     setLoadingRutas(true);
     try {
       const { data, error } = await supabase.from('rutas_activas').select('*');
       if (error) throw error;
-      setRutasActivas(data.map(r => r.ruta));
-      
-      // Si el chofer actual ya tenía una ruta, autoseleccionarla
+      setRutasActivas(data.map((r) => r.ruta));
       if (session?.user?.id) {
-        const myRoute = data.find(r => r.chofer_id === session.user.id);
-        if (myRoute) setSelectedRoute(myRoute.ruta);
+        const mine = data.find((r) => r.chofer_id === session.user.id);
+        if (mine) setSelectedRoute(mine.ruta);
       }
     } catch (err) {
-      console.warn('No se pudo cargar rutas_activas (puede que no exista la tabla aún):', err.message);
-      // Fallback local para pruebas si la tabla no existe
-      const localActivas = JSON.parse(localStorage.getItem('rutas_activas_local') || '[]');
-      setRutasActivas(localActivas.map(r => r.ruta));
+      // Fallback local seguro
+      const local = safeStorage.get(STORAGE_KEYS.rutasActivas, []);
+      setRutasActivas(local.map((r) => r.ruta));
       if (session?.user?.id) {
-        const myRoute = localActivas.find(r => r.chofer_id === session.user.id);
-        if (myRoute) setSelectedRoute(myRoute.ruta);
+        const mine = local.find((r) => r.chofer_id === session.user.id);
+        if (mine) setSelectedRoute(mine.ruta);
       }
     } finally {
       setLoadingRutas(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
-    if (!selectedRoute) fetchRutasActivas();
-  }, [selectedRoute, session]);
-
-  const handleSelectRoute = async (ruta) => {
-    if (!session?.user?.id) return;
-    const code = parseRuta(ruta).code;
-    try {
-      const { error } = await supabase.from('rutas_activas').insert({ ruta, chofer_id: session.user.id });
-      if (error) throw error;
-      setSelectedRoute(ruta);
-      notify.routeSelected(code);
-    } catch (err) {
-      console.warn('Error al insertar ruta_activa, usando local:', err.message);
-      const local = JSON.parse(localStorage.getItem('rutas_activas_local') || '[]');
-      local.push({ ruta, chofer_id: session.user.id });
-      localStorage.setItem('rutas_activas_local', JSON.stringify(local));
-      setSelectedRoute(ruta);
-      notify.routeSelected(code);
+    if (!selectedRoute) {
+      // Diferimos al microtask para que el primer setState de
+      // fetchRutasActivas no se ejecute síncrono dentro del effect.
+      Promise.resolve().then(fetchRutasActivas);
     }
-  };
+  }, [selectedRoute, fetchRutasActivas]);
 
-  const handleEndRoute = async () => {
+  const handleSelectRoute = useCallback(async (ruta) => {
+    if (!session?.user?.id) return;
+    const { code } = parseRuta(ruta);
+    try {
+      const { error } = await supabase
+        .from('rutas_activas')
+        .insert({ ruta, chofer_id: session.user.id });
+      if (error) throw error;
+    } catch {
+      const local = safeStorage.get(STORAGE_KEYS.rutasActivas, []);
+      local.push({ ruta, chofer_id: session.user.id });
+      safeStorage.set(STORAGE_KEYS.rutasActivas, local);
+    }
+    setSelectedRoute(ruta);
+    notify.routeSelected(code);
+  }, [session]);
+
+  const handleEndRoute = useCallback(async () => {
     if (!selectedRoute || !session?.user?.id) return;
-    const code = parseRuta(selectedRoute).code;
+    const { code } = parseRuta(selectedRoute);
     setIsFinishing(true);
     try {
-      await supabase.from('rutas_activas').delete().eq('ruta', selectedRoute);
-    } catch (err) {
-      // ignore
+      const { error } = await supabase
+        .from('rutas_activas')
+        .delete()
+        .eq('ruta', selectedRoute);
+      if (error) throw error;
+    } catch {
+      notify.warning('Ruta cerrada solo localmente', {
+        description: 'No pudimos sincronizar con el servidor. Se reintentará al recuperar conexión.',
+      });
     }
-    const local = JSON.parse(localStorage.getItem('rutas_activas_local') || '[]').filter(r => r.ruta !== selectedRoute);
-    localStorage.setItem('rutas_activas_local', JSON.stringify(local));
+    const local = safeStorage.get(STORAGE_KEYS.rutasActivas, [])
+      .filter((r) => r.ruta !== selectedRoute);
+    safeStorage.set(STORAGE_KEYS.rutasActivas, local);
+
     setSelectedRoute(null);
     setIsFinishing(false);
     fetchRutasActivas();
     notify.routeFinished(code);
-  };
+  }, [selectedRoute, session, fetchRutasActivas]);
 
-  
-
-  
-
+  /* ── Escáner QR ──────────────────────────────────────────────── */
   useEffect(() => {
-    // Solo arrancamos la cámara si estamos en tab scanner Y hay ruta seleccionada
-    if (!selectedRoute) return;
+    if (!selectedRoute) return undefined;
 
+    cancelledRef.current = false;
     const qr = new Html5Qrcode('reader');
     qrRef.current = qr;
 
+    const stopScanner = async () => {
+      try {
+        if (qr?.isScanning) {
+          await qr.stop();
+          await qr.clear();
+        }
+      } catch {
+        /* noop */
+      }
+    };
+
     const onScanSuccess = async (decodedText) => {
+      if (cancelledRef.current) return;
       if (isScanningRef.current) return;
+
+      // Dedupe: ignora el mismo QR si llega dentro de la ventana de cooldown
+      const now = Date.now();
+      if (
+        lastScanRef.current.text === decodedText &&
+        now - lastScanRef.current.at < SCAN_CONFIG.dedupeWindowMs
+      ) {
+        return;
+      }
+      lastScanRef.current = { text: decodedText, at: now };
+
       isScanningRef.current = true;
       if (timerRef.current) clearTimeout(timerRef.current);
 
-      // uiColor en scope externo al try para poder usarlo en el finally
       let uiColor = 'success';
 
       try {
-        // ─── Parsear el contenido del QR ──────────────────
-        // Los QR generados contienen JSON: {"numero_empleado":"4"}
-        // Mantenemos compatibilidad con QRs antiguos que pudieran contener
-        // directamente el id (UUID) o el número de empleado en texto plano.
+        // Parse QR → lookup por id o numero_empleado
         let lookupField = 'id';
         let lookupValue = decodedText;
         const trimmed = String(decodedText).trim();
@@ -458,17 +356,20 @@ export const ChoferPortal = () => {
               lookupValue = String(parsed.id).trim();
             }
           } catch {
-            // QR con texto no-JSON: lo dejamos como UUID/id
+            /* texto no-JSON, lo dejamos como UUID/id */
           }
         } else if (/^\d+$/.test(trimmed)) {
-          // QR con solo dígitos → asumimos número de empleado
           lookupField = 'numero_empleado';
           lookupValue = trimmed;
         }
 
-        const { data: emp, error: empError } = await supabase.from('empleados').select('*').eq(lookupField, lookupValue).maybeSingle();
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        const { data: emp, error: empError } = await supabase
+          .from('empleados')
+          .select('*')
+          .eq(lookupField, lookupValue)
+          .maybeSingle();
+        const nowDate = new Date();
+        const timeStr = nowDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
         let estado = 'autorizado';
         let isValid = true;
@@ -483,140 +384,182 @@ export const ChoferPortal = () => {
           estado = 'rechazado_ruta';
           rejectReason = `Pertenece a la ${emp.ruta || 'Sin Ruta'}.`;
         } else {
-          // Validar horario y día de descanso
-          const diaActualStr = DAY_NAMES[now.getDay()];
+          const diaActualStr = DAY_NAMES[nowDate.getDay()];
           const diasLaborables = SHIFT_SCHEDULE[emp.turno];
-          
+
           if (diasLaborables && !diasLaborables.includes(diaActualStr)) {
             estado = 'dia_descanso';
           } else {
-            // Validar ventanas de horario si no es su día de descanso
-            let turnoReal = String(emp.turno);
-            // El turno 4 es comodín, depende del día
-            if (turnoReal === '4') {
-              if (diaActualStr === 'Domingo') turnoReal = '1';
-              else if (diaActualStr === 'Lunes' || diaActualStr === 'Martes') turnoReal = '2';
-              else if (diaActualStr === 'Miércoles' || diaActualStr === 'Jueves') turnoReal = '3';
-            }
-
-            const SHIFT_HOURS = {
-              '1': { start: 6, end: 14 },
-              '2': { start: 14, end: 22 },
-              '3': { start: 22, end: 6 }
-            };
-
+            const turnoReal = resolveTurno(emp.turno, diaActualStr);
             const hours = SHIFT_HOURS[turnoReal];
             if (hours) {
-              const currentMins = now.getHours() * 60 + now.getMinutes();
-              const isWithin = (hStr, mStr, hEnd, mEnd) => {
-                const startM = hStr * 60 + mStr;
-                const endM = hEnd * 60 + mEnd;
+              const currentMins = nowDate.getHours() * 60 + nowDate.getMinutes();
+              const isWithin = (hStart, hEnd) => {
+                const startM = hStart * 60;
+                const endM = hEnd * 60;
                 if (startM <= endM) return currentMins >= startM && currentMins <= endM;
-                return currentMins >= startM || currentMins <= endM; // Cruce de medianoche
+                return currentMins >= startM || currentMins <= endM; // cruza medianoche
               };
 
-              // Entrada: 2 horas antes hasta 1 hora después del inicio
-              let startEntH = hours.start - 2; if (startEntH < 0) startEntH += 24;
-              let endEntH = hours.start + 1;   if (endEntH >= 24) endEntH -= 24;
-              const isValidEntrada = isWithin(startEntH, 0, endEntH, 0);
+              let startEntH = hours.start - SHIFT_TOLERANCE.entradaAntes;
+              if (startEntH < 0) startEntH += 24;
+              let endEntH = hours.start + SHIFT_TOLERANCE.entradaDespues;
+              if (endEntH >= 24) endEntH -= 24;
 
-              // Salida: 1 hora antes hasta 20 mins después del fin
-              let startSalH = hours.end - 1;   if (startSalH < 0) startSalH += 24;
-              const isValidSalida = isWithin(startSalH, 0, hours.end, 20);
+              let startSalH = hours.end - SHIFT_TOLERANCE.salidaAntes;
+              if (startSalH < 0) startSalH += 24;
+              const endSalMins = hours.end * 60 + SHIFT_TOLERANCE.salidaDespuesMin;
 
-              if (!isValidEntrada && !isValidSalida) {
-                estado = 'fuera_horario';
-              }
+              const isValidEntrada = isWithin(startEntH, endEntH);
+              const isValidSalida =
+                currentMins >= startSalH * 60 ||
+                currentMins <= endSalMins % (24 * 60);
+
+              if (!isValidEntrada && !isValidSalida) estado = 'fuera_horario';
             }
           }
         }
 
         const isWarning = estado === 'dia_descanso' || estado === 'fuera_horario';
         uiColor = isValid ? (isWarning ? 'warning' : 'success') : 'error';
-        
+
         let warningReason = '';
         if (estado === 'dia_descanso') warningReason = 'Día de descanso';
         else if (estado === 'fuera_horario') warningReason = 'Fuera de horario de abordaje';
 
-        setScanResult({ 
-          text: decodedText, 
-          isValid, 
+        if (cancelledRef.current) return;
+
+        setScanResult({
+          text: decodedText,
+          isValid,
           estado,
           uiColor,
           rejectReason: isValid && isWarning ? warningReason : rejectReason,
-          employee: emp, 
-          time: timeStr 
+          employee: emp,
+          time: timeStr,
         });
 
-        // Feedback háptico (móvil): patrón distinto según severidad
-        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-          if (uiColor === 'success') navigator.vibrate(60);
-          else if (uiColor === 'warning') navigator.vibrate([60, 80, 60]);
-          else navigator.vibrate([120, 80, 120, 80, 120]);
+        // Háptica solo si el usuario NO pidió reducir movimiento
+        if (
+          !reducedMotion &&
+          typeof navigator !== 'undefined' &&
+          typeof navigator.vibrate === 'function'
+        ) {
+          navigator.vibrate(SCAN_CONFIG.haptics[uiColor]);
         }
 
-        // Insertar en registros sin importar si es válido o no (requiere que empleado_id sea null-able si es rechazado_qr)
-        const record = { 
+        const record = {
           chofer_id: session?.user?.id || null,
           ruta_chofer: selectedRoute,
           estado,
-          qr_leido: decodedText
+          qr_leido: decodedText,
         };
-        // Solo asignamos empleado_id si existe el empleado, para evitar error de Foreign Key
         if (emp) record.empleado_id = emp.id;
 
-        const { error: regError } = await supabase.from('registros').insert(record);
-        if (regError) {
-          console.warn('Error insertando registro, guardando local:', regError.message);
-          const local = JSON.parse(localStorage.getItem('qr_local_history') || '[]');
-          local.unshift({ id: Date.now(), fecha_hora: now.toISOString(), empleados: emp, estado, ruta_chofer: selectedRoute });
-          localStorage.setItem('qr_local_history', JSON.stringify(local.slice(0, 500)));
+        try {
+          const { error: regError } = await supabase.from('registros').insert(record);
+          if (regError) throw regError;
+        } catch {
+          offlineQueue.enqueue(record);
+          // Historial local de respaldo
+          const local = safeStorage.get(STORAGE_KEYS.qrHistory, []);
+          local.unshift({
+            id: Date.now(),
+            fecha_hora: nowDate.toISOString(),
+            empleados: emp,
+            estado,
+            ruta_chofer: selectedRoute,
+          });
+          safeStorage.set(STORAGE_KEYS.qrHistory, local.slice(0, 500));
         }
-      } catch (err) {
-        console.error(err);
+      } catch {
+        // Falla de red en la búsqueda: notificamos al chofer
+        if (!cancelledRef.current) {
+          notify.networkError({ message: 'No pudimos validar el QR. Inténtalo de nuevo.' });
+        }
       } finally {
-        // Duración del aviso según severidad — los errores/advertencias se quedan
-        // más tiempo para que el chofer alcance a leerlos antes de seguir escaneando.
-        // El usuario también puede tocar el aviso para descartarlo manualmente.
-        let ms = 4000; // éxito por defecto
-        if (uiColor === 'warning') ms = 6000;
-        else if (uiColor === 'error') ms = 6500;
-        timerRef.current = setTimeout(() => { setScanResult(null); isScanningRef.current = false; }, ms);
+        const ms = SCAN_CONFIG.scanCooldownMs[uiColor] || SCAN_CONFIG.scanCooldownMs.success;
+        timerRef.current = setTimeout(() => {
+          if (cancelledRef.current) return;
+          setScanResult(null);
+          isScanningRef.current = false;
+        }, ms);
       }
     };
 
-    qr.start(
-      { facingMode: 'environment' },
-      {
-        fps: 15,
-        qrbox: (w, h) => {
-          const size = Math.round(Math.min(w, h) * 0.65);
-          return { width: size, height: size };
+    const startCamera = () => qr
+      .start(
+        { facingMode: 'environment' },
+        {
+          fps: SCAN_CONFIG.fps,
+          qrbox: (w, h) => {
+            const size = Math.round(Math.min(w, h) * SCAN_CONFIG.qrboxRatio);
+            return { width: size, height: size };
+          },
+          aspectRatio: window.innerHeight / window.innerWidth,
+          disableFlip: false,
         },
-        aspectRatio: window.innerHeight / window.innerWidth,
-        disableFlip: false,
-      },
-      onScanSuccess,
-      () => {}
-    ).catch((err) => {
-      console.warn('Fallback a cámara frontal:', err);
-      qr.start({ facingMode: 'user' }, { fps: 15, qrbox: { width: 240, height: 240 } }, onScanSuccess, () => {}).catch(console.error);
-    });
+        onScanSuccess,
+        () => {},
+      )
+      .catch(() => qr.start(
+        { facingMode: 'user' },
+        { fps: SCAN_CONFIG.fps, qrbox: { width: 240, height: 240 } },
+        onScanSuccess,
+        () => {},
+      ))
+      .catch((err) => {
+        setCameraError(
+          err?.message?.includes('Permission') || err?.name === 'NotAllowedError'
+            ? 'permission'
+            : 'unavailable'
+        );
+      });
+
+    startCamera();
+
+    /* ── Pausar cámara si el usuario sale a otra app (item 7) ──── */
+    const onVisibility = async () => {
+      if (document.visibilityState === 'hidden') {
+        if (qr?.isScanning) {
+          try { await qr.stop(); } catch { /* noop */ }
+        }
+      } else if (document.visibilityState === 'visible' && !cancelledRef.current) {
+        if (qrRef.current && !qrRef.current.isScanning) startCamera();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      qr.isScanning && qr.stop().then(() => qr.clear()).catch(console.error);
+      cancelledRef.current = true;
+      document.removeEventListener('visibilitychange', onVisibility);
       if (timerRef.current) clearTimeout(timerRef.current);
+      stopScanner();
     };
-  }, [selectedRoute, session]);
+    // Intencionalmente sin `session` en deps: la sesión cambia al refrescar
+    // token cada hora y reiniciaría la cámara. Usamos session.user.id solo
+    // para registrar el chofer en cada inserción.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRoute, reducedMotion]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--color-canvas-soft)', position: 'relative', overflow: 'hidden' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100dvh',
+        minHeight: '100vh', // fallback
+        background: 'var(--color-canvas-soft)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       <style>{`
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        /* Scoping a nivel componente para que el efecto se revierta al desmontar */
+        html, body { overscroll-behavior: none; }
         .app-container > nav, .app-container > header { display: none !important; }
         .app-container > main { padding: 0 !important; max-width: none !important; }
 
-        /* --- Html5Qrcode overrides: video a pantalla completa --- */
         #reader {
           width: 100% !important;
           height: 100% !important;
@@ -626,12 +569,7 @@ export const ChoferPortal = () => {
           position: absolute !important;
           inset: 0 !important;
         }
-        #reader > div {
-          width: 100% !important;
-          height: 100% !important;
-          padding: 0 !important;
-          border: none !important;
-        }
+        #reader > div { width: 100% !important; height: 100% !important; padding: 0 !important; border: none !important; }
         #reader video {
           width: 100% !important;
           height: 100% !important;
@@ -639,49 +577,58 @@ export const ChoferPortal = () => {
           position: absolute !important;
           top: 0 !important; left: 0 !important;
         }
-        /* Ocultar el QR box nativo de la librería, usamos el nuestro */
-        #reader__scan_region {
-          width: 100% !important;
-          height: 100% !important;
-          border: none !important;
-        }
+        #reader__scan_region { width: 100% !important; height: 100% !important; border: none !important; }
         #reader__scan_region img, #reader__dashboard { display: none !important; }
 
         /* Helpers responsivos */
         .vp-hide-sm { display: inline; }
-        @media (max-width: 360px) {
-          .vp-hide-sm { display: none; }
+        @media (max-width: 360px) { .vp-hide-sm { display: none; } }
+
+        /* Respeta usuarios con reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
         }
       `}</style>
 
-      {/* Header cohesivo con TopNav de Empresa (sólo visible al seleccionar ruta) */}
+      {/* Header solo en selección de ruta */}
       {!selectedRoute && (
         <PortalHeader
           subtitle="Portal Abordaje · Transporte"
-          onBrandClick={() => navigate(isAdmin ? '/empresa' : '/chofer')}
-          onLogout={async () => { await supabase.auth.signOut(); navigate('/'); }}
+          onBrandClick={() => navigate(isAdmin ? APP_ROUTES.empresa : APP_ROUTES.chofer)}
+          onLogout={async () => { await supabase.auth.signOut(); navigate(APP_ROUTES.landing); }}
           extras={
             isAdmin && (
               <motion.button
-                whileTap={{ scale: 0.93 }}
-                onClick={() => navigate('/empresa')}
+                type="button"
+                whileTap={reducedMotion ? {} : { scale: 0.93 }}
+                onClick={() => navigate(APP_ROUTES.empresa)}
                 data-testid="back-to-empresa-btn"
-                title="Volver a Empresa"
                 aria-label="Volver al portal de Empresa"
                 style={{
-                  height: '36px', minWidth: '36px', padding: '0 var(--spacing-sm)',
+                  height: `${TAP_TARGET.min}px`,
+                  minWidth: `${TAP_TARGET.min}px`,
+                  padding: '0 var(--spacing-base)',
                   borderRadius: 'var(--rounded-pill)',
                   background: 'rgb(var(--color-accent-raw) / 0.1)',
                   border: '1px solid rgb(var(--color-accent-raw) / 0.25)',
-                  cursor: 'pointer', display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xxs)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 'var(--spacing-xxs)',
                   color: 'var(--color-accent)',
                   fontFamily: 'var(--font-body)',
                   fontSize: 'var(--typography-caption-size)',
                   fontWeight: 600,
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <Building2 size={14} />
+                <Building2 size={16} aria-hidden="true" />
                 <span className="vp-hide-sm">Empresa</span>
               </motion.button>
             )
@@ -689,46 +636,211 @@ export const ChoferPortal = () => {
         />
       )}
 
-      {/* Content */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-
-        {/* Tab: Escáner */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', opacity: 1, pointerEvents: 'auto', transition: 'opacity 0.25s ease', zIndex: 5 }}>
-          <div style={{ flex: 1, position: 'relative', background: selectedRoute ? '#000' : 'var(--color-canvas-soft)' }}>
-            
+      {/* Main */}
+      <main
+        role="main"
+        aria-label="Portal de chofer"
+        style={{ flex: 1, position: 'relative', overflow: 'hidden' }}
+      >
+        <section
+          aria-label={selectedRoute ? 'Escáner de códigos QR' : 'Selección de ruta'}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 5,
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              position: 'relative',
+              background: selectedRoute ? '#000' : 'var(--color-canvas-soft)',
+            }}
+          >
             {!selectedRoute ? (
-              <RutaSelectionPanel onSelect={handleSelectRoute} rutasActivas={rutasActivas} loading={loadingRutas} />
+              <RutaSelectionPanel
+                onSelect={handleSelectRoute}
+                rutasActivas={rutasActivas}
+                loading={loadingRutas}
+                reducedMotion={reducedMotion}
+              />
             ) : (
               <>
-                <div id="reader" style={{ position: 'absolute', inset: 0 }} />
+                <div
+                  id="reader"
+                  role="application"
+                  aria-label="Vista previa de cámara para escanear códigos QR"
+                  style={{ position: 'absolute', inset: 0 }}
+                />
 
-                {/* Overlay minimalista */}
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2, boxShadow: 'inset 0 0 0 2000px rgba(0,0,0,0.5)' }}>
-                  
-                  {/* Cuadro central del escáner */}
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '250px', height: '250px', border: '2px solid rgba(255,255,255,0.4)', borderRadius: '24px' }}>
-                    <ScanLine size={40} color="rgba(255,255,255,0.4)" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+                {/* Mensaje de error de cámara */}
+                {cameraError && (
+                  <div
+                    role="alert"
+                    data-testid="camera-error"
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: 'var(--spacing-base)',
+                      right: 'var(--spacing-base)',
+                      transform: 'translateY(-50%)',
+                      background: 'var(--color-surface-card)',
+                      borderRadius: 'var(--rounded-xl)',
+                      padding: 'var(--spacing-lg)',
+                      textAlign: 'center',
+                      zIndex: 6,
+                    }}
+                  >
+                    <p style={{ margin: 0, fontWeight: 700, color: 'var(--color-semantic-error)' }}>
+                      {cameraError === 'permission' ? 'Cámara bloqueada' : 'Cámara no disponible'}
+                    </p>
+                    <p style={{ margin: '8px 0 0', color: 'var(--color-muted)', fontSize: 'var(--typography-body-sm-size)' }}>
+                      {cameraError === 'permission'
+                        ? 'Permite el acceso a la cámara desde los ajustes del navegador y vuelve a intentarlo.'
+                        : 'No detectamos una cámara disponible en este dispositivo.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      data-testid="camera-error-retry"
+                      style={{
+                        marginTop: 'var(--spacing-base)',
+                        minHeight: `${TAP_TARGET.min}px`,
+                        padding: '0 var(--spacing-lg)',
+                        borderRadius: 'var(--rounded-pill)',
+                        background: 'var(--color-accent)',
+                        color: 'var(--color-on-primary)',
+                        border: 'none',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Reintentar
+                    </button>
                   </div>
-                  
-                  {/* Top Bar (Ruta y Botón Salir) */}
-                  <div style={{ position: 'absolute', top: 'var(--spacing-lg)', left: 'var(--spacing-lg)', right: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'auto' }}>
-                    
-                    {/* Etiqueta de ruta (Minimalista) */}
-                    <div style={{ background: getRutaColor(parseRuta(selectedRoute).code).bg, padding: 'var(--spacing-xxs) var(--spacing-sm)', borderRadius: 'var(--rounded-pill)', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getRutaColor(parseRuta(selectedRoute).code).text, boxShadow: `0 0 8px ${getRutaColor(parseRuta(selectedRoute).code).text}` }} />
-                      <span style={{ color: 'var(--color-on-primary)', fontSize: 'var(--typography-body-sm-size)', fontWeight: 700, fontFamily: 'var(--font-display)', letterSpacing: '0.5px' }}>
+                )}
+
+                {/* Overlay */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    zIndex: 2,
+                    boxShadow: 'inset 0 0 0 2000px rgba(0,0,0,0.5)',
+                  }}
+                  aria-hidden="true"
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: 'min(70vmin, 320px)',
+                      height: 'min(70vmin, 320px)',
+                      border: '2px solid rgba(255,255,255,0.55)',
+                      borderRadius: '24px',
+                    }}
+                  >
+                    <ScanLine
+                      size={40}
+                      color="rgba(255,255,255,0.6)"
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Top Bar */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'max(var(--spacing-lg), env(safe-area-inset-top))',
+                      left: 'max(var(--spacing-lg), env(safe-area-inset-left))',
+                      right: 'max(var(--spacing-lg), env(safe-area-inset-right))',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      pointerEvents: 'auto',
+                      gap: 'var(--spacing-sm)',
+                    }}
+                  >
+                    <div
+                      role="status"
+                      aria-label={`Ruta activa ${parseRuta(selectedRoute).code}`}
+                      style={{
+                        background: 'rgba(0,0,0,0.55)',
+                        padding: 'var(--spacing-xxs) var(--spacing-base)',
+                        borderRadius: 'var(--rounded-pill)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-xs)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        minHeight: '32px',
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          borderRadius: '50%',
+                          background: getRutaColor(parseRuta(selectedRoute).code).text,
+                          boxShadow: `0 0 8px ${getRutaColor(parseRuta(selectedRoute).code).text}`,
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: '#fff',
+                          fontSize: 'var(--typography-body-sm-size)',
+                          fontWeight: 700,
+                          fontFamily: 'var(--font-display)',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
                         {parseRuta(selectedRoute).code}
                       </span>
                     </div>
 
-                    {/* Botón Salir */}
-                    <button 
+                    <button
+                      type="button"
                       onClick={handleEndRoute}
                       disabled={isFinishing}
-                      style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-on-primary)', borderRadius: 'var(--rounded-full)', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}
-                      aria-label="Cerrar cámara"
+                      data-testid="end-route-btn"
+                      aria-label="Finalizar ruta y liberar"
+                      style={{
+                        background: 'rgba(0,0,0,0.55)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: '#fff',
+                        borderRadius: 'var(--rounded-pill)',
+                        minWidth: `${TAP_TARGET.min}px`,
+                        minHeight: `${TAP_TARGET.min}px`,
+                        padding: '0 var(--spacing-sm)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-xxs)',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        touchAction: 'manipulation',
+                        WebkitTapHighlightColor: 'transparent',
+                        opacity: isFinishing ? 0.6 : 1,
+                      }}
                     >
-                      {isFinishing ? <span style={{ fontSize: 'var(--typography-caption-size)' }}>…</span> : <X size={20} />}
+                      {isFinishing
+                        ? <span aria-hidden="true" style={{ fontSize: '14px' }}>…</span>
+                        : <X size={20} aria-hidden="true" />}
+                      <span className="vp-hide-sm" style={{ fontSize: 'var(--typography-caption-size)', fontWeight: 600 }}>
+                        Finalizar
+                      </span>
                     </button>
                   </div>
                 </div>
@@ -736,115 +848,202 @@ export const ChoferPortal = () => {
                 {/* Resultado flotante */}
                 <AnimatePresence>
                   {scanResult && (() => {
-                    const dur = scanResult.uiColor === 'success' ? 4000 : scanResult.uiColor === 'warning' ? 6000 : 6500;
+                    const dur = SCAN_CONFIG.scanCooldownMs[scanResult.uiColor] || SCAN_CONFIG.scanCooldownMs.success;
                     const titleText = scanResult.isValid
                       ? (scanResult.uiColor === 'warning' ? 'Alerta de Horario' : 'Acceso Autorizado')
                       : (scanResult.estado === 'rechazado_qr' ? 'QR no Reconocido' : 'Acceso Denegado');
                     const tone = `var(--color-semantic-${scanResult.uiColor})`;
                     const toneRaw = `var(--color-semantic-${scanResult.uiColor}-raw)`;
+                    // ARIA crítico: 'assertive' para denegaciones y advertencias (item 6)
+                    const ariaLive = scanResult.uiColor === 'error' || scanResult.uiColor === 'warning' ? 'assertive' : 'polite';
+                    const ariaRole = scanResult.uiColor === 'error' ? 'alert' : 'status';
+                    const motionProps = reducedMotion
+                      ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0 } }
+                      : {
+                          initial: { opacity: 0, y: 60, scale: 0.92 },
+                          animate: { opacity: 1, y: 0, scale: 1 },
+                          exit: { opacity: 0, y: 20, scale: 0.95 },
+                          transition: { type: 'spring', stiffness: 320, damping: 26 },
+                        };
                     return (
                       <motion.div
                         key={`scan-${scanResult.estado}-${scanResult.time}`}
-                        initial={{ opacity: 0, y: 60, scale: 0.92 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                        {...motionProps}
                         onClick={() => {
                           if (timerRef.current) clearTimeout(timerRef.current);
                           setScanResult(null);
                           isScanningRef.current = false;
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                            e.preventDefault();
+                            if (timerRef.current) clearTimeout(timerRef.current);
+                            setScanResult(null);
+                            isScanningRef.current = false;
+                          }
+                        }}
+                        tabIndex={0}
+                        role={ariaRole}
+                        aria-live={ariaLive}
+                        aria-atomic="true"
                         data-testid="scan-result-card"
-                        role="status"
-                        aria-live="polite"
                         style={{
                           position: 'absolute',
-                          bottom: 'var(--spacing-xl)',
-                          left: 'var(--spacing-base)', right: 'var(--spacing-base)',
+                          bottom: 'max(var(--spacing-xl), env(safe-area-inset-bottom))',
+                          left: 'max(var(--spacing-base), env(safe-area-inset-left))',
+                          right: 'max(var(--spacing-base), env(safe-area-inset-right))',
                           zIndex: 10,
                           background: 'var(--color-surface-card)',
                           borderRadius: 'var(--rounded-xl)',
                           padding: 'var(--spacing-lg) var(--spacing-base) var(--spacing-base)',
                           boxShadow: `0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px ${tone}`,
                           borderTop: `4px solid ${tone}`,
-                          display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 'var(--spacing-sm)',
                           cursor: 'pointer',
                           overflow: 'hidden',
+                          outline: 'none',
+                          minHeight: `${TAP_TARGET.min}px`,
                         }}
                       >
-                        {/* Fila principal */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-base)' }}>
                           <motion.div
-                            initial={{ scale: 0.6, rotate: -15 }}
+                            initial={reducedMotion ? false : { scale: 0.6, rotate: -15 }}
                             animate={{ scale: 1, rotate: 0 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 14, delay: 0.05 }}
+                            aria-hidden="true"
                             style={{
-                              width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0,
+                              width: '64px',
+                              height: '64px',
+                              borderRadius: '50%',
+                              flexShrink: 0,
                               background: tone,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: scanResult.uiColor === 'warning' ? 'var(--color-ink)' : 'var(--color-on-primary)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: scanResult.uiColor === 'warning' ? 'var(--color-ink)' : '#fff',
                               boxShadow: `0 8px 20px rgb(${toneRaw} / 0.35)`,
                             }}
                           >
-                            {scanResult.isValid ? <CheckCircle size={36} strokeWidth={2.5} /> : <XCircle size={36} strokeWidth={2.5} />}
+                            {scanResult.isValid
+                              ? <CheckCircle size={36} strokeWidth={2.5} />
+                              : <XCircle size={36} strokeWidth={2.5} />}
                           </motion.div>
 
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 'var(--typography-title-md-size)', fontWeight: 700, fontFamily: 'var(--font-display)', color: tone, lineHeight: 1.1, letterSpacing: '-0.01em' }}>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: 'var(--typography-title-md-size)',
+                                fontWeight: 700,
+                                fontFamily: 'var(--font-display)',
+                                color: tone,
+                                lineHeight: 1.1,
+                                letterSpacing: '-0.01em',
+                              }}
+                            >
                               {titleText}
                             </p>
-                            <p style={{ margin: '4px 0 0', fontSize: 'var(--typography-body-sm-size)', fontFamily: 'var(--font-body)', fontWeight: 500, color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {scanResult.isValid ? (scanResult.employee?.nombre || '—') : (scanResult.rejectReason || '—')}
+                            <p
+                              style={{
+                                margin: '4px 0 0',
+                                fontSize: 'var(--typography-body-sm-size)',
+                                fontFamily: 'var(--font-body)',
+                                fontWeight: 500,
+                                color: 'var(--color-ink)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {scanResult.isValid
+                                ? (scanResult.employee?.nombre || '—')
+                                : (scanResult.rejectReason || '—')}
                             </p>
                             {scanResult.employee?.numero_empleado && (
-                              <p style={{ margin: '2px 0 0', fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted)' }}>
-                                #{scanResult.employee.numero_empleado} · {scanResult.time}
+                              <p
+                                style={{
+                                  margin: '2px 0 0',
+                                  fontSize: 'var(--typography-caption-size)',
+                                  fontFamily: 'var(--font-body)',
+                                  color: 'var(--color-muted)',
+                                }}
+                              >
+                                #{scanResult.employee.numero_empleado} ·{' '}
+                                <time dateTime={new Date().toISOString()}>{scanResult.time}</time>
                               </p>
                             )}
                           </div>
                         </div>
 
-                        {/* Chips de turno y ruta */}
+                        {/* Chips */}
                         {scanResult.employee && (scanResult.employee.turno || scanResult.employee.ruta) && (
                           <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
                             {scanResult.employee.turno && (
-                              <span style={{
-                                padding: 'var(--spacing-xxs) var(--spacing-sm)',
-                                background: 'var(--color-canvas)',
-                                borderRadius: 'var(--rounded-pill)',
-                                fontSize: 'var(--typography-caption-uppercase-size)',
-                                fontWeight: 'var(--typography-caption-uppercase-weight)',
-                                letterSpacing: 'var(--typography-caption-uppercase-ls)',
-                                textTransform: 'uppercase',
-                                fontFamily: 'var(--font-body)',
-                                color: 'var(--color-ink)',
-                                border: '1px solid var(--color-hairline-soft)',
-                              }}>
+                              <span
+                                style={{
+                                  padding: 'var(--spacing-xxs) var(--spacing-sm)',
+                                  background: 'var(--color-canvas)',
+                                  borderRadius: 'var(--rounded-pill)',
+                                  fontSize: 'var(--typography-caption-uppercase-size)',
+                                  fontWeight: 'var(--typography-caption-uppercase-weight)',
+                                  letterSpacing: 'var(--typography-caption-uppercase-ls)',
+                                  textTransform: 'uppercase',
+                                  fontFamily: 'var(--font-body)',
+                                  color: 'var(--color-ink)',
+                                  border: '1px solid var(--color-hairline-soft)',
+                                }}
+                              >
                                 Turno {scanResult.employee.turno}
                               </span>
                             )}
                             {scanResult.employee.ruta && (
-                              <span style={{
-                                padding: 'var(--spacing-xxs) var(--spacing-sm)',
-                                background: scanResult.estado === 'rechazado_ruta' ? `rgb(${toneRaw} / 0.1)` : 'var(--color-canvas)',
-                                borderRadius: 'var(--rounded-pill)',
-                                fontSize: 'var(--typography-caption-uppercase-size)',
-                                fontWeight: 'var(--typography-caption-uppercase-weight)',
-                                letterSpacing: 'var(--typography-caption-uppercase-ls)',
-                                textTransform: 'uppercase',
-                                fontFamily: 'var(--font-body)',
-                                color: scanResult.estado === 'rechazado_ruta' ? tone : 'var(--color-ink)',
-                                border: `1px solid ${scanResult.estado === 'rechazado_ruta' ? `rgb(${toneRaw} / 0.3)` : 'var(--color-hairline-soft)'}`,
-                                maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              }}>
-                                {parseRuta(scanResult.employee.ruta).code} · {parseRuta(scanResult.employee.ruta).desc}
+                              <span
+                                style={{
+                                  padding: 'var(--spacing-xxs) var(--spacing-sm)',
+                                  background:
+                                    scanResult.estado === 'rechazado_ruta'
+                                      ? `rgb(${toneRaw} / 0.1)`
+                                      : 'var(--color-canvas)',
+                                  borderRadius: 'var(--rounded-pill)',
+                                  fontSize: 'var(--typography-caption-uppercase-size)',
+                                  fontWeight: 'var(--typography-caption-uppercase-weight)',
+                                  letterSpacing: 'var(--typography-caption-uppercase-ls)',
+                                  textTransform: 'uppercase',
+                                  fontFamily: 'var(--font-body)',
+                                  color:
+                                    scanResult.estado === 'rechazado_ruta'
+                                      ? tone
+                                      : 'var(--color-ink)',
+                                  border: `1px solid ${
+                                    scanResult.estado === 'rechazado_ruta'
+                                      ? `rgb(${toneRaw} / 0.3)`
+                                      : 'var(--color-hairline-soft)'
+                                  }`,
+                                  maxWidth: '100%',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {parseRuta(scanResult.employee.ruta).code} ·{' '}
+                                {parseRuta(scanResult.employee.ruta).desc}
                               </span>
                             )}
                           </div>
                         )}
 
-                        {/* Barra de progreso (countdown visual) */}
-                        <div style={{ height: '3px', background: 'var(--color-hairline-soft)', borderRadius: 'var(--rounded-pill)', overflow: 'hidden', marginTop: 'var(--spacing-xxs)' }}>
+                        <div
+                          aria-hidden="true"
+                          style={{
+                            height: '3px',
+                            background: 'var(--color-hairline-soft)',
+                            borderRadius: 'var(--rounded-pill)',
+                            overflow: 'hidden',
+                            marginTop: 'var(--spacing-xxs)',
+                          }}
+                        >
                           <motion.div
                             initial={{ width: '100%' }}
                             animate={{ width: '0%' }}
@@ -853,8 +1052,16 @@ export const ChoferPortal = () => {
                           />
                         </div>
 
-                        <p style={{ margin: 0, fontSize: 'var(--typography-caption-size)', fontFamily: 'var(--font-body)', color: 'var(--color-muted-soft)', textAlign: 'center' }}>
-                          Toca para cerrar
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 'var(--typography-caption-size)',
+                            fontFamily: 'var(--font-body)',
+                            color: 'var(--color-muted-soft)',
+                            textAlign: 'center',
+                          }}
+                        >
+                          Toca o presiona Enter para cerrar
                         </p>
                       </motion.div>
                     );
@@ -863,8 +1070,8 @@ export const ChoferPortal = () => {
               </>
             )}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };

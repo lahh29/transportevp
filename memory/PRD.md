@@ -40,10 +40,77 @@ Sistema web (Vite + React + Supabase) para gestión de transporte de personal en
 - **data-testid** en todo elemento interactivo y de estado (`photo-dropzone`, `photo-progress-bar`, `photo-progress-pct`, `photo-progress-count`, `photo-modal-confirm`, `photo-modal-cancel-upload`, `photo-modal-retry`, `photo-modal-finish`, `photo-file-status-*`, `photo-summary-ready`, `photo-summary-notfound`, …)
 
 ### Bundle
-- Build limpio · 1,095 KB → **315 KB gzip** · sin nuevas dependencias
+- Build limpio · 1,121 KB → **321 KB gzip** · PWA con SW + precache 19 entradas
+
+## Implementado en esta sesión (Ene 2026) — `/chofer` PWA Hardening (items 2-9)
+### Item 2 · PWA real (iOS + Android)
+- `vite-plugin-pwa` con workbox `generateSW`, `autoUpdate`, `injectRegister: 'auto'`
+- Manifest completo: `start_url: /chofer`, `scope: /`, `display_override: [standalone, minimal-ui]`, orientation portrait, categorías, shortcut "Escanear QR"
+- Íconos PNG reales generados con `@vite-pwa/assets-generator`: 64, 192, 512, maskable-512, apple-touch-180
+- Runtime caching: Supabase = NetworkFirst (timeout 6s) · Google Fonts = CacheFirst
+- `navigateFallback: /index.html` + denylist `/api/`
+
+### Item 3 · Viewport / iOS meta (`index.html`)
+- ✅ Quitado `maximum-scale=1.0, user-scalable=no` (WCAG 1.4.4)
+- ✅ Añadido `viewport-fit=cover` para notch/Dynamic Island
+- ✅ `apple-mobile-web-app-capable`, `status-bar-style=black-translucent`, `apple-mobile-web-app-title`, `format-detection`, `theme-color` con `prefers-color-scheme`
+
+### Item 4 · Safe-area-inset
+- Top bar usa `max(var(--spacing-lg), env(safe-area-inset-top|left|right))`
+- Banner de resultado usa `env(safe-area-inset-bottom|left|right)`
+- Panel de rutas usa `env(safe-area-inset-top)` + `env(safe-area-inset-bottom)`
+
+### Item 5 · Dead code + `regStyles` (bomba de tiempo) eliminados
+- Removidos `RegHeader`, `RegCard`, `RegEmpty`, `RegItem`, helpers `getWeekKey`, `getISOWeek`, `formatWeekLabel`, `getDayKey`, `formatDayLabel`, `REG_ANIM`, `REG_LIST_ITEM`, `PRIORITY`, `slideIn`
+- Imports removidos: `useMemo`, `useLocation`, `List`, `Camera`, `Calendar`, `Users`, `Clock`, `MapPin`, `Bus`
+
+### Item 6 · A11y / Tap targets
+- Tap targets ≥ 44 px (TAP_TARGET centralizado en config)
+- Botón finalizar: `aria-label="Finalizar ruta y liberar"` + visible label "Finalizar" en pantallas >360px
+- `aria-live="assertive"` + `role="alert"` para denegaciones; `polite`/`status` para autorizaciones
+- Soporte `prefers-reduced-motion` (hook `useReducedMotion`) en framer-motion y CSS
+- Banner de resultado es keyboard-dismissable (Enter / Space / Escape) + `tabIndex={0}`
+- Landmarks reales: `<main>`, `<section aria-label>`, `<header>`, `<ul role="list">`, `<time dateTime>`
+- Jerarquía corregida: `<h1>` real en panel de rutas
+- `touch-action: manipulation` + `WebkitTapHighlightColor: transparent` en todos los botones móviles
+- `<div role="application" aria-label>` para el contenedor de cámara
+
+### Item 7 · Listener `visibilitychange`
+- Cámara se pausa al salir de la app (background) y reanuda al volver al frente
+- Listener `onAuthStateChange` añadido (antes solo `getSession()` una vez)
+- Dedupe de escaneos: ignora mismo QR dentro de `dedupeWindowMs` (8 s)
+- Effect del scanner **no depende de `session`** (evita reinicio cada refresh de token)
+- `cancelledRef` protege contra setState tras desmontar
+
+### Item 8 · localStorage seguro + cola offline
+- `safeStorage` con try/catch + fallback in-memory (resuelve Safari iOS privado)
+- `STORAGE_KEYS` prefijadas con `vp:` (sin colisiones)
+- `offlineQueue.enqueue/flush/size`: cuando un insert a `registros` falla, se reintenta automáticamente al recuperar red (`online` + `visibilitychange`)
+- Notificación `notify.success` al reenviar pendientes
+- Manejo de error de cámara con UI: `cameraError = 'permission' | 'unavailable'` + botón Reintentar (44 px)
+
+### Item 9 · Servicio centralizado de configuración
+- `/app/src/lib/choferConfig.js` — única fuente de verdad para:
+  - `RUTAS_LIST`, `RUTA_COLORS`, `parseRuta`, `getRutaColor`
+  - `SHIFT_SCHEDULE`, `SHIFT_HOURS`, `SHIFT_TOLERANCE`, `resolveTurno`, `DAY_NAMES`
+  - `SCAN_CONFIG` (fps, qrboxRatio, cooldowns, haptics, dedupeWindow)
+  - `TAP_TARGET`, `APP_ROUTES`, `PRIORITY`
+  - Helpers fecha (`getISOWeek`) e `getInitials`
+- `/app/src/lib/safeStorage.js`, `/app/src/lib/offlineQueue.js`, `/app/src/lib/useReducedMotion.js`
+
+### Validación
+- ✅ `yarn build` limpio · PWA mode `generateSW` · 19 precache entries
+- ✅ Manifest válido (`/manifest.webmanifest` 200)
+- ✅ Service Worker (`/sw.js` 200)
+- ✅ Icons (`/pwa-512x512.png`, `/apple-touch-icon-180x180.png` 200)
+- ✅ Viewport meta verificado en runtime (test playwright)
 
 ## Backlog
+- P0 (item 1 pendiente): Mover `RUTAS_LIST`, `SHIFT_SCHEDULE`, `SHIFT_HOURS` a Supabase + Edge Function para validar `estado` server-side (evita manipulación cliente)
+- P0 (item 10 pendiente): RLS estricta sobre `registros` y `rutas_activas`
 - P1: Reforzar auth empleado (session token)
+- P1: Botón torch/linterna + cambio de cámara en escáner
 - P2: Code-splitting del bundle (1MB → chunks)
-- P2: Sustituir `MOCK_REGISTROS` por datos reales
-- P3: Resolver warnings ESLint en `RegistrosPanel`
+- P2: i18n (es-MX hardcodeado en `toLocaleDateString`)
+- P2: Resolver warnings ESLint `set-state-in-effect` en `EmpresaPortal.jsx` y `QrPrintPage.jsx`
+- P3: PNG de logo a mayor resolución (los íconos actuales son trazados del SVG simple)
