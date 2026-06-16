@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Truck, MapPin, Check, ChevronLeft } from 'lucide-react';
 
@@ -122,14 +122,22 @@ const Field = ({ field, value, onChange }) => {
 };
 
 /* ─── Componente principal ────────────────────────────────── */
-export const EmployeeWizard = ({ initialData, onSave, onCancel }) => {
+export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) => {
   const [step,     setStep]     = useState(1);
   const [dir,      setDir]      = useState(1);
   const [formData, setFormData] = useState(EMPTY_FORM);
+  const [initialSnapshot, setInitialSnapshot] = useState(EMPTY_FORM);
 
   useEffect(() => {
-    if (initialData) setFormData({ ...EMPTY_FORM, ...initialData });
+    const next = initialData ? { ...EMPTY_FORM, ...initialData } : EMPTY_FORM;
+    setFormData(next);
+    setInitialSnapshot(next);
   }, [initialData]);
+
+  const isDirty = useMemo(
+    () => Object.keys(EMPTY_FORM).some((k) => (formData[k] || '') !== (initialSnapshot[k] || '')),
+    [formData, initialSnapshot],
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -139,9 +147,14 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel }) => {
   const handleNext = () => { setDir(1);  setStep((s) => s + 1); };
   const handlePrev = () => { setDir(-1); setStep((s) => s - 1); };
 
+  const handleCancel = () => {
+    if (isDirty && !window.confirm('¿Descartar los cambios sin guardar?')) return;
+    onCancel?.();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (step < STEPS.length) { handleNext(); return; }
+    if (!flat && step < STEPS.length) { handleNext(); return; }
     onSave(formData);
   };
 
@@ -152,6 +165,48 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel }) => {
     center: { opacity: 1, x: 0 },
     exit:   { opacity: 0, x: dir * -24 },
   };
+
+  /* Modo plano (edición): todos los campos visibles */
+  if (flat) {
+    return (
+      <div style={S.root} data-testid="employee-wizard-flat">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+            {STEPS.map((stepCfg) => (
+              <fieldset key={stepCfg.id} style={S.fieldset}>
+                <legend style={S.legendVisible}>{stepCfg.label}</legend>
+                {stepCfg.fields.map((field) => (
+                  <Field key={field.name} field={field} value={formData[field.name]} onChange={handleChange} />
+                ))}
+              </fieldset>
+            ))}
+          </div>
+
+          <div style={S.footer}>
+            <button type="button" onClick={handleCancel} data-testid="wizard-cancel" style={S.btnLink}>
+              Cancelar
+            </button>
+            <motion.button
+              type="submit"
+              whileTap={isDirty ? { scale: 0.985 } : {}}
+              disabled={!isDirty}
+              data-testid="wizard-submit"
+              style={{
+                ...S.btnPrimary,
+                background: 'var(--color-accent)',
+                color: 'var(--color-on-primary)',
+                border: 'none',
+                opacity: isDirty ? 1 : 0.5,
+                cursor: isDirty ? 'pointer' : 'not-allowed',
+              }}
+            >
+              <Check size={14} strokeWidth={2.5} /> Guardar cambios
+            </motion.button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div style={S.root} data-testid="employee-wizard">
@@ -191,7 +246,7 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel }) => {
           {step === 1 ? (
             <button
               type="button"
-              onClick={onCancel}
+              onClick={handleCancel}
               data-testid="wizard-cancel"
               style={S.btnLink}
             >
@@ -297,6 +352,22 @@ const S = {
     clip: 'rect(0,0,0,0)',
     whiteSpace: 'nowrap',
     border: 0,
+  },
+  legendVisible: {
+    position: 'static',
+    width: 'auto', height: 'auto',
+    margin: '0 0 var(--spacing-xs)',
+    padding: 0,
+    overflow: 'visible',
+    clip: 'auto',
+    whiteSpace: 'normal',
+    border: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-uppercase-size)',
+    fontWeight: 'var(--typography-caption-uppercase-weight)',
+    letterSpacing: 'var(--typography-caption-uppercase-ls)',
+    textTransform: 'uppercase',
+    color: 'var(--color-muted)',
   },
 
   /* Field */

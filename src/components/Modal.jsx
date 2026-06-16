@@ -1,52 +1,51 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useFocusTrap } from '../lib/useFocusTrap';
+import { useIsMobile } from '../lib/useMediaQuery';
 
 /**
  * Modal — diálogo cohesivo, mobile-first, semántico.
  *
- * Características:
- *  - Backdrop con blur, click para cerrar
- *  - Esc para cerrar
- *  - Bloquea scroll del body
- *  - Animación spring de entrada
- *  - Header con título + botón X
- *  - Scroll interno con safe-area-inset-bottom
- *  - role=dialog + aria-modal=true + aria-labelledby
- *
- * Props:
- *  - isOpen, onClose
- *  - title (string)
- *  - children
- *  - size: 'sm' | 'md' | 'lg' (default 'md')
- *  - testId (opcional)
+ *  • Focus trap + restore foco previo
+ *  • Bottom-sheet en mobile (slide-up), centrado en desktop
+ *  • Backdrop con blur, click para cerrar
+ *  • Esc para cerrar
+ *  • Bloquea scroll del body
+ *  • Header con título + botón X
+ *  • Scroll interno con safe-area-inset-bottom
+ *  • role=dialog + aria-modal=true + aria-labelledby
  */
-export const Modal = ({ isOpen, onClose, children, title, size = 'md', testId }) => {
-  const dialogRef = useRef(null);
+export const Modal = ({ isOpen, onClose, children, title, size = 'md', testId, variant }) => {
+  const focusRef = useFocusTrap(isOpen);
+  const mobile = useIsMobile();
+  const titleAutoId = useId();
+  const titleId = title ? titleAutoId : undefined;
 
-  // Bloquear scroll del body mientras está abierto
+  /* Block body scroll */
   useEffect(() => {
-    if (!isOpen) return;
-    const prevOverflow = document.body.style.overflow;
+    if (!isOpen) return undefined;
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prevOverflow; };
+    return () => { document.body.style.overflow = prev; };
   }, [isOpen]);
 
-  // Esc para cerrar + focus inicial
+  /* Esc para cerrar */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return undefined;
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     window.addEventListener('keydown', onKey);
-    // focus al diálogo (para a11y)
-    requestAnimationFrame(() => dialogRef.current?.focus());
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
+  const useBottomSheet = (variant === 'sheet') || (mobile && variant !== 'centered');
   const maxW = size === 'sm' ? 'min(92vw, 22rem)'
              : size === 'lg' ? 'min(96vw, 44rem)'
-             : /* md */        'min(94vw, 32rem)';
+             : 'min(94vw, 32rem)';
 
-  const titleId = title ? `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}` : undefined;
+  const sheetMotion = useBottomSheet
+    ? { initial: { y: '100%', opacity: 1 }, animate: { y: 0, opacity: 1 }, exit: { y: '100%', opacity: 1 } }
+    : { initial: { scale: 0.97, opacity: 0, y: 8 }, animate: { scale: 1, opacity: 1, y: 0 }, exit: { scale: 0.97, opacity: 0, y: 8 } };
 
   return (
     <AnimatePresence>
@@ -56,21 +55,32 @@ export const Modal = ({ isOpen, onClose, children, title, size = 'md', testId })
           transition={{ duration: 0.18 }}
           onClick={onClose}
           data-testid={testId || 'modal-backdrop'}
-          style={S.backdrop}
+          style={{ ...S.backdrop, alignItems: useBottomSheet ? 'flex-end' : 'center' }}
         >
           <motion.div
-            ref={dialogRef}
+            ref={focusRef}
             tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            initial={{ scale: 0.97, opacity: 0, y: 8 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.97, opacity: 0, y: 8 }}
+            {...sheetMotion}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            style={{ ...S.panel, maxWidth: maxW }}
+            style={{
+              ...S.panel,
+              maxWidth: useBottomSheet ? '100%' : maxW,
+              width: useBottomSheet ? '100%' : '100%',
+              borderRadius: useBottomSheet
+                ? 'var(--rounded-xl) var(--rounded-xl) 0 0'
+                : 'var(--rounded-xl)',
+              maxHeight: useBottomSheet
+                ? 'calc(100dvh - var(--spacing-xxl))'
+                : 'calc(100dvh - var(--spacing-xl))',
+            }}
           >
+            {useBottomSheet && (
+              <div aria-hidden="true" style={S.grabber} />
+            )}
             {title && (
               <header style={S.header}>
                 <h2 id={titleId} style={S.title}>{title}</h2>
@@ -81,7 +91,7 @@ export const Modal = ({ isOpen, onClose, children, title, size = 'md', testId })
                   data-testid="modal-close-btn"
                   style={S.closeBtn}
                 >
-                  <X size={18} strokeWidth={2} />
+                  <X size={18} strokeWidth={2} aria-hidden="true" />
                 </button>
               </header>
             )}
@@ -102,7 +112,6 @@ const S = {
     backdropFilter: 'blur(var(--backdrop-blur))',
     WebkitBackdropFilter: 'blur(var(--backdrop-blur))',
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'center',
     padding: 'var(--spacing-base)',
     paddingTop: 'max(var(--spacing-base), env(safe-area-inset-top))',
@@ -110,16 +119,19 @@ const S = {
     zIndex: 1000,
   },
   panel: {
-    width: '100%',
-    maxHeight: 'calc(100dvh - var(--spacing-xl))',
     background: 'var(--color-surface-card)',
     border: '1px solid var(--color-hairline-soft)',
-    borderRadius: 'var(--rounded-xl)',
     boxShadow: 'var(--shadow-elevated)',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     outline: 'none',
+  },
+  grabber: {
+    width: '2.5rem', height: '4px', borderRadius: 'var(--rounded-pill)',
+    background: 'var(--color-hairline-strong)',
+    margin: 'var(--spacing-xs) auto 0',
+    flexShrink: 0,
   },
   header: {
     display: 'flex',
@@ -143,8 +155,8 @@ const S = {
     whiteSpace: 'nowrap',
   },
   closeBtn: {
-    width: 'var(--button-height-sm)',
-    height: 'var(--button-height-sm)',
+    width: '2.5rem',
+    height: '2.5rem',
     borderRadius: '50%',
     border: 'none',
     background: 'var(--color-canvas)',
@@ -160,6 +172,7 @@ const S = {
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
     padding: 'var(--spacing-lg)',
+    paddingBottom: 'max(var(--spacing-lg), env(safe-area-inset-bottom))',
     flex: 1,
     minHeight: 0,
   },

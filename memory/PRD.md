@@ -105,6 +105,68 @@ Sistema web (Vite + React + Supabase) para gestión de transporte de personal en
 - ✅ Icons (`/pwa-512x512.png`, `/apple-touch-icon-180x180.png` 200)
 - ✅ Viewport meta verificado en runtime (test playwright)
 
+## Implementado en esta sesión (Ene 2026) — EmpresaPortal Tandas A+B+C+D
+
+### Tanda A · Crítico y visual
+- ✅ Edge Function `empleado-admin-reset` (limpia `nip_hash`, `nip_failed_attempts`, `nip_locked_until` o WebAuthn) — requiere JWT de admin de Supabase Auth
+- ✅ Cliente: `adminApi.resetNip / resetWebauthn / resetAll`
+- ✅ Componentes compartidos `<ModalActions>`, `<ModalSpinner>`, `<ModalIntro>` (`ModalKit.jsx`) — reemplazan duplicaciones en QrGenerateModal y JsonUploadModal
+- ✅ Todos los `toast.*` directos → `notify.*` con textos cortos
+- ✅ Bulk dropdown: añadidos `MenuGroupLabel` "Importar"/"Exportar" + divider; "Imprimir credenciales" → "Imprimir"; `max-content` width corrige el wrap
+- ✅ `select('*')` eliminado — solo campos explícitos
+- ✅ Helpers a `choferConfig.js`: `getInitials`, `splitName`, `getFirstName`, `plural()`, `EMPRESA_PAGE_SIZE`
+
+### Tanda B · A11y + UX
+- ✅ `useFocusTrap` hook + restore foco al desmontar
+- ✅ `useMenuKeyboardNav` (ArrowDown/Up/Home/End/Escape/Tab)
+- ✅ Modal: focus trap real + Esc/backdrop + bottom-sheet en mobile + safe-area-inset-bottom
+- ✅ Preview QR ahora muestra `nombre` en título + botones **Descargar** + **Copiar número**
+- ✅ Búsqueda con `useDeferredValue` (no re-renderiza grid en cada keystroke)
+- ✅ `useMemo` en `filteredEmployees` y `currentEmployees`
+- ✅ EmployeeWizard: dirty-check con `window.confirm("¿Descartar cambios?")`
+- ✅ Avatar con `loading="lazy"` + `decoding="async"`
+- ✅ Tap targets bumped a 2.75rem (44px) en search, iconAction, pagBtn
+
+### Tanda C · Mobile-first refinado
+- ✅ Modal bottom-sheet automático en `< 600px` (`useIsMobile`)
+- ✅ Grabber visual en sheet (drag handle)
+- ✅ Modal max-height ajusta a `100dvh - var(--spacing-xxl)` en sheet
+- ✅ Header actions con touch targets 44px; flex-wrap responsive
+- ✅ Card actions visibles al 60% opacity (no 0%) — siempre detectables sin hover
+- ✅ EmployeeWizard `flat` mode cuando se edita (sin wizard, todos los campos visibles con `<legend>` semántico)
+- ✅ Multi-select con checkboxes + barra de selección (Exportar/Eliminar masivo)
+
+### Tanda D · Features nuevas
+- ✅ "Copiar número" en menú per-card (`notify.copied()`)
+- ✅ "Borrar biometría" en menú per-card (solo si `webauthn_enrolled_at`)
+- ✅ "Exportar CSV" en bulk menu (formato Excel-friendly con BOM UTF-8)
+- ✅ `QrGenerateModal`: checkbox **"Solo empleados sin QR"** para no regenerar
+- ✅ Preview QR con descarga (`<a download>`)
+- ✅ `<DropdownMenu>` reutilizable: keyboard nav + `aria-label` por menú
+
+### Archivos nuevos
+- `/app/src/components/ModalKit.jsx`
+- `/app/src/lib/useFocusTrap.js`
+- `/app/src/lib/useMenuKeyboardNav.js`
+- `/app/src/lib/useMediaQuery.js` (con `useIsMobile`)
+- `/app/src/lib/adminApi.js`
+- `/app/src/lib/exportCsv.js`
+- `/app/supabase/functions/empleado-admin-reset/index.ts`
+
+### Validación
+- ✅ `yarn build` limpio · PWA 322 KB gzip · 1176 KB total
+- ✅ `/empresa` ruta sirve 200 desde build de producción
+- ✅ Sin queries directos a campos sensibles (`nip_hash`)
+- ✅ Lint OK (warnings preexistentes en QrPrintPage no son de esta sesión)
+
+### Pendiente Supabase
+**Tienes que desplegar 1 Edge Function nueva** (las 7 anteriores siguen igual):
+```bash
+supabase functions deploy empleado-admin-reset
+# NOTA: SIN --no-verify-jwt (esta sí valida el JWT de Supabase Auth con role=admin)
+```
+README actualizado en `/app/supabase/README.md` con instrucciones completas.
+
 ## Implementado en esta sesión (Ene 2026) — Tandas B + C + D (EmpleadoLogin completo)
 
 ### Tanda B · Pulido P2 (refactor interno)

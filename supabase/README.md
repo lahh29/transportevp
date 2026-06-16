@@ -40,7 +40,7 @@ En Supabase Dashboard → **Project Settings → Edge Functions → Secrets**, a
 
 > `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` ya están disponibles automáticamente en las Edge Functions.
 
-### 3️⃣ Desplegar las 7 Edge Functions
+### 3️⃣ Desplegar las 8 Edge Functions
 
 ```bash
 # Asegúrate de estar logueado y linkeado al proyecto:
@@ -51,13 +51,15 @@ supabase link --project-ref <tu-project-ref>
 supabase functions deploy empleado-find         --no-verify-jwt
 supabase functions deploy empleado-login        --no-verify-jwt
 supabase functions deploy empleado-set-nip      --no-verify-jwt
+supabase functions deploy empleado-admin-reset
 supabase functions deploy webauthn-register-begin   --no-verify-jwt
 supabase functions deploy webauthn-register-finish  --no-verify-jwt
 supabase functions deploy webauthn-login-begin      --no-verify-jwt
 supabase functions deploy webauthn-login-finish     --no-verify-jwt
 ```
 
-> `--no-verify-jwt` es **obligatorio**: nuestras funciones validan el JWT propio (`EMPLEADO_JWT_SECRET`), no el JWT de Supabase Auth.
+> `--no-verify-jwt` es **obligatorio** para las funciones de empleado/webauthn (validan nuestro JWT propio).
+> Para `empleado-admin-reset` **NO uses** `--no-verify-jwt`: requiere el JWT de Supabase Auth con `role=admin` en `user_metadata`.
 
 ### 4️⃣ Verificar
 

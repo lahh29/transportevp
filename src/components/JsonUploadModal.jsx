@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Upload, CheckCircle, FileJson, AlertCircle, X as XIcon, Loader2 } from 'lucide-react';
+import { Upload, CheckCircle, FileJson, AlertCircle, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ModalActions } from './ModalKit';
+import { plural } from '../lib/choferConfig';
 
 /* ============================================================
    JSON UPLOAD MODAL — Carga masiva de empleados
@@ -201,38 +203,19 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
       </AnimatePresence>
 
       {/* Acciones */}
-      <div style={S.actions}>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={loading}
-          data-testid="json-modal-cancel"
-          style={S.btnSecondary}
-        >
-          Cancelar
-        </button>
-
-        <motion.button
-          type="button"
-          onClick={handleConfirm}
-          disabled={!parsedData || loading}
-          whileTap={parsedData && !loading ? { scale: 0.985 } : {}}
-          aria-busy={loading}
-          data-testid="json-modal-confirm"
-          style={{
-            ...S.btnPrimary,
-            opacity: !parsedData || loading ? 0.55 : 1,
-            cursor: !parsedData || loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {loading
-            ? <><Loader2 size={15} strokeWidth={2} style={{ animation: 'vp-json-spin 0.8s linear infinite' }} /> Subiendo…</>
-            : <><CheckCircle size={15} strokeWidth={2} /> Confirmar y subir</>
-          }
-        </motion.button>
-      </div>
-
-      <style>{`@keyframes vp-json-spin { from { transform: rotate(0) } to { transform: rotate(360deg) } }`}</style>
+      <ModalActions
+        cancel={{ onClick: onCancel, disabled: loading }}
+        confirm={{
+          onClick: handleConfirm,
+          disabled: !parsedData,
+          loading,
+          loadingLabel: 'Subiendo…',
+          icon: CheckCircle,
+          label: parsedData ? `Subir ${plural(parsedData.length, 'empleado')}` : 'Subir',
+        }}
+        testIdCancel="json-modal-cancel"
+        testIdConfirm="json-modal-confirm"
+      />
     </div>
   );
 };

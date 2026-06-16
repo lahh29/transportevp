@@ -169,3 +169,21 @@ export const getFirstName = (nombre) => {
   if (!nombre) return '';
   return String(nombre).trim().split(/\s+/)[0] || '';
 };
+
+/** Split nombre completo en { apellidos, nombres } siguiendo convención "APE APE NOM". */
+export const splitName = (fullName) => {
+  if (!fullName) return { apellidos: '', nombres: '' };
+  const parts = String(fullName).trim().split(/\s+/);
+  if (parts.length <= 1) return { apellidos: parts.join(' '), nombres: '' };
+  if (parts.length === 2) return { apellidos: parts[0], nombres: parts[1] };
+  return { apellidos: parts.slice(0, 2).join(' '), nombres: parts.slice(2).join(' ') };
+};
+
+/** Pluraliza una palabra simple según el conteo. */
+export const plural = (n, singular, pluralForm) => {
+  const word = n === 1 ? singular : (pluralForm ?? `${singular}s`);
+  return `${n} ${word}`;
+};
+
+/** Tamaño de página por defecto en /empresa. */
+export const EMPRESA_PAGE_SIZE = 12;
