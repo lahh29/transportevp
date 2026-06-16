@@ -105,6 +105,58 @@ Sistema web (Vite + React + Supabase) para gestión de transporte de personal en
 - ✅ Icons (`/pwa-512x512.png`, `/apple-touch-icon-180x180.png` 200)
 - ✅ Viewport meta verificado en runtime (test playwright)
 
+## Implementado en esta sesión (Ene 2026) — EmpleadoLogin Tanda A (UX + A11y P1)
+
+### Componentes nuevos
+- **`<NipInput>`** (`/app/src/components/NipInput.jsx`):
+  - 4 cajas OTP-style con auto-advance al tipear y auto-back con Backspace en caja vacía
+  - Paste support (`1234` se distribuye automáticamente)
+  - Navegación con flechas + Home/End
+  - ARIA: `role="group"`, `aria-labelledby`, `aria-label="Dígito N de M"` en cada caja
+  - `type="password"` + `inputMode="numeric"` + `autoComplete="one-time-code"` (sin password manager)
+  - `enterKeyHint` configurable (next/done) para el teclado iOS
+  - Animación shake en error + indicadores `data-filled`/`data-error` CSS-driven
+  - Respeta `prefers-reduced-motion`
+  - Estados `:focus-visible` con halo accent (WCAG 2.4.7)
+
+- **`<StepProgress>`** (`/app/src/components/StepProgress.jsx`):
+  - Indicador minimalista de dots con paso actual ensanchado
+  - Semántico: `<ol>` + `aria-current="step"` + `aria-live="polite"` para anunciar el cambio
+  - Visually-hidden text "Paso N (actual)" para SR
+
+### `EmpleadoLogin.jsx` reescrito completo
+- **NIP en 4 cajas OTP** (item 5) — reemplaza el input único con bullets
+- **Steps 2/3/4 ahora son `<motion.form>`** (item 6) → Enter envía + `enterKeyHint` adecuado
+- **CSS `:hover/:focus-visible`** reemplaza `onMouseOver/Out` (item 7) — funciona en touch + teclado
+- **Anuncio de paso** con `role="status" aria-live="polite"` (item 8) screen-reader-only
+- **`<StepProgress>` visible** en todos los pasos (item 9) — 4 dots para flujo nuevo, 2 para login con NIP existente
+- **Botón "← Atrás"** entre pasos (item 10) con `:focus-visible`, tap target ≥44px, `aria-label`
+- **Step 4 conserva `nip` original** si confirmación falla (item 11) — solo limpia `confirmNip`
+- **Foto + nombre completo en step 2** (item 12) — confirmación visual de identidad antes de la pregunta
+- **`<fieldset>` + `<legend>` + `role="radiogroup"`** en step 2 (semántica correcta)
+- **Mensaje de error inline** con `<AuthError>` reemplaza los toasts efímeros (consistencia)
+- **`friendlyAuthError`-like local strings**: errores cortos ("No encontramos ese número", "NIP incorrecto", "Los NIP no coinciden")
+- **Rechazo de NIPs triviales**: `WEAK_NIPS` set (0000, 1234, 1111, 7890, etc.) — UX item ya cubre defensa
+- **STEPS config object** reemplaza la cadena de ternarios para `eyebrow` + `label`
+- **`safe localStorage`** con try/catch envolviendo `localStorage.setItem('empleado_id', id)`
+- **`select('id, nombre, turno, foto_url, nip')`** en lugar de `select('*')` — minimiza datos sensibles expuestos al cliente
+- **Auto-submit en step 5** cuando el NIP coincide con `empleado.nip` (UX fluida)
+- **`useReducedMotion`** integrado en `stepMotion` (sin animaciones si el usuario lo pide)
+- **`stepMotion` con `y: 8`** en lugar de `x: 16` (vertical sutil, no abrupto)
+- **Resets atómicos** vía `resetFlow()` único
+
+### Validación
+- ✅ `yarn build` limpio · PWA SW + 19 precache entries
+- ✅ Snapshot iPhone 14 (390×844): step 1 renderiza con dots, intro, input numérico, botón
+- ✅ Error renderiza con `<AuthError>` y se anuncia con `aria-live`
+- ✅ `aria-label="Paso 1 de 4"` en `<StepProgress>` verificado
+- ✅ Announcer `role="status"` textcontent: "Paso 1 de 4: Identificación"
+- ✅ Back button oculto en step 1, visible en steps 2-5
+
+### Pendiente (próximas tandas)
+- **Tanda B (P2 pulido)**: `safeStorage` con clave prefijada (vp:empleado_id), `getInitials`, `APP_ROUTES`, tokens de motion centralizados, `friendlyAuthError` para errores Supabase
+- **Tanda C (P0 seguridad)**: NIP hash server-side, JWT de sesión, rate-limit, RLS — requiere Edge Function
+
 ## Implementado en esta sesión (Ene 2026) — Safe-area fix headers + toasts
 
 ### Bug reportado
