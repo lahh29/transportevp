@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useId } from 'react';
+import React, { useState, useEffect, useMemo, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Lock, Check, LogIn, ArrowLeft } from 'lucide-react';
+import { User, Lock, Check, LogIn, ArrowLeft, Fingerprint } from 'lucide-react';
 import { AuthShell } from '../components/AuthShell';
 import { AuthField } from '../components/AuthField';
 import { AuthButton } from '../components/AuthButton';
@@ -13,46 +12,42 @@ import { notify } from '../lib/notify';
 import { LoginTransition, LOGIN_TRANSITION_MS } from '../components/LoginTransition';
 import { MAPA_TURNOS } from '../lib/turnos';
 import { useReducedMotion } from '../lib/useReducedMotion';
+import { empleadoApi } from '../lib/empleadoApi';
+import { empleadoSession, webauthnHints } from '../lib/empleadoSession';
+import { webauthn } from '../lib/webauthn';
+import { APP_ROUTES, MOTION, getFirstName } from '../lib/choferConfig';
 
 /* ============================================================
-   LOGIN — Colaborador (flujo NIP 4 dígitos)
+   LOGIN — Colaborador (flujo NIP 4 dígitos + WebAuthn biométrico)
    Pasos:
      1. Número de empleado
-     2. Pregunta de seguridad (turno) → muestra foto + nombre
-     3. Crear NIP        (solo si no existe)
-     4. Confirmar NIP    (solo si no existe)
-     5. Ingresar NIP existente
+     2. Verificación de turno (sólo primera vez)
+     3. Crear NIP        (sólo primera vez)
+     4. Confirmar NIP    (sólo primera vez)
+     5. Ingresar NIP existente + opción biometría
+     6. Prompt opcional: "¿Activar Face ID/Touch ID?" tras login
    ============================================================ */
 
 const NIP_LENGTH = 4;
-const TOTAL_STEPS_NEW_NIP   = 4; // 1→2→3→4
-const TOTAL_STEPS_EXIST_NIP = 2; // 1→5
 
-/* Catálogo central de pasos — añadir uno nuevo es solo añadir aquí */
 const STEPS = {
   1: { eyebrow: 'Colaborador',  label: 'Identificación' },
   2: { eyebrow: 'Verificación', label: 'Verificación' },
   3: { eyebrow: 'Crear NIP',    label: 'Nuevo NIP' },
   4: { eyebrow: 'Confirmar',    label: 'Confirmación' },
   5: { eyebrow: 'Acceso',       label: 'Ingreso' },
+  6: { eyebrow: 'Biometría',    label: 'Acceso rápido' },
 };
-
-/* NIPs triviales rechazados (anti-patrones obvios) */
-const WEAK_NIPS = new Set([
-  '0000','1111','2222','3333','4444','5555','6666','7777','8888','9999',
-  '1234','2345','3456','4567','5678','6789','7890',
-  '0987','9876','8765','7654','6543','5432','4321','3210',
-]);
 
 const stepMotion = (reduced) => reduced ? {
   initial: false,
   animate: { opacity: 1 },
-  exit: { opacity: 0 },
+  exit:    { opacity: 0 },
 } : {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 0, y: MOTION.offset.sm },
   animate: { opacity: 1, y: 0 },
-  exit:    { opacity: 0, y: -8 },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+  exit:    { opacity: 0, y: -MOTION.offset.sm },
+  transition: { duration: MOTION.duration.base, ease: MOTION.ease },
 };
 
 export const EmpleadoLogin = () => {
@@ -63,24 +58,42 @@ export const EmpleadoLogin = () => {
   const [loading, setLoading]         = useState(false);
   const [numEmpleado, setNumEmpleado] = useState('');
   const [empleado, setEmpleado]       = useState(null);
+  const [hasWebAuthn, setHasWebAuthn] = useState(false);
   const [options, setOptions]         = useState([]);
   const [nip, setNip]                 = useState('');
   const [confirmNip, setConfirmNip]   = useState('');
   const [error, setError]             = useState('');
   const [successAnim, setSuccessAnim] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioRegistering, setBioRegistering] = useState(false);
 
-  /* IDs únicos para aria-describedby */
   const introHintId = useId();
 
-  /* Pasos visibles para el indicador (cambia según flujo) */
-  const flow = empleado?.nip ? 'existing' : 'new';
-  const total = flow === 'existing' ? TOTAL_STEPS_EXIST_NIP : TOTAL_STEPS_NEW_NIP;
+  /* ── Si ya hay sesión válida, salta al dashboard ── */
+  useEffect(() => {
+    if (empleadoSession.isAuthenticated()) {
+      navigate(APP_ROUTES.empleadoDashboard, { replace: true });
+    }
+  }, [navigate]);
+
+  /* ── Detecta soporte biométrico ── */
+  useEffect(() => {
+    let alive = true;
+    webauthn.hasPlatformAuthenticator().then((ok) => {
+      if (alive) setBioAvailable(ok);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  /* ── Progreso visual ── */
+  const flow = empleado?.has_nip ? 'existing' : 'new';
+  const total = flow === 'existing' ? 2 : 4;
   const currentForUI = useMemo(() => {
-    if (step === 5) return 2; // step 5 es el 2/2 del flujo "existing"
+    if (step === 5 || step === 6) return 2;
     return step;
   }, [step]);
 
-  /* ── Buscar empleado ── */
+  /* ── Step 1: Buscar empleado ── */
   const handleBuscarEmpleado = async (e) => {
     e?.preventDefault?.();
     if (!numEmpleado.trim()) return;
@@ -88,117 +101,160 @@ export const EmpleadoLogin = () => {
     setLoading(true);
 
     try {
-      const { data, error: dbErr } = await supabase
-        .from('empleados')
-        .select('id, nombre, turno, foto_url, nip')
-        .eq('numero_empleado', numEmpleado.trim())
-        .maybeSingle();
+      const { empleado: emp } = await empleadoApi.find(numEmpleado.trim());
+      setEmpleado(emp);
+      setHasWebAuthn(emp.has_webauthn || webauthnHints.has(numEmpleado.trim()));
 
-      if (dbErr || !data) {
-        setError('No encontramos ese número');
-        return;
-      }
-
-      setEmpleado(data);
-
-      if (data.nip) {
+      if (emp.has_nip) {
         setStep(5);
         return;
       }
 
-      const dbTurno   = String(data.turno || '').trim();
-      const realTurno = MAPA_TURNOS[dbTurno] || dbTurno;
-
+      // Primera vez: arma las opciones de turno
+      const realTurno = String(emp.turno || '').trim();
       if (!realTurno) {
         setError('Turno sin asignar. Contacta a RH.');
         setEmpleado(null);
         return;
       }
-
-      // Opciones = todos los turnos del MAPA + el real (si no está)
       const base = Object.keys(MAPA_TURNOS);
       const set  = new Set(base);
       set.add(realTurno);
       const posibles = Array.from(set);
       setOptions(posibles.map((t) => ({ label: t, isReal: t === realTurno })));
       setStep(2);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerificarTurno = (isReal) => {
-    if (isReal) {
+  /* ── Step 2: Verificación de turno ── */
+  const handleVerificarTurno = (op) => {
+    if (op.isReal) {
       setError('');
       setStep(3);
     } else {
-      setError('Respuesta incorrecta. Vuelve a empezar.');
-      // Permanecemos en step 2 unos ms para que el usuario lea, luego reset
+      setError('Respuesta incorrecta');
       setTimeout(() => resetFlow(), 900);
     }
   };
 
+  /* ── Step 3 → 4 ── */
   const handleCrearNip = (e) => {
     e?.preventDefault?.();
     if (nip.length !== NIP_LENGTH) return;
-    if (WEAK_NIPS.has(nip)) {
-      setError('Elige un NIP menos predecible');
-      setNip('');
-      return;
-    }
     setError('');
     setStep(4);
   };
 
+  /* ── Step 4: Confirmar y guardar ── */
   const handleConfirmarNip = async (e) => {
     e?.preventDefault?.();
     if (confirmNip.length !== NIP_LENGTH) return;
     if (nip !== confirmNip) {
       setError('Los NIP no coinciden');
-      setConfirmNip(''); // conserva nip original (UX item 11)
+      setConfirmNip('');
       return;
     }
 
     setError('');
     setLoading(true);
     try {
-      const { error: dbErr } = await supabase
-        .from('empleados')
-        .update({ nip })
-        .eq('id', empleado.id);
-      if (dbErr) throw dbErr;
+      // Verificación de turno se hizo en step 2 (lado cliente).
+      // Para mayor seguridad, el backend la vuelve a verificar.
+      const turnoReal = String(empleado.turno || '').trim();
+      const { token, empleado: fresh } = await empleadoApi.setNipPrimerLogin(
+        numEmpleado.trim(),
+        turnoReal,
+        nip,
+      );
+      empleadoSession.setToken(token, fresh);
+      setEmpleado(fresh);
       notify.success('NIP creado');
-      iniciarSesion(empleado.id);
-    } catch {
-      setError('No se pudo guardar. Inténtalo de nuevo.');
+      // Pregunta por biometría antes de entrar
+      if (bioAvailable) setStep(6);
+      else iniciarSesion();
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLoginNip = (e) => {
+  /* ── Step 5: Login con NIP existente ── */
+  const handleLoginNip = async (e) => {
     e?.preventDefault?.();
     if (nip.length !== NIP_LENGTH) return;
-    if (nip !== empleado.nip) {
-      setError('NIP incorrecto');
-      setNip('');
-      return;
-    }
     setError('');
-    iniciarSesion(empleado.id);
+    setLoading(true);
+    try {
+      const { token, empleado: fresh } = await empleadoApi.login(numEmpleado.trim(), nip);
+      empleadoSession.setToken(token, fresh);
+      setEmpleado(fresh);
+      // Si nunca enrolaron biometría y el dispositivo lo soporta, ofrécelo
+      if (bioAvailable && !hasWebAuthn) setStep(6);
+      else iniciarSesion();
+    } catch (err) {
+      setError(err.message);
+      setNip('');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const iniciarSesion = (id) => {
-    try { localStorage.setItem('empleado_id', id); } catch { /* iOS private: ignore */ }
+  /* ── Login biométrico (atajo desde step 5) ── */
+  const handleBiometricLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { token, empleado: fresh } = await webauthn.loginWithBiometric(numEmpleado.trim());
+      empleadoSession.setToken(token, fresh);
+      setEmpleado(fresh);
+      iniciarSesion();
+    } catch (err) {
+      if (err?.name === 'NotAllowedError') {
+        // Usuario canceló el prompt — silencio
+      } else {
+        setError(err.message || 'No se pudo usar biometría');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ── Step 6: Enrolar biometría (opcional) ── */
+  const handleEnableBio = async () => {
+    setBioRegistering(true);
+    try {
+      await webauthn.register({ deviceLabel: navigator.userAgent.slice(0, 80) });
+      webauthnHints.set(numEmpleado.trim(), true);
+      notify.success('Biometría activada');
+      iniciarSesion();
+    } catch (err) {
+      if (err?.name !== 'NotAllowedError') {
+        notify.error('No se pudo activar la biometría');
+      }
+      iniciarSesion();
+    } finally {
+      setBioRegistering(false);
+    }
+  };
+
+  const handleSkipBio = () => iniciarSesion();
+
+  const iniciarSesion = () => {
     setSuccessAnim(true);
-    setTimeout(() => navigate('/empleado/dashboard'), LOGIN_TRANSITION_MS);
+    setTimeout(() => navigate(APP_ROUTES.empleadoDashboard), LOGIN_TRANSITION_MS);
   };
 
-  /* ── Resets / navegación atrás ── */
+  /* ── Resets ── */
   const resetFlow = () => {
     setStep(1);
     setNumEmpleado('');
     setEmpleado(null);
+    setHasWebAuthn(false);
     setNip('');
     setConfirmNip('');
     setOptions([]);
@@ -207,34 +263,29 @@ export const EmpleadoLogin = () => {
 
   const handleBack = () => {
     setError('');
-    if (step === 2) resetFlow();
+    if (step === 2 || step === 5) resetFlow();
     else if (step === 3) { setNip(''); setStep(2); }
     else if (step === 4) { setConfirmNip(''); setStep(3); }
-    else if (step === 5) resetFlow();
   };
 
-  const canGoBack = step !== 1;
-  const stepCfg   = STEPS[step];
+  const canGoBack = step !== 1 && step !== 6;
+  const stepCfg = STEPS[step];
+  const showBioInStep5 = step === 5 && bioAvailable && (hasWebAuthn || empleado?.has_webauthn);
 
   return (
     <>
       <LoginTransition isVisible={successAnim} userName={empleado?.nombre} />
       <AuthShell eyebrow={stepCfg.eyebrow} testId="empleado-login-page">
 
-        {/* Progreso visual */}
-        <StepProgress current={currentForUI} total={total} />
+        {step !== 6 && <StepProgress current={currentForUI} total={total} />}
 
-        {/* Anuncio del paso para lectores de pantalla (item 8) */}
-        <p
-          role="status"
-          aria-live="polite"
-          data-testid="step-announcer"
-          style={srOnly}
-        >
-          Paso {currentForUI} de {total}: {stepCfg.label}
+        <p role="status" aria-live="polite" data-testid="step-announcer" style={srOnly}>
+          {step === 6
+            ? 'Activar acceso rápido con biometría'
+            : `Paso ${currentForUI} de ${total}: ${stepCfg.label}`
+          }
         </p>
 
-        {/* Barra superior con back button (item 10) */}
         <div style={topBarStyle}>
           {canGoBack ? (
             <button
@@ -255,15 +306,9 @@ export const EmpleadoLogin = () => {
 
         <AnimatePresence mode="wait">
 
-          {/* ── Step 1: Número de empleado ── */}
+          {/* ── Step 1 ── */}
           {step === 1 && (
-            <motion.form
-              key="step-1"
-              {...stepMotion(reducedMotion)}
-              onSubmit={handleBuscarEmpleado}
-              style={formStyle}
-              noValidate
-            >
+            <motion.form key="step-1" {...stepMotion(reducedMotion)} onSubmit={handleBuscarEmpleado} style={formStyle} noValidate>
               <StepIntro
                 icon={User}
                 title="Bienvenido"
@@ -301,15 +346,10 @@ export const EmpleadoLogin = () => {
             </motion.form>
           )}
 
-          {/* ── Step 2: Verificación de identidad ── */}
+          {/* ── Step 2 ── */}
           {step === 2 && empleado && (
-            <motion.div
-              key="step-2"
-              {...stepMotion(reducedMotion)}
-              style={formStyle}
-            >
+            <motion.div key="step-2" {...stepMotion(reducedMotion)} style={formStyle}>
               <EmpleadoIdentity empleado={empleado} />
-
               <fieldset style={fieldsetStyle} data-testid="empleado-turno-group">
                 <legend style={legendStyle} id={introHintId}>
                   ¿Cuál es tu turno asignado?
@@ -321,7 +361,7 @@ export const EmpleadoLogin = () => {
                       type="button"
                       role="radio"
                       aria-checked="false"
-                      onClick={() => handleVerificarTurno(op.isReal)}
+                      onClick={() => handleVerificarTurno(op)}
                       data-testid={`empleado-turno-opt-${op.label}`}
                       className="vp-turno-opt"
                       style={optionStyle}
@@ -334,15 +374,9 @@ export const EmpleadoLogin = () => {
             </motion.div>
           )}
 
-          {/* ── Step 3: Crear NIP ── */}
+          {/* ── Step 3 ── */}
           {step === 3 && (
-            <motion.form
-              key="step-3"
-              {...stepMotion(reducedMotion)}
-              onSubmit={handleCrearNip}
-              style={formStyle}
-              noValidate
-            >
+            <motion.form key="step-3" {...stepMotion(reducedMotion)} onSubmit={handleCrearNip} style={formStyle} noValidate>
               <StepIntro
                 icon={Lock}
                 title="Crea tu NIP"
@@ -370,15 +404,9 @@ export const EmpleadoLogin = () => {
             </motion.form>
           )}
 
-          {/* ── Step 4: Confirmar NIP ── */}
+          {/* ── Step 4 ── */}
           {step === 4 && (
-            <motion.form
-              key="step-4"
-              {...stepMotion(reducedMotion)}
-              onSubmit={handleConfirmarNip}
-              style={formStyle}
-              noValidate
-            >
+            <motion.form key="step-4" {...stepMotion(reducedMotion)} onSubmit={handleConfirmarNip} style={formStyle} noValidate>
               <StepIntro
                 icon={Check}
                 title="Confirma tu NIP"
@@ -408,29 +436,30 @@ export const EmpleadoLogin = () => {
             </motion.form>
           )}
 
-          {/* ── Step 5: Login con NIP existente ── */}
+          {/* ── Step 5 ── */}
           {step === 5 && empleado && (
-            <motion.form
-              key="step-5"
-              {...stepMotion(reducedMotion)}
-              onSubmit={handleLoginNip}
-              style={formStyle}
-              noValidate
-            >
+            <motion.form key="step-5" {...stepMotion(reducedMotion)} onSubmit={handleLoginNip} style={formStyle} noValidate>
               <EmpleadoIdentity empleado={empleado} variant="compact" />
+
+              {showBioInStep5 && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="vp-bio-btn"
+                  style={bioBtnStyle}
+                  data-testid="empleado-bio-login"
+                >
+                  <Fingerprint size={20} strokeWidth={1.75} aria-hidden="true" />
+                  <span>Ingresar con biometría</span>
+                </button>
+              )}
+
               <NipInput
                 value={nip}
-                onChange={(v) => {
-                  setNip(v);
-                  if (error) setError('');
-                  // Auto-submit cuando se completa (UX fluida)
-                  if (v.length === NIP_LENGTH && empleado?.nip && v === empleado.nip) {
-                    // breve delay para que el shake/feedback no aparezca antes
-                    setTimeout(() => iniciarSesion(empleado.id), 80);
-                  }
-                }}
+                onChange={(v) => { setNip(v); if (error) setError(''); }}
                 length={NIP_LENGTH}
-                autoFocus
+                autoFocus={!showBioInStep5}
                 error={Boolean(error)}
                 labelledBy="nip-login-label"
                 enterKeyHint="done"
@@ -441,6 +470,8 @@ export const EmpleadoLogin = () => {
               <AuthButton
                 type="submit"
                 onClick={handleLoginNip}
+                loading={loading}
+                loadingText="Verificando…"
                 disabled={nip.length !== NIP_LENGTH}
                 trailingIcon={LogIn}
                 data-testid="empleado-nip-login-btn"
@@ -460,32 +491,53 @@ export const EmpleadoLogin = () => {
             </motion.form>
           )}
 
+          {/* ── Step 6: Prompt biometría ── */}
+          {step === 6 && (
+            <motion.div key="step-6" {...stepMotion(reducedMotion)} style={formStyle}>
+              <StepIntro
+                icon={Fingerprint}
+                title="Acceso rápido"
+                subtitle="Activa Face ID o Touch ID para entrar sin NIP"
+              />
+              <AuthButton
+                onClick={handleEnableBio}
+                loading={bioRegistering}
+                loadingText="Activando…"
+                data-testid="empleado-bio-enable"
+              >
+                Activar biometría
+              </AuthButton>
+              <button
+                type="button"
+                onClick={handleSkipBio}
+                disabled={bioRegistering}
+                className="vp-link-btn"
+                style={linkBtnStyle}
+                data-testid="empleado-bio-skip"
+              >
+                Ahora no
+              </button>
+            </motion.div>
+          )}
+
         </AnimatePresence>
 
-        {/* Estilos para hover/focus accesibles — sin onMouseOver/Out */}
         <style>{`
-          .vp-turno-opt {
-            transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease;
-          }
-          .vp-turno-opt:hover {
-            border-color: var(--color-accent);
-            color: var(--color-accent);
-          }
+          .vp-turno-opt { transition: border-color 160ms ease, color 160ms ease, background-color 160ms ease; }
+          .vp-turno-opt:hover { border-color: var(--color-accent); color: var(--color-accent); }
           .vp-turno-opt:focus-visible {
             outline: none;
             border-color: var(--color-accent);
             color: var(--color-accent);
             box-shadow: 0 0 0 3px rgb(var(--color-accent-raw) / 0.18);
           }
-          .vp-turno-opt:active {
-            transform: scale(0.98);
-          }
+          .vp-turno-opt:active { transform: scale(0.98); }
 
           .vp-link-btn {
             text-decoration: underline;
-            text-decoration-color: rgb(var(--color-ink-raw, 0 0 0) / 0.2);
+            text-decoration-color: rgb(0 0 0 / 0.18);
             text-underline-offset: 3px;
-            transition: color 120ms ease, text-decoration-color 120ms ease;
+            transition: color 120ms ease, text-decoration-color 120ms ease, box-shadow 120ms ease;
           }
           .vp-link-btn:hover, .vp-link-btn:focus-visible {
             color: var(--color-ink);
@@ -497,20 +549,24 @@ export const EmpleadoLogin = () => {
             border-radius: var(--rounded-sm);
           }
 
-          .vp-back-btn {
-            transition: color 120ms ease, background-color 120ms ease;
-          }
+          .vp-back-btn { transition: color 120ms ease, background-color 120ms ease; }
           .vp-back-btn:hover, .vp-back-btn:focus-visible {
-            color: var(--color-ink);
-            background: var(--color-canvas-soft);
+            color: var(--color-ink); background: var(--color-canvas-soft); outline: none;
+          }
+          .vp-back-btn:focus-visible { box-shadow: 0 0 0 3px rgb(var(--color-accent-raw) / 0.18); }
+
+          .vp-bio-btn { transition: background 140ms ease, border-color 140ms ease, color 140ms ease; }
+          .vp-bio-btn:hover, .vp-bio-btn:focus-visible {
+            background: rgb(var(--color-accent-raw) / 0.08);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
             outline: none;
           }
-          .vp-back-btn:focus-visible {
-            box-shadow: 0 0 0 3px rgb(var(--color-accent-raw) / 0.18);
-          }
+          .vp-bio-btn:focus-visible { box-shadow: 0 0 0 3px rgb(var(--color-accent-raw) / 0.18); }
+          .vp-bio-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
           @media (prefers-reduced-motion: reduce) {
-            .vp-turno-opt, .vp-link-btn, .vp-back-btn { transition: none; }
+            .vp-turno-opt, .vp-link-btn, .vp-back-btn, .vp-bio-btn { transition: none; }
             .vp-turno-opt:active { transform: none; }
           }
         `}</style>
@@ -520,30 +576,23 @@ export const EmpleadoLogin = () => {
 };
 
 /* ─── Intro de paso ─── */
-const StepIntro = ({ icon: Icon, title, subtitle, tone = 'accent', hintId }) => {
-  const toneColor = tone === 'success' ? 'var(--color-semantic-success)' : 'var(--color-accent)';
-  const toneBg    = tone === 'success' ? 'rgb(var(--color-semantic-success-raw) / 0.1)' : 'rgb(var(--color-accent-raw) / 0.1)';
-  return (
-    <div style={introStyle}>
-      {Icon && (
-        <div style={{ ...introIconStyle, background: toneBg, color: toneColor }}>
-          <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
-        </div>
-      )}
-      <h2 style={introTitleStyle}>{title}</h2>
-      {subtitle && (
-        <p id={hintId} style={introSubtitleStyle}>{subtitle}</p>
-      )}
-    </div>
-  );
-};
+const StepIntro = ({ icon: Icon, title, subtitle, hintId }) => (
+  <div style={introStyle}>
+    {Icon && (
+      <div style={{ ...introIconStyle, background: 'rgb(var(--color-accent-raw) / 0.1)', color: 'var(--color-accent)' }}>
+        <Icon size={18} strokeWidth={1.75} aria-hidden="true" />
+      </div>
+    )}
+    <h2 style={introTitleStyle}>{title}</h2>
+    {subtitle && <p id={hintId} style={introSubtitleStyle}>{subtitle}</p>}
+  </div>
+);
 
-/* ─── Identidad del empleado (steps 2 y 5) ─── */
+/* ─── Identidad ─── */
 const EmpleadoIdentity = ({ empleado, variant = 'full' }) => {
-  const firstName = empleado?.nombre?.split(' ')[0] || '';
+  const firstName = getFirstName(empleado?.nombre);
   const compact = variant === 'compact';
   const size = compact ? '3rem' : '3.5rem';
-
   return (
     <div style={introStyle} data-testid="empleado-identity">
       {empleado.foto_url ? (
@@ -559,163 +608,108 @@ const EmpleadoIdentity = ({ empleado, variant = 'full' }) => {
           }}
         />
       ) : (
-        <div style={{
-          width: size, height: size, borderRadius: '50%',
-          background: 'rgb(var(--color-accent-raw) / 0.1)',
-          color: 'var(--color-accent)',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        }} aria-hidden="true">
+        <div
+          aria-hidden="true"
+          style={{
+            width: size, height: size, borderRadius: '50%',
+            background: 'rgb(var(--color-accent-raw) / 0.1)',
+            color: 'var(--color-accent)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
           <User size={compact ? 22 : 26} strokeWidth={1.75} />
         </div>
       )}
       <h2 style={introTitleStyle}>
         {compact ? `Hola, ${firstName}` : empleado.nombre || firstName}
       </h2>
-      {!compact && (
-        <p style={introSubtitleStyle}>Verifiquemos tu identidad</p>
-      )}
-      {compact && (
-        <p style={introSubtitleStyle}>Ingresa tu NIP</p>
-      )}
+      <p style={introSubtitleStyle}>
+        {compact ? 'Ingresa tu NIP' : 'Verifiquemos tu identidad'}
+      </p>
     </div>
   );
 };
 
 /* ============================================================
-   STYLES — 100% tokens, mobile-first
+   STYLES
    ============================================================ */
-const formStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--spacing-base)',
-};
-
-const topBarStyle = {
-  minHeight: '2.5rem',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-};
-
+const formStyle = { display: 'flex', flexDirection: 'column', gap: 'var(--spacing-base)' };
+const topBarStyle = { minHeight: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' };
 const backBtnStyle = {
-  background: 'none',
-  border: 'none',
-  minHeight: '2.5rem',
-  minWidth: '2.75rem',
+  background: 'none', border: 'none',
+  minHeight: '2.5rem', minWidth: '2.75rem',
   padding: 'var(--spacing-xxs) var(--spacing-sm)',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 'var(--spacing-xxs)',
-  borderRadius: 'var(--rounded-pill)',
-  cursor: 'pointer',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--typography-caption-size)',
+  display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xxs)',
+  borderRadius: 'var(--rounded-pill)', cursor: 'pointer',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--typography-caption-size)',
   color: 'var(--color-muted)',
-  WebkitTapHighlightColor: 'transparent',
-  touchAction: 'manipulation',
+  WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
 };
-
 const introStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  textAlign: 'center',
-  gap: 'var(--spacing-xs)',
-  marginBottom: 'var(--spacing-xs)',
+  display: 'flex', flexDirection: 'column', alignItems: 'center',
+  textAlign: 'center', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-xs)',
 };
-
 const introIconStyle = {
-  width: '2.5rem',
-  height: '2.5rem',
-  borderRadius: '50%',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  width: '2.5rem', height: '2.5rem', borderRadius: '50%',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
   marginBottom: 'var(--spacing-xxs)',
 };
-
 const introTitleStyle = {
-  margin: 0,
-  fontFamily: 'var(--font-display)',
+  margin: 0, fontFamily: 'var(--font-display)',
   fontSize: 'var(--typography-title-md-size)',
   fontWeight: 'var(--typography-title-md-weight)',
-  color: 'var(--color-ink)',
-  lineHeight: 1.2,
-  letterSpacing: '-0.01em',
+  color: 'var(--color-ink)', lineHeight: 1.2, letterSpacing: '-0.01em',
 };
-
 const introSubtitleStyle = {
-  margin: 0,
-  fontFamily: 'var(--font-body)',
+  margin: 0, fontFamily: 'var(--font-body)',
   fontSize: 'var(--typography-caption-size)',
-  color: 'var(--color-muted)',
-  lineHeight: 'var(--typography-caption-lh)',
+  color: 'var(--color-muted)', lineHeight: 'var(--typography-caption-lh)',
 };
-
-const fieldsetStyle = {
-  border: 'none',
-  padding: 0,
-  margin: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 'var(--spacing-sm)',
-};
-
+const fieldsetStyle = { border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' };
 const legendStyle = {
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--typography-body-sm-size)',
-  fontWeight: 'var(--typography-title-sm-weight)',
-  color: 'var(--color-ink)',
-  textAlign: 'center',
-  padding: 0,
-  marginBottom: 'var(--spacing-xs)',
-  width: '100%',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--typography-body-sm-size)',
+  fontWeight: 'var(--typography-title-sm-weight)', color: 'var(--color-ink)',
+  textAlign: 'center', padding: 0, marginBottom: 'var(--spacing-xs)', width: '100%',
 };
-
 const optionsGridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: 'var(--spacing-xs)',
+  display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--spacing-xs)',
 };
-
 const optionStyle = {
-  width: '100%',
-  minHeight: '3rem',
+  width: '100%', minHeight: '3rem',
   padding: 'var(--spacing-sm) var(--spacing-base)',
   borderRadius: 'var(--rounded-lg)',
   border: '1px solid var(--color-hairline-soft)',
   background: 'var(--color-surface-card)',
   color: 'var(--color-ink)',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--typography-body-sm-size)',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--typography-body-sm-size)',
   fontWeight: 'var(--typography-title-sm-weight)',
-  textAlign: 'center',
-  cursor: 'pointer',
+  textAlign: 'center', cursor: 'pointer',
   letterSpacing: '0.04em',
-  WebkitTapHighlightColor: 'transparent',
-  touchAction: 'manipulation',
+  WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
 };
-
 const linkBtnStyle = {
-  background: 'none',
-  border: 'none',
-  minHeight: '2.75rem',
-  padding: 'var(--spacing-xs) var(--spacing-sm)',
-  cursor: 'pointer',
-  fontFamily: 'var(--font-body)',
-  fontSize: 'var(--typography-caption-size)',
-  color: 'var(--color-muted)',
-  textAlign: 'center',
-  alignSelf: 'center',
+  background: 'none', border: 'none', minHeight: '2.75rem',
+  padding: 'var(--spacing-xs) var(--spacing-sm)', cursor: 'pointer',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--typography-caption-size)',
+  color: 'var(--color-muted)', textAlign: 'center', alignSelf: 'center',
   WebkitTapHighlightColor: 'transparent',
 };
-
+const bioBtnStyle = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  gap: 'var(--spacing-xs)',
+  minHeight: '2.75rem',
+  padding: 'var(--spacing-xs) var(--spacing-base)',
+  borderRadius: 'var(--rounded-pill)',
+  border: '1px dashed var(--color-hairline-strong)',
+  background: 'transparent',
+  color: 'var(--color-ink)',
+  fontFamily: 'var(--font-body)', fontSize: 'var(--typography-body-sm-size)',
+  fontWeight: 600,
+  cursor: 'pointer',
+  WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation',
+};
 const srOnly = {
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  overflow: 'hidden',
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
+  position: 'absolute', width: '1px', height: '1px',
+  overflow: 'hidden', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)',
   whiteSpace: 'nowrap',
 };

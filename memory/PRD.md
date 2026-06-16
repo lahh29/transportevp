@@ -105,6 +105,71 @@ Sistema web (Vite + React + Supabase) para gestión de transporte de personal en
 - ✅ Icons (`/pwa-512x512.png`, `/apple-touch-icon-180x180.png` 200)
 - ✅ Viewport meta verificado en runtime (test playwright)
 
+## Implementado en esta sesión (Ene 2026) — Tandas B + C + D (EmpleadoLogin completo)
+
+### Tanda B · Pulido P2 (refactor interno)
+- `safeStorage.STORAGE_KEYS` ampliado: `empleadoId`, `empleadoToken`, `webauthnHints` (prefijados `vp:`)
+- `choferConfig.APP_ROUTES` ampliado: `empleadoLogin`, `empleadoDashboard`, `choferLogin`
+- `choferConfig.MOTION` nuevo: `ease`, `duration` (instant/fast/base/slow), `offset` (sm/md) — tokens centralizados
+- `getFirstName()` helper añadido (seguro ante null)
+- `EmpleadoLogin` usa `APP_ROUTES`, `MOTION`, `getFirstName` (cero magic numbers/strings)
+
+### Tanda C · Seguridad P0 (backend Supabase)
+**SQL migración** (`/app/supabase/migrations/20260116_empleado_security.sql`):
+- `empleados`: añade `nip_hash`, `nip_failed_attempts`, `nip_locked_until`, `webauthn_enrolled_at`
+- `empleado_login_attempts`: tracking de intentos (con índice por número+tiempo)
+- `empleado_webauthn_credentials`: passkeys/biometría
+- `empleado_webauthn_challenges`: challenges temporales (TTL 5 min)
+- RLS habilitada en las 4 tablas
+
+**Edge Functions** (3 para Tanda C):
+- `empleado-find`: busca empleado sin exponer `nip_hash`; devuelve `has_nip`, `has_webauthn`; rate-limit; detecta lockout
+- `empleado-login`: valida NIP con bcrypt; **migración transparente desde NIP plano** (auto-hash al primer login exitoso); rate-limit (5 fails / 15 min → lockout 15 min); emite JWT 8 h firmado con `EMPLEADO_JWT_SECRET`
+- `empleado-set-nip`: 2 modos — primera vez (verificación de turno server-side) o cambio con token; rechaza NIPs débiles (`WEAK_NIPS`); bcrypt + emite token nuevo
+
+**Shared utilities**:
+- `_shared/cors.ts`: helpers CORS/JSON
+- `_shared/jwt.ts`: firma/verificación HS256 con `djwt`
+- `_shared/rate_limit.ts`: 5 intentos / 15 min, lockout 15 min, registro en `empleado_login_attempts`
+- `_shared/hash.ts`: bcrypt cost 10 (~80ms)
+- `_shared/webauthn_config.ts`: variables RP
+
+**Cliente**:
+- `empleadoSession.js`: JWT lifecycle (set/get/clear/isAuthenticated), decodifica payload local para detectar `exp`
+- `empleadoApi.js`: wrapper `supabase.functions.invoke` con `friendlyApiError` y manejo de error de red
+- `EmpleadoLogin` 100% migrado a `empleadoApi` — sin queries directos a `empleados` desde cliente
+- `select('*')` eliminado: ya no se filtra nada sensible al cliente
+
+### Tanda D · WebAuthn / Biometría (Face ID + Touch ID + Windows Hello)
+**Edge Functions** (4 nuevas):
+- `webauthn-register-begin`: pide challenge para enrolar (requiere token)
+- `webauthn-register-finish`: verifica respuesta del navegador, persiste credencial (`@simplewebauthn/server@10`)
+- `webauthn-login-begin`: challenge para autenticar (no requiere token)
+- `webauthn-login-finish`: verifica firma + counter anti-replay, emite JWT
+
+**Cliente**:
+- `webauthn.js`: orquesta `startRegistration`/`startAuthentication` de `@simplewebauthn/browser@10`
+- `webauthnHints` en safeStorage: recuerda qué números tienen biometría enrolada (UI hint)
+- `EmpleadoLogin` step 5: botón "Ingresar con biometría" si dispositivo soporta + hay credencial enrolada
+- `EmpleadoLogin` step 6 (nuevo): prompt opcional "Activar Face ID/Touch ID" tras primer login
+- Detección automática de `platformAuthenticatorIsAvailable()` (oculta el botón en navegadores sin soporte)
+- Manejo silencioso de `NotAllowedError` (usuario canceló el prompt)
+
+### Documentación de despliegue
+`/app/supabase/README.md` con checklist en orden:
+1. Aplicar migración SQL (idempotente, vía Dashboard o CLI)
+2. Configurar 4 project secrets: `EMPLEADO_JWT_SECRET`, `WEBAUTHN_RP_ID`, `WEBAUTHN_RP_NAME`, `WEBAUTHN_ORIGIN`
+3. Desplegar 7 functions con `--no-verify-jwt`
+4. Verificar con `curl`
+5. Hardening opcional (RLS, pg_cron, monitoring)
++ Sección de troubleshooting y migración de NIPs legacy
+
+### Validación
+- ✅ `yarn build` limpio · PWA intacta · 1163 KB / 322 KB gzip (+2 KB por `@simplewebauthn/browser`)
+- ✅ Cliente renderiza step 1 con progress + intro + input + submit
+- ✅ Error genérico "Servicio no disponible" cuando Edge Functions aún no desplegadas (en lugar del crudo "Failed to send a request")
+- ✅ Sin queries directos a `empleados` desde cliente
+
 ## Implementado en esta sesión (Ene 2026) — EmpleadoLogin Tanda A (UX + A11y P1)
 
 ### Componentes nuevos

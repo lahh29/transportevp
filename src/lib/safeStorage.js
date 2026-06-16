@@ -94,4 +94,7 @@ export const STORAGE_KEYS = {
   rutasActivas: 'vp:rutas_activas_local',
   qrHistory:    'vp:qr_local_history',
   offlineQueue: 'vp:offline_queue',
+  empleadoId:   'vp:empleado_id',
+  empleadoToken:'vp:empleado_token',
+  webauthnHints:'vp:webauthn_hints', // mapa numero_empleado → bool (sólo UI hint)
 };

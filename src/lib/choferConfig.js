@@ -124,7 +124,28 @@ export const APP_ROUTES = {
   landing:  '/',
   login:    '/login',
   chofer:   '/chofer',
+  choferLogin: '/chofer/login',
   empresa:  '/empresa',
+  empleadoLogin: '/empleado/login',
+  empleadoDashboard: '/empleado/dashboard',
+};
+
+/* ── Tokens de motion (centralizados para todas las animaciones) ─ */
+export const MOTION = {
+  /** Easing estándar — equivalente a CSS cubic-bezier(.22,1,.36,1) "ease-out-expo soft" */
+  ease: [0.22, 1, 0.36, 1],
+  /** Duraciones (segundos para framer, ms multiplicado donde aplique) */
+  duration: {
+    instant: 0.12,
+    fast:    0.18,
+    base:    0.22,
+    slow:    0.32,
+  },
+  /** Desplazamientos para slides */
+  offset: {
+    sm: 8,
+    md: 16,
+  },
 };
 
 /* ── Helpers de fecha ────────────────────────────────────────────── */
@@ -141,4 +162,10 @@ export const getInitials = (nombre) => {
   return parts.length === 1
     ? parts[0][0].toUpperCase()
     : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+/** Primer nombre — seguro ante null/undefined. */
+export const getFirstName = (nombre) => {
+  if (!nombre) return '';
+  return String(nombre).trim().split(/\s+/)[0] || '';
 };
