@@ -325,610 +325,13 @@ const RegItem = ({ reg, i }) => {
   );
 };
 
-/* ─── Componente drill-down de Registros ──────────────────── */
-const RegistrosPanel = ({ registros, loading }) => {
-  // drillPath: [] | ['ruta', rutaName] | ['ruta', rutaName, 'week', weekKey] | ['ruta', rutaName, 'week', weekKey, 'day', dayKey]
-  const [drillPath, setDrillPath] = useState([]);
-
-  const push = (...segments) => setDrillPath(prev => [...prev, ...segments]);
-  const back = () => setDrillPath(prev => prev.slice(0, -2));
-
-  // ── Datos agrupados por ruta
-  const byRuta = useMemo(() => {
-    const map = {};
-    registros.forEach(reg => {
-      const ruta = reg.ruta_chofer || reg.empleados?.ruta || 'Sin ruta';
-      if (!map[ruta]) map[ruta] = [];
-      map[ruta].push(reg);
-    });
-    return map;
-  }, [registros]);
-
-  const level = drillPath.length / 2; // 0=rutas, 1=semanas, 2=dias, 3=turnos
-
-  const currentRuta  = drillPath[1];
-  const currentWeek  = drillPath[3];
-  const currentDay   = drillPath[5];
-
-  // Datos filtrados según el nivel
-  const rutaRegs = currentRuta ? (byRuta[currentRuta] || []) : [];
-
-  const byWeek = useMemo(() => {
-    const map = {};
-    rutaRegs.forEach(reg => {
-      const key = getWeekKey(reg.fecha_hora);
-      if (!map[key]) map[key] = [];
-      map[key].push(reg);
-    });
-    return map;
-  }, [rutaRegs]);
-
-  const weekRegs = currentWeek ? (byWeek[currentWeek] || []) : [];
-
-  const byDay = useMemo(() => {
-    const map = {};
-    weekRegs.forEach(reg => {
-      const key = getDayKey(reg.fecha_hora);
-      if (!map[key]) map[key] = [];
-      map[key].push(reg);
-    });
-    return map;
-  }, [weekRegs]);
-
-  const dayRegs = currentDay ? (byDay[currentDay] || []) : [];
-
-  const byTurno = useMemo(() => {
-    const map = {};
-    dayRegs.forEach(reg => {
-      const t = reg.empleados?.turno || 'Sin turno';
-      if (!map[t]) map[t] = [];
-      map[t].push(reg);
-    });
-    // Orden por prioridad de anomalía:
-    // 1. Ruta Incorrecta · 2. QR Inválido · 3. Fuera de Horario · 4. Día Descanso · 5. Autorizado
-    Object.keys(map).forEach(t => {
-      map[t].sort((a, b) => {
-        const pa = PRIORITY[a.estado] ?? 99;
-        const pb = PRIORITY[b.estado] ?? 99;
-        if (pa !== pb) return pa - pb;
-        return new Date(b.fecha_hora) - new Date(a.fecha_hora);
-      });
-    });
-    return map;
-  }, [dayRegs]);
-
-  // Turnos ordenados: anomalías arriba, luego ascendente numérico
-  const turnosOrdered = useMemo(() => {
-    return Object.keys(byTurno).sort((a, b) => {
-      const anomA = byTurno[a].filter(r => r.estado !== 'autorizado').length;
-      const anomB = byTurno[b].filter(r => r.estado !== 'autorizado').length;
-      if ((anomA > 0) !== (anomB > 0)) return anomB - anomA;
-      const na = parseInt(a, 10), nb = parseInt(b, 10);
-      if (!isNaN(na) && !isNaN(nb)) return na - nb;
-      if (!isNaN(na)) return -1;
-      if (!isNaN(nb)) return 1;
-      return a.localeCompare(b);
-    });
-  }, [byTurno]);
-
-  if (loading) {
-    return (
-      <div role="status" aria-busy="true" style={regStyles.loadingWrap}>
-        {[0, 1, 2].map(k => (
-          <div key={k} style={regStyles.skeletonCard} />
-        ))}
-        <style>{`@keyframes vp-reg-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
-      </div>
-    );
-  }
-
-  return (
-    <section style={regStyles.panel} data-testid="registros-panel" aria-label="Historial de abordajes">
-      <AnimatePresence mode="wait">
-
-        {/* NIVEL 0 — Rutas */}
-        {level === 0 && (
-          <motion.div key="rutas" {...REG_ANIM}>
-            <RegHeader
-              title="Historial"
-              sub="Selecciona una ruta para ver el detalle"
-              showBack={false}
-            />
-            {Object.keys(byRuta).length === 0 ? (
-              <RegEmpty />
-            ) : (
-              <ul style={regStyles.list} role="list">
-                {Object.entries(byRuta).sort().map(([ruta, regs], i) => {
-                  const { code, desc } = parseRuta(ruta);
-                  const color = getRutaColor(code);
-                  return (
-                    <motion.li key={ruta} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
-                      <button
-                        type="button"
-                        onClick={() => push('ruta', ruta)}
-                        data-testid={`reg-ruta-${code}`}
-                        style={regStyles.rutaCard}
-                      >
-                        <div
-                          aria-hidden="true"
-                          style={{ ...regStyles.rutaBadge, background: color.bg }}
-                        >
-                          <span style={{ ...regStyles.rutaBadgeText, color: color.text }}>
-                            {code}
-                          </span>
-                        </div>
-                        <div style={regStyles.cardBody}>
-                          <p style={regStyles.cardLeft} title={desc}>{desc}</p>
-                          <p style={regStyles.cardSub}>
-                            {regs.length} abordaje{regs.length !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                        <div style={regStyles.cardRight}>
-                          <span
-                            style={{
-                              ...regStyles.countPill,
-                              background: color.bg,
-                              color: color.text,
-                            }}
-                          >
-                            {regs.length}
-                          </span>
-                          <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" style={{ color: 'var(--color-muted-soft)' }} />
-                        </div>
-                      </button>
-                    </motion.li>
-                  );
-                })}
-              </ul>
-            )}
-          </motion.div>
-        )}
-
-        {/* NIVEL 1 — Semanas */}
-        {level === 1 && (
-          <motion.div key="semanas" {...REG_ANIM}>
-            <RegHeader
-              title={currentRuta}
-              sub="Selecciona una semana"
-              showBack
-              onBack={back}
-            />
-            <ul style={regStyles.list} role="list">
-              {Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0])).map(([weekKey, regs], i) => (
-                <motion.li key={weekKey} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
-                  <RegCard
-                    onClick={() => push('week', weekKey)}
-                    left={formatWeekLabel(weekKey)}
-                    sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
-                    right={regs.length}
-                    accent={<Calendar size={16} strokeWidth={1.75} style={{ color: 'var(--color-accent)' }} />}
-                    testId={`reg-week-${weekKey}`}
-                  />
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-
-        {/* NIVEL 2 — Días */}
-        {level === 2 && (
-          <motion.div key="dias" {...REG_ANIM}>
-            <RegHeader
-              title={formatWeekLabel(currentWeek)}
-              sub="Selecciona un día"
-              showBack
-              onBack={back}
-            />
-            <ul style={regStyles.list} role="list">
-              {Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0])).map(([dayKey, regs], i) => (
-                <motion.li key={dayKey} {...REG_LIST_ITEM(i)} style={{ listStyle: 'none' }}>
-                  <RegCard
-                    onClick={() => push('day', dayKey)}
-                    left={formatDayLabel(dayKey)}
-                    sub={`${regs.length} abordaje${regs.length !== 1 ? 's' : ''}`}
-                    right={regs.length}
-                    accent={<Clock size={16} strokeWidth={1.75} style={{ color: 'var(--color-accent)' }} />}
-                    testId={`reg-day-${dayKey}`}
-                  />
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-
-        {/* NIVEL 3 — Turnos + Empleados (ordenados por prioridad) */}
-        {level === 3 && (
-          <motion.div key="turnos" {...REG_ANIM}>
-            <RegHeader
-              title={formatDayLabel(currentDay)}
-              sub={`${dayRegs.length} empleado${dayRegs.length !== 1 ? 's' : ''} · orden por prioridad`}
-              showBack
-              onBack={back}
-            />
-            <div style={regStyles.turnosWrap}>
-              {turnosOrdered.map(turno => {
-                const regs = byTurno[turno];
-                const anomalies = regs.filter(r => r.estado !== 'autorizado').length;
-                return (
-                  <section key={turno} aria-labelledby={`turno-${turno}`} data-testid={`reg-turno-${turno}`}>
-                    <div style={regStyles.turnoHeader}>
-                      <h3 id={`turno-${turno}`} style={regStyles.turnoTitle}>
-                        Turno {turno}
-                      </h3>
-                      {anomalies > 0 && (
-                        <span
-                          style={regStyles.turnoAlertChip}
-                          title={`${anomalies} incidencia${anomalies !== 1 ? 's' : ''}`}
-                          aria-label={`${anomalies} incidencias en este turno`}
-                          data-testid={`reg-turno-alert-${turno}`}
-                        >
-                          {anomalies} <span aria-hidden="true">⚠</span>
-                        </span>
-                      )}
-                      <div style={regStyles.turnoDivider} aria-hidden="true" />
-                      <span style={regStyles.turnoCount}>{regs.length}</span>
-                    </div>
-
-                    <div style={regStyles.itemList}>
-                      {regs.map((reg, i) => (
-                        <RegItem key={reg.id || `${turno}-${i}`} reg={reg} i={i} />
-                      ))}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
-    </section>
-  );
-};
-
-/* ============================================================
-   STYLES — RegistrosPanel · 100% tokens · mobile-first
-   ============================================================ */
-const regStyles = {
-  panel: {
-    position: 'absolute',
-    inset: 0,
-    overflowY: 'auto',
-    padding: 'var(--spacing-base)',
-    paddingBottom: 'max(var(--spacing-xxl), calc(env(safe-area-inset-bottom) + var(--spacing-xl)))',
-    WebkitOverflowScrolling: 'touch',
-  },
-
-  /* Header */
-  header: {
-    marginBottom: 'var(--spacing-lg)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-xs)',
-  },
-  backBtn: {
-    alignSelf: 'flex-start',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-xxs)',
-    minHeight: '2rem',
-    padding: 'var(--spacing-xxs) var(--spacing-xs) var(--spacing-xxs) 0',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 500,
-    color: 'var(--color-accent)',
-    WebkitTapHighlightColor: 'transparent',
-  },
-  title: {
-    margin: 0,
-    fontFamily: 'var(--font-display)',
-    fontSize: 'clamp(var(--typography-title-md-size), 5vw, var(--typography-display-sm-size))',
-    fontWeight: 'var(--typography-title-md-weight)',
-    color: 'var(--color-ink)',
-    textTransform: 'capitalize',
-    letterSpacing: '-0.02em',
-    lineHeight: 1.15,
-  },
-  sub: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    lineHeight: 'var(--typography-caption-lh)',
-  },
-
-  /* List */
-  list: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-sm)',
-  },
-
-  /* Card genérica */
-  card: {
-    width: '100%',
-    minHeight: '4rem',
-    background: 'var(--color-surface-card)',
-    border: '1px solid var(--color-hairline-soft)',
-    borderRadius: 'var(--rounded-xl)',
-    padding: 'var(--spacing-sm) var(--spacing-base)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'border-color 160ms ease, transform 120ms ease',
-    WebkitTapHighlightColor: 'transparent',
-  },
-  accentBox: {
-    width: '2.5rem',
-    height: '2.5rem',
-    borderRadius: 'var(--rounded-md)',
-    flexShrink: 0,
-    background: 'rgb(var(--color-accent-raw) / 0.1)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBody: {
-    flex: 1,
-    minWidth: 0,
-    textAlign: 'left',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  },
-  cardLeft: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-    color: 'var(--color-ink)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    lineHeight: 1.2,
-  },
-  cardSub: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    lineHeight: 'var(--typography-caption-lh)',
-  },
-  cardRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-xs)',
-    flexShrink: 0,
-  },
-  countPill: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    fontWeight: 600,
-    color: 'var(--color-accent)',
-    background: 'rgb(var(--color-accent-raw) / 0.08)',
-    padding: '2px var(--spacing-xs)',
-    borderRadius: 'var(--rounded-pill)',
-    fontVariantNumeric: 'tabular-nums',
-    lineHeight: 1.4,
-  },
-
-  /* Ruta card (NIVEL 0) */
-  rutaCard: {
-    width: '100%',
-    minHeight: '4rem',
-    background: 'var(--color-surface-card)',
-    border: '1px solid var(--color-hairline-soft)',
-    borderRadius: 'var(--rounded-xl)',
-    padding: 'var(--spacing-sm) var(--spacing-base)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'border-color 160ms ease, transform 120ms ease',
-    WebkitTapHighlightColor: 'transparent',
-  },
-  rutaBadge: {
-    width: '3rem',
-    height: '3rem',
-    borderRadius: 'var(--rounded-md)',
-    flexShrink: 0,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rutaBadgeText: {
-    fontFamily: 'var(--font-display)',
-    fontSize: 'var(--typography-caption-uppercase-size)',
-    fontWeight: 'var(--typography-caption-uppercase-weight)',
-    letterSpacing: 'var(--typography-caption-uppercase-ls)',
-  },
-
-  /* Turno (NIVEL 3) */
-  turnosWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-lg)',
-  },
-  turnoHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-xs)',
-    marginBottom: 'var(--spacing-sm)',
-  },
-  turnoTitle: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-uppercase-size)',
-    fontWeight: 'var(--typography-caption-uppercase-weight)',
-    letterSpacing: 'var(--typography-caption-uppercase-ls)',
-    textTransform: 'uppercase',
-    color: 'var(--color-muted)',
-  },
-  turnoAlertChip: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    lineHeight: 1,
-    background: 'rgb(var(--color-semantic-error-raw) / 0.1)',
-    color: 'var(--color-semantic-error)',
-    padding: '2px var(--spacing-xs)',
-    borderRadius: 'var(--rounded-pill)',
-    fontWeight: 600,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '2px',
-  },
-  turnoDivider: {
-    flex: 1,
-    height: '1px',
-    background: 'var(--color-hairline-soft)',
-  },
-  turnoCount: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    fontVariantNumeric: 'tabular-nums',
-  },
-
-  /* Item de empleado */
-  itemList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-xs)',
-  },
-  item: {
-    border: '1px solid var(--color-hairline-soft)',
-    borderRadius: 'var(--rounded-lg)',
-    padding: 'var(--spacing-sm) var(--spacing-base)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-  },
-  itemIcon: {
-    width: '2.25rem',
-    height: '2.25rem',
-    borderRadius: '50%',
-    flexShrink: 0,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-  },
-  itemBody: {
-    flex: 1,
-    minWidth: 0,
-  },
-  itemName: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    lineHeight: 1.25,
-  },
-  itemMeta: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-xxs)',
-    marginTop: '2px',
-    flexWrap: 'wrap',
-  },
-  itemNum: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    fontVariantNumeric: 'tabular-nums',
-  },
-  itemBadge: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    lineHeight: 1,
-    padding: '2px var(--spacing-xs)',
-    borderRadius: 'var(--rounded-pill)',
-    fontWeight: 600,
-  },
-  itemTime: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    flexShrink: 0,
-    fontVariantNumeric: 'tabular-nums',
-    letterSpacing: '0.02em',
-  },
-
-  /* Empty */
-  empty: {
-    textAlign: 'center',
-    padding: 'var(--spacing-xxl) var(--spacing-lg)',
-    background: 'var(--color-surface-card)',
-    borderRadius: 'var(--rounded-xl)',
-    border: '1px dashed var(--color-hairline-strong)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 'var(--spacing-xs)',
-  },
-  emptyIcon: {
-    width: '3rem',
-    height: '3rem',
-    borderRadius: '50%',
-    background: 'var(--color-canvas-soft)',
-    color: 'var(--color-muted-soft)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 'var(--spacing-xs)',
-  },
-  emptyTitle: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-    color: 'var(--color-ink)',
-  },
-  emptySub: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    lineHeight: 'var(--typography-caption-lh)',
-  },
-
-  /* Loading */
-  loadingWrap: {
-    padding: 'var(--spacing-lg) var(--spacing-base)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-sm)',
-  },
-  skeletonCard: {
-    height: '4rem',
-    borderRadius: 'var(--rounded-xl)',
-    background: 'var(--color-hairline-soft)',
-    animation: 'vp-reg-pulse 1.4s ease-in-out infinite',
-  },
-};
 
 
 /* ─── Portal Principal ────────────────────────────────────── */
 export const ChoferPortal = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.hash === '#registros' ? 'registros' : 'scanner');
+  
   
   // Rutas y Scanner
   const [selectedRoute, setSelectedRoute] = useState(null);
@@ -937,9 +340,7 @@ export const ChoferPortal = () => {
   const [scanResult, setScanResult] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
   
-  // Registros
-  const [registros, setRegistros] = useState([]);
-  const [loadingRegistros, setLoadingRegistros] = useState(false);
+  
   
   const [session, setSession] = useState(null);
   const isAdmin = session?.user?.user_metadata?.role === 'admin';
@@ -980,8 +381,8 @@ export const ChoferPortal = () => {
   };
 
   useEffect(() => {
-    if (activeTab === 'scanner' && !selectedRoute) fetchRutasActivas();
-  }, [activeTab, selectedRoute, session]);
+    if (!selectedRoute) fetchRutasActivas();
+  }, [selectedRoute, session]);
 
   const handleSelectRoute = async (ruta) => {
     if (!session?.user?.id) return;
@@ -1018,153 +419,13 @@ export const ChoferPortal = () => {
     notify.routeFinished(code);
   };
 
-  useEffect(() => {
-    if (activeTab === 'registros') fetchRegistros();
-  }, [activeTab]);
+  
 
-  // ── TODO: QUITAR DATOS DE PRUEBA ──────────────────────────
-  const MOCK_REGISTROS = (() => {
-    const rutas = [
-      'R1- QUERETARO- PIE DE LA CUESTA',
-      'R2- SAN JOSE ITURBIDE',
-      'R3- SAN JOSE ITURBIDE 2',
-      'R4-SANTA ROSA',
-      'R5- QUERETARO-AV. DE LA LUZ',
-      'R6- AV. DE LA LUZ - PASEOS QUERETARO',
-    ];
-    const nombres = [
-      'JUAN PÉREZ LÓPEZ', 'MARÍA GARCÍA HERNÁNDEZ', 'CARLOS RAMÍREZ TORRES',
-      'ANA MARTÍNEZ REYES', 'PEDRO SÁNCHEZ LUNA', 'LAURA FLORES MENDOZA',
-      'JOSE MORALES VEGA', 'PATRICIA RUIZ DELGADO', 'MIGUEL CASTILLO RAMOS',
-      'SOFIA GUTIERREZ PONCE', 'ROBERTO DÍAZ SILVA', 'ELENA VARGAS CORONA',
-    ];
-    const turnos = ['1', '2', '3'];
-    const records = [];
-    let id = 1;
-    // Semana pasada (lun-sáb)
-    for (let day = 0; day < 6; day++) {
-      const date = new Date('2026-06-09T07:00:00');
-      date.setDate(date.getDate() + day);
-      rutas.forEach((ruta, ri) => {
-        turnos.forEach(turno => {
-          const count = 2 + Math.floor(Math.random() * 3);
-          for (let e = 0; e < count; e++) {
-            const h = new Date(date);
-            h.setHours(6 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
-            
-            // Simular algunos registros rechazados
-            const isRejectedRuta = Math.random() > 0.9;
-            const isRejectedQR = !isRejectedRuta && Math.random() > 0.95;
-            const isFueraHorario = !isRejectedRuta && !isRejectedQR && Math.random() > 0.9;
-            const isDiaDescanso = !isRejectedRuta && !isRejectedQR && !isFueraHorario && Math.random() > 0.9;
-            
-            let estado = 'autorizado';
-            let qr_leido = null;
-            let empleadoRuta = ruta;
-            
-            if (isRejectedRuta) {
-              estado = 'rechazado_ruta';
-              empleadoRuta = rutas[(ri + 1) % rutas.length]; // Le ponemos otra ruta al empleado
-            } else if (isRejectedQR) {
-              estado = 'rechazado_qr';
-              qr_leido = `FAKE-QR-${id}`;
-            } else if (isFueraHorario) {
-              estado = 'fuera_horario';
-            } else if (isDiaDescanso) {
-              estado = 'dia_descanso';
-            }
-
-            records.push({
-              id: String(id++),
-              fecha_hora: h.toISOString(),
-              estado,
-              ruta_chofer: ruta,
-              qr_leido,
-              empleados: isRejectedQR ? null : {
-                id: String(id * 10),
-                nombre: nombres[(id + ri + e) % nombres.length],
-                numero_empleado: String(10200 + id),
-                turno,
-                ruta: empleadoRuta,
-              },
-            });
-          }
-        });
-      });
-    }
-    // Semana actual (lun-vie)
-    for (let day = 0; day < 5; day++) {
-      const date = new Date('2026-06-16T07:00:00');
-      date.setDate(date.getDate() + day);
-      [rutas[0], rutas[1], rutas[4]].forEach((ruta, ri) => {
-        ['1', '2'].forEach(turno => {
-          const h = new Date(date);
-          h.setHours(6 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 60));
-          
-          const isRejectedRuta = Math.random() > 0.85; // Un poco más probable para verlos más fácil
-          const isRejectedQR = !isRejectedRuta && Math.random() > 0.9;
-          const isFueraHorario = !isRejectedRuta && !isRejectedQR && Math.random() > 0.85;
-          const isDiaDescanso = !isRejectedRuta && !isRejectedQR && !isFueraHorario && Math.random() > 0.85;
-
-          let estado = 'autorizado';
-          let qr_leido = null;
-          let empleadoRuta = ruta;
-
-          if (isRejectedRuta) {
-            estado = 'rechazado_ruta';
-            empleadoRuta = rutas[(ri + 2) % rutas.length];
-          } else if (isRejectedQR) {
-            estado = 'rechazado_qr';
-            qr_leido = `INVALID-CODE-${id}`;
-          } else if (isFueraHorario) {
-            estado = 'fuera_horario';
-          } else if (isDiaDescanso) {
-            estado = 'dia_descanso';
-          }
-
-          records.push({
-            id: String(id++),
-            fecha_hora: h.toISOString(),
-            estado,
-            ruta_chofer: ruta,
-            qr_leido,
-            empleados: isRejectedQR ? null : {
-              id: String(id * 10),
-              nombre: nombres[(id + ri) % nombres.length],
-              numero_empleado: String(10200 + id),
-              turno,
-              ruta: empleadoRuta,
-            },
-          });
-        });
-      });
-    }
-    return records;
-  })();
-  // ─────────────────────────────────────────────────────────
-
-  const fetchRegistros = async () => {
-    setLoadingRegistros(true);
-    try {
-      const { data, error } = await supabase
-        .from('registros')
-        .select(`id, fecha_hora, estado, qr_leido, ruta_chofer, empleados (id, nombre, numero_empleado, turno, ruta)`)
-        .order('fecha_hora', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      // TODO: quitar fallback a MOCK cuando la tabla exista
-      setRegistros(data?.length ? data : MOCK_REGISTROS);
-    } catch {
-      setRegistros(MOCK_REGISTROS); // TODO: quitar cuando la tabla exista
-    } finally {
-      setLoadingRegistros(false);
-    }
-  };
-
+  
 
   useEffect(() => {
     // Solo arrancamos la cámara si estamos en tab scanner Y hay ruta seleccionada
-    if (activeTab !== 'scanner' || !selectedRoute) return;
+    if (!selectedRoute) return;
 
     const qr = new Html5Qrcode('reader');
     qrRef.current = qr;
@@ -1346,7 +607,7 @@ export const ChoferPortal = () => {
       qr.isScanning && qr.stop().then(() => qr.clear()).catch(console.error);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [activeTab, selectedRoute, session]);
+  }, [selectedRoute, session]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--color-canvas-soft)', position: 'relative', overflow: 'hidden' }}>
@@ -1393,44 +654,46 @@ export const ChoferPortal = () => {
         }
       `}</style>
 
-      {/* Header cohesivo con TopNav de Empresa */}
-      <PortalHeader
-        subtitle="Portal Abordaje · Transporte"
-        onBrandClick={() => navigate(isAdmin ? '/empresa' : '/chofer')}
-        onLogout={async () => { await supabase.auth.signOut(); navigate('/'); }}
-        extras={
-          isAdmin && (
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => navigate('/empresa')}
-              data-testid="back-to-empresa-btn"
-              title="Volver a Empresa"
-              aria-label="Volver al portal de Empresa"
-              style={{
-                height: '36px', minWidth: '36px', padding: '0 var(--spacing-sm)',
-                borderRadius: 'var(--rounded-pill)',
-                background: 'rgb(var(--color-accent-raw) / 0.1)',
-                border: '1px solid rgb(var(--color-accent-raw) / 0.25)',
-                cursor: 'pointer', display: 'inline-flex',
-                alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xxs)',
-                color: 'var(--color-accent)',
-                fontFamily: 'var(--font-body)',
-                fontSize: 'var(--typography-caption-size)',
-                fontWeight: 600,
-              }}
-            >
-              <Building2 size={14} />
-              <span className="vp-hide-sm">Empresa</span>
-            </motion.button>
-          )
-        }
-      />
+      {/* Header cohesivo con TopNav de Empresa (sólo visible al seleccionar ruta) */}
+      {!selectedRoute && (
+        <PortalHeader
+          subtitle="Portal Abordaje · Transporte"
+          onBrandClick={() => navigate(isAdmin ? '/empresa' : '/chofer')}
+          onLogout={async () => { await supabase.auth.signOut(); navigate('/'); }}
+          extras={
+            isAdmin && (
+              <motion.button
+                whileTap={{ scale: 0.93 }}
+                onClick={() => navigate('/empresa')}
+                data-testid="back-to-empresa-btn"
+                title="Volver a Empresa"
+                aria-label="Volver al portal de Empresa"
+                style={{
+                  height: '36px', minWidth: '36px', padding: '0 var(--spacing-sm)',
+                  borderRadius: 'var(--rounded-pill)',
+                  background: 'rgb(var(--color-accent-raw) / 0.1)',
+                  border: '1px solid rgb(var(--color-accent-raw) / 0.25)',
+                  cursor: 'pointer', display: 'inline-flex',
+                  alignItems: 'center', justifyContent: 'center', gap: 'var(--spacing-xxs)',
+                  color: 'var(--color-accent)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 'var(--typography-caption-size)',
+                  fontWeight: 600,
+                }}
+              >
+                <Building2 size={14} />
+                <span className="vp-hide-sm">Empresa</span>
+              </motion.button>
+            )
+          }
+        />
+      )}
 
       {/* Content */}
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
 
         {/* Tab: Escáner */}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', opacity: activeTab === 'scanner' ? 1 : 0, pointerEvents: activeTab === 'scanner' ? 'auto' : 'none', transition: 'opacity 0.25s ease', zIndex: activeTab === 'scanner' ? 5 : 0 }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', opacity: 1, pointerEvents: 'auto', transition: 'opacity 0.25s ease', zIndex: 5 }}>
           <div style={{ flex: 1, position: 'relative', background: selectedRoute ? '#000' : 'var(--color-canvas-soft)' }}>
             
             {!selectedRoute ? (
@@ -1601,50 +864,7 @@ export const ChoferPortal = () => {
             )}
           </div>
         </div>
-
-        {/* Tab: Registros */}
-        <div style={{ position: 'absolute', inset: 0, opacity: activeTab === 'registros' ? 1 : 0, pointerEvents: activeTab === 'registros' ? 'auto' : 'none', transition: 'opacity 0.25s ease', zIndex: activeTab === 'registros' ? 5 : 0 }}>
-          <RegistrosPanel registros={registros} loading={loadingRegistros} />
-        </div>
-
       </div>
-
-      {/* Bottom Nav */}
-      <nav style={{ background: 'var(--color-surface-card)', padding: 'var(--spacing-xs) var(--spacing-base)', paddingBottom: 'max(var(--spacing-xs), env(safe-area-inset-bottom))', borderTop: '1px solid var(--color-hairline-soft)', display: 'flex', zIndex: 10 }} role="tablist" aria-label="Navegación inferior">
-        {[
-          { id: 'scanner',   icon: <Camera size={22} />,  label: 'Escanear'  },
-          { id: 'registros', icon: <List   size={22} />,  label: 'Registros' },
-        ].map(tab => {
-          const active = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={active}
-              data-testid={`tab-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flex: 1, background: 'none', border: 'none',
-                padding: 'var(--spacing-xs) var(--spacing-xxs)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 'var(--spacing-xxs)',
-                color: active ? 'var(--color-accent)' : 'var(--color-muted)',
-                cursor: 'pointer',
-                transition: 'color 0.2s ease',
-                fontFamily: 'var(--font-body)',
-              }}
-            >
-              {tab.icon}
-              <span style={{
-                fontSize: 'var(--typography-caption-uppercase-size)',
-                fontWeight: active ? 700 : 'var(--typography-caption-uppercase-weight)',
-                letterSpacing: 'var(--typography-caption-uppercase-ls)',
-                textTransform: 'uppercase',
-              }}>{tab.label}</span>
-            </button>
-          );
-        })}
-      </nav>
     </div>
   );
 };

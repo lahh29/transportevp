@@ -10,11 +10,12 @@ import { EmpleadoLogin } from './pages/EmpleadoLogin';
 import { EmpleadoDashboard } from './pages/EmpleadoDashboard';
 import { Landing } from './pages/Landing';
 import { QrPrintPage } from './pages/QrPrintPage';
+import Historial from './pages/Historial';
 
 // Wrapper to conditionally show TopNav (hide on login and landing)
 const Layout = ({ children }) => {
   const location = useLocation();
-  const isAuthView = location.pathname === '/' || location.pathname === '/login' || location.pathname.startsWith('/empleado') || location.pathname === '/chofer/login';
+  const isAuthView = location.pathname === '/' || location.pathname === '/login' || location.pathname.startsWith('/empleado') || location.pathname.startsWith('/chofer');
   return (
     <div className="app-container">
       <Toaster
@@ -65,6 +66,12 @@ function App() {
           <Route path="/empresa" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <EmpresaPortal />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/historial" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <Historial />
             </ProtectedRoute>
           } />
 

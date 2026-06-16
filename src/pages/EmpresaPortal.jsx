@@ -31,6 +31,14 @@ const getInitials = (nombre) => {
 
 const ITEMS_PER_PAGE = 12;
 
+const splitName = (fullName) => {
+  if (!fullName) return { apellidos: '', nombres: '' };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) return { apellidos: parts.join(' '), nombres: '' };
+  if (parts.length === 2) return { apellidos: parts[0], nombres: parts[1] };
+  return { apellidos: parts.slice(0, 2).join(' '), nombres: parts.slice(2).join(' ') };
+};
+
 /* ─── Avatar ──────────────────────────────────────────────── */
 const Avatar = ({ nombre, photoUrl }) => {
   if (photoUrl) {
@@ -409,9 +417,11 @@ export const EmpresaPortal = () => {
             <EmptyState hasQuery={searchQuery.length > 0} />
           ) : (
             <AnimatePresence mode="popLayout">
-              {currentEmployees.map((emp, i) => (
-                <motion.article
-                  key={emp.id}
+              {currentEmployees.map((emp, i) => {
+                const { apellidos, nombres } = splitName(emp.nombre);
+                return (
+                  <motion.article
+                    key={emp.id}
                   role="listitem"
                   className="vp-emp-card"
                   data-testid={`empresa-card-${emp.numero_empleado || emp.id}`}
@@ -423,8 +433,9 @@ export const EmpresaPortal = () => {
                 >
                   <Avatar nombre={emp.nombre || ''} photoUrl={emp.foto_url} />
 
-                  <div style={S.cardBody}>
-                    <p style={S.cardName} title={emp.nombre}>{emp.nombre}</p>
+                  <div style={S.cardBody} title={emp.nombre}>
+                    {apellidos && <p style={S.cardLastName}>{apellidos}</p>}
+                    {nombres && <p style={S.cardFirstName}>{nombres}</p>}
                     <p style={S.cardNum}>#{emp.numero_empleado}</p>
                   </div>
 
@@ -502,7 +513,8 @@ export const EmpresaPortal = () => {
                     </AnimatePresence>
                   </div>
                 </motion.article>
-              ))}
+                );
+              })}
             </AnimatePresence>
           )}
         </div>
@@ -747,12 +759,25 @@ const S = {
     flexDirection: 'column',
     gap: '2px',
   },
-  cardName: {
+  cardLastName: {
     margin: 0,
     fontFamily: 'var(--font-body)',
     fontSize: 'var(--typography-body-sm-size)',
     fontWeight: 'var(--typography-title-sm-weight)',
     color: 'var(--color-ink)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.01em',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.2,
+  },
+  cardFirstName: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    fontWeight: 'normal',
+    color: 'var(--color-muted)',
     textTransform: 'uppercase',
     letterSpacing: '0.01em',
     overflow: 'hidden',
