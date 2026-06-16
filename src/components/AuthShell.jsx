@@ -46,7 +46,7 @@ export const AuthShell = ({ eyebrow, children, showBack = true, testId }) => {
         <header style={S.brand}>
           <LogoMockup />
           <h1 id="auth-brand" style={S.brandName}>
-            Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
+            Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
           </h1>
         </header>
 
@@ -118,7 +118,7 @@ const S = {
     fontSize: 'clamp(var(--typography-title-md-size), 5.5vw, var(--typography-display-sm-size))',
     fontWeight: 'var(--typography-title-md-weight)',
     color: 'var(--color-ink)',
-    letterSpacing: '-0.03em',
+    letterSpacing: 'var(--ls-tight-1)',
     lineHeight: 1.1,
   },
 
@@ -157,7 +157,7 @@ const S = {
     gap: 'var(--spacing-xxs)',
     fontFamily: 'var(--font-body)',
     fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
+    color: 'var(--color-ink-muted)',
     transition: 'color 120ms ease',
   },
 };

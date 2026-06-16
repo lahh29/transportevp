@@ -1,16 +1,17 @@
 import React from 'react';
 
 /**
- * Card component implementing hairline-only depth (no drop shadows)
+ * Card component implementing Notion hairline-only depth
+ * Use .card-elevated for soft shadow lift
  */
-export const Card = ({ children, className = '', style = {}, ...props }) => {
+export const Card = ({ children, className = '', style = {}, elevated = false, ...props }) => {
   const cardStyles = {
     backgroundColor: 'var(--color-surface-card)',
     color: 'var(--color-ink)',
     borderRadius: 'var(--rounded-lg)',
-    padding: '24px',
-    border: '1px solid var(--color-hairline)',
-    boxShadow: 'none', // Strictly no drop shadows
+    padding: 'var(--spacing-lg)',
+    border: '1px solid var(--color-hairline-soft)',
+    boxShadow: elevated ? 'var(--shadow-soft)' : 'var(--shadow-flat)',
     ...style
   };
 
@@ -23,7 +24,7 @@ export const Card = ({ children, className = '', style = {}, ...props }) => {
 
 export const CardHeader = ({ children, className = '', style = {} }) => {
   return (
-    <div style={{ marginBottom: '16px', ...style }} className={className}>
+    <div style={{ marginBottom: 'var(--spacing-base)', ...style }} className={className}>
       {children}
     </div>
   );
@@ -32,10 +33,12 @@ export const CardHeader = ({ children, className = '', style = {} }) => {
 export const CardTitle = ({ children, className = '', style = {} }) => {
   return (
     <h3 style={{ 
-      fontSize: '18px', 
-      fontWeight: 600, 
-      lineHeight: 1.4, 
+      fontSize: 'var(--typography-title-size)', 
+      fontWeight: 'var(--typography-title-weight)', 
+      lineHeight: 'var(--typography-title-lh)',
+      letterSpacing: 'var(--typography-title-ls)',
       margin: 0,
+      color: 'var(--color-ink)',
       ...style 
     }} className={className}>
       {children}

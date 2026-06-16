@@ -57,15 +57,15 @@ export const TopNav = () => {
       <style>{`
         .topnav-link {
           position: relative;
-          font-size: 13px;
-          font-weight: 500;
-          color: var(--color-muted);
+          font-size: var(--typography-nav-link-size);
+          font-weight: var(--typography-nav-link-weight);
+          color: var(--color-ink-muted);
           cursor: pointer;
           text-decoration: none;
-          padding: 4px 0;
+          padding: var(--spacing-xxs) 0;
           background: none;
           border: none;
-          transition: color 0.15s;
+          transition: color 120ms ease;
           white-space: nowrap;
         }
         .topnav-link:hover { color: var(--color-ink); }
@@ -73,10 +73,12 @@ export const TopNav = () => {
         .topnav-link.active::after {
           content: '';
           position: absolute;
-          bottom: -2px; left: 0; right: 0;
-          height: 1.5px;
+          bottom: calc(-1 * var(--spacing-xxs));
+          left: 0;
+          right: 0;
+          height: 0.09375rem;
           background: var(--color-ink);
-          border-radius: 1px;
+          border-radius: 0.0625rem;
         }
         @media (min-width: 640px) { .topnav-mobile-only { display: none !important; } }
         @media (max-width: 639px) { .topnav-desktop-only { display: none !important; } }
@@ -91,13 +93,13 @@ export const TopNav = () => {
           position: 'sticky',
           top: 0,
           zIndex: 1000,
-          minHeight: '56px',
+          minHeight: 'var(--nav-height)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 'var(--spacing-sm)',
           padding: 'var(--spacing-xs) var(--spacing-lg)',
-          background: 'var(--color-canvas)',
+          background: 'var(--color-canvas-soft)',
           borderBottom: '1px solid var(--color-hairline-soft)',
         }}
       >
@@ -108,20 +110,24 @@ export const TopNav = () => {
           style={{
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
             textAlign: 'left',
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px',
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 'calc(var(--spacing-xxs) / 2)',
             minWidth: 0, overflow: 'hidden',
           }}
         >
           <span style={{
-            fontSize: '15px', fontWeight: 600, letterSpacing: '-0.01em',
-            color: 'var(--color-ink)', fontFamily: 'var(--font-display)', lineHeight: 1.1,
+            fontSize: 'var(--typography-title-size)',
+            fontWeight: 'var(--typography-title-weight)',
+            letterSpacing: 'var(--ls-tight-2)',
+            color: 'var(--color-ink)',
+            fontFamily: 'var(--font-display)',
+            lineHeight: 1.1,
           }}>
-            Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
+            Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
           </span>
           <span style={{
             fontSize: 'var(--typography-caption-size)',
             fontFamily: 'var(--font-body)',
-            color: 'var(--color-muted)',
+            color: 'var(--color-ink-muted)',
             lineHeight: 'var(--typography-caption-lh)',
           }}>
             Recursos Humanos
@@ -144,7 +150,7 @@ export const TopNav = () => {
           ))}
 
           {/* Separador */}
-          <div style={{ width: '1px', height: '16px', background: 'var(--color-hairline-soft)' }} />
+          <div style={{ width: '1px', height: 'var(--spacing-base)', background: 'var(--color-hairline-soft)' }} />
 
           {/* Actualizar */}
           <motion.button
@@ -156,11 +162,13 @@ export const TopNav = () => {
             aria-label="Actualizar aplicación"
             data-testid="topnav-refresh"
             style={{
-              width: '36px', height: '36px', borderRadius: '50%',
-              background: 'rgb(var(--color-accent-raw) / 0.08)',
+              width: 'var(--button-height-sm)',
+              height: 'var(--button-height-sm)',
+              borderRadius: '50%',
+              background: 'rgb(var(--color-primary-raw) / 0.08)',
               border: 'none', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--color-accent)',
+              color: 'var(--color-primary)',
             }}
           >
             <RefreshCw size={16} />
@@ -174,7 +182,9 @@ export const TopNav = () => {
             aria-label="Cerrar sesión"
             data-testid="topnav-logout"
             style={{
-              width: '36px', height: '36px', borderRadius: '50%',
+              width: 'var(--button-height-sm)',
+              height: 'var(--button-height-sm)',
+              borderRadius: '50%',
               background: 'rgb(var(--color-semantic-error-raw) / 0.08)',
               border: 'none', cursor: 'pointer',
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -193,7 +203,9 @@ export const TopNav = () => {
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: '36px', height: '36px', borderRadius: '8px',
+            width: 'var(--button-height-sm)',
+            height: 'var(--button-height-sm)',
+            borderRadius: 'var(--rounded-md)',
             color: 'var(--color-ink)',
           }}
         >
@@ -223,14 +235,14 @@ export const TopNav = () => {
             transition={{ duration: 0.18, ease: 'easeOut' }}
             style={{
               position: 'fixed',
-              top: '56px', left: 0, right: 0,
+              top: 'var(--nav-height)', left: 0, right: 0,
               zIndex: 999,
-              background: 'var(--color-canvas)',
+              background: 'var(--color-canvas-soft)',
               borderBottom: '1px solid var(--color-hairline-soft)',
-              padding: '8px 24px 16px',
+              padding: 'var(--spacing-xs) var(--spacing-lg) var(--spacing-base)',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.06)'
+              boxShadow: 'var(--shadow-soft)'
             }}
           >
             {NAV_LINKS.map(({ label, path }, i) => (
@@ -242,9 +254,10 @@ export const TopNav = () => {
                 onClick={() => navigate(path)}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  textAlign: 'left', padding: '12px 0',
-                  fontSize: '14px', fontWeight: isActive(path) ? 500 : 400,
-                  color: isActive(path) ? 'var(--color-ink)' : 'var(--color-muted)',
+                  textAlign: 'left', padding: 'var(--spacing-sm) 0',
+                  fontSize: 'var(--typography-body-sm-size)',
+                  fontWeight: isActive(path) ? 500 : 400,
+                  color: isActive(path) ? 'var(--color-ink)' : 'var(--color-ink-muted)',
                   borderBottom: '1px solid var(--color-hairline-soft)',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}
@@ -252,8 +265,8 @@ export const TopNav = () => {
                 {label}
                 {isActive(path) && (
                   <span style={{
-                    width: '6px', height: '6px', borderRadius: '50%',
-                    background: 'var(--color-accent)',
+                    width: 'var(--spacing-xs)', height: 'var(--spacing-xs)', borderRadius: '50%',
+                    background: 'var(--color-primary)',
                   }} />
                 )}
               </motion.button>
@@ -263,16 +276,16 @@ export const TopNav = () => {
               onClick={handleRefresh}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                textAlign: 'left', padding: '12px 0',
-                fontSize: '14px', fontWeight: 400,
+                textAlign: 'left', padding: 'var(--spacing-sm) 0',
+                fontSize: 'var(--typography-body-sm-size)', fontWeight: 400,
                 color: 'var(--color-ink)',
-                display: 'flex', alignItems: 'center', gap: '8px',
-                marginTop: '4px',
+                display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)',
+                marginTop: 'var(--spacing-xxs)',
                 borderBottom: '1px solid var(--color-hairline-soft)',
               }}
             >
               <motion.div animate={{ rotate: isRefreshing ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                <RefreshCw size={15} color="var(--color-muted)" />
+                <RefreshCw size={15} color="var(--color-ink-muted)" />
               </motion.div>
               Actualizar aplicación
             </button>
@@ -281,11 +294,11 @@ export const TopNav = () => {
               onClick={handleLogout}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                textAlign: 'left', padding: '12px 0',
-                fontSize: '14px', fontWeight: 400,
+                textAlign: 'left', padding: 'var(--spacing-sm) 0',
+                fontSize: 'var(--typography-body-sm-size)', fontWeight: 400,
                 color: 'var(--color-semantic-error)',
-                display: 'flex', alignItems: 'center', gap: '8px',
-                marginTop: '4px',
+                display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)',
+                marginTop: 'var(--spacing-xxs)',
               }}
             >
               <LogOut size={15} />

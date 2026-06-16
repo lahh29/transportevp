@@ -49,13 +49,13 @@ const RoleRow = ({ role, onClick, delay }) => {
           transform: pressed ? 'scale(0.985)' : 'scale(1)',
         }}
       >
-        <span style={{ ...S.iconBox, color: hovered ? 'var(--color-accent)' : 'var(--color-ink)' }} aria-hidden="true">
+        <span style={{ ...S.iconBox, color: hovered ? 'var(--color-primary)' : 'var(--color-ink)' }} aria-hidden="true">
           <Icon size={18} strokeWidth={1.75} />
         </span>
 
         <span style={S.label}>{role.label}</span>
 
-        <span style={{ ...S.arrow, color: hovered ? 'var(--color-accent)' : 'var(--color-muted-soft)' }} aria-hidden="true">
+        <span style={{ ...S.arrow, color: hovered ? 'var(--color-primary)' : 'var(--color-muted-soft)' }} aria-hidden="true">
           <ArrowUpRight size={16} strokeWidth={1.75} />
         </span>
       </button>
@@ -95,7 +95,7 @@ export const Landing = () => {
         <header style={S.brand}>
           <LogoMockup />
           <h1 id="landing-title" style={S.title}>
-            Viño<span style={{ color: 'var(--color-accent)' }}>Plastic</span>
+            Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
           </h1>
         </header>
 
@@ -161,7 +161,7 @@ const S = {
     fontSize: 'clamp(var(--typography-title-md-size), 6vw, var(--typography-display-sm-size))',
     fontWeight: 'var(--typography-title-md-weight)',
     color: 'var(--color-ink)',
-    letterSpacing: '-0.03em',
+    letterSpacing: 'var(--ls-tight-1)',
     lineHeight: 1.1,
   },
 
@@ -193,7 +193,7 @@ const S = {
   /* Role row */
   row: {
     width: '100%',
-    minHeight: '3.5rem',
+    minHeight: 'var(--nav-height)',
     display: 'grid',
     gridTemplateColumns: 'auto 1fr auto',
     alignItems: 'center',
@@ -213,15 +213,15 @@ const S = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '2rem',
-    height: '2rem',
+    width: 'var(--button-height-sm)',
+    height: 'var(--button-height-sm)',
     transition: 'color 160ms ease',
   },
   label: {
     fontSize: 'var(--typography-body-sm-size)',
     fontWeight: 'var(--typography-title-sm-weight)',
     color: 'var(--color-ink)',
-    letterSpacing: '-0.005em',
+    letterSpacing: 'var(--ls-tight-3)',
   },
   arrow: {
     display: 'inline-flex',
@@ -232,7 +232,7 @@ const S = {
 
   /* Skeleton */
   skeletonItem: {
-    height: '3.5rem',
+    height: 'var(--nav-height)',
     borderRadius: 'var(--rounded-lg)',
     background: 'var(--color-hairline-soft)',
     animation: 'vp-pulse-soft 1.4s ease-in-out infinite',
@@ -244,6 +244,6 @@ const S = {
     fontFamily: 'var(--font-body)',
     fontSize: 'var(--typography-caption-size)',
     color: 'var(--color-muted-soft)',
-    letterSpacing: '0.02em',
+    letterSpacing: 'var(--ls-wide-1)',
   },
 };
