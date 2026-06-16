@@ -55,7 +55,17 @@ export const Modal = ({ isOpen, onClose, children, title, size = 'md', testId, v
           transition={{ duration: 0.18 }}
           onClick={onClose}
           data-testid={testId || 'modal-backdrop'}
-          style={{ ...S.backdrop, alignItems: useBottomSheet ? 'flex-end' : 'center' }}
+          style={{
+            ...S.backdrop,
+            alignItems: useBottomSheet ? 'flex-end' : 'center',
+            padding: useBottomSheet ? 0 : 'var(--spacing-base)',
+            paddingTop: useBottomSheet
+              ? 'max(0px, env(safe-area-inset-top))'
+              : 'max(var(--spacing-base), env(safe-area-inset-top))',
+            paddingBottom: useBottomSheet
+              ? 0
+              : 'max(var(--spacing-base), env(safe-area-inset-bottom))',
+          }}
         >
           <motion.div
             ref={focusRef}
@@ -113,9 +123,6 @@ const S = {
     WebkitBackdropFilter: 'blur(var(--backdrop-blur))',
     display: 'flex',
     justifyContent: 'center',
-    padding: 'var(--spacing-base)',
-    paddingTop: 'max(var(--spacing-base), env(safe-area-inset-top))',
-    paddingBottom: 'max(var(--spacing-base), env(safe-area-inset-bottom))',
     zIndex: 1000,
   },
   panel: {
