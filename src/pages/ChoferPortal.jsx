@@ -373,26 +373,23 @@ export const ChoferPortal = () => {
           const hours = SHIFT_HOURS[turnoReal];
           if (hours) {
             const currentMins = nowDate.getHours() * 60 + nowDate.getMinutes();
-            const isWithin = (hStart, hEnd) => {
-              const startM = hStart * 60;
-              const endM = hEnd * 60;
+            const isWithinMins = (startM, endM) => {
               if (startM <= endM) return currentMins >= startM && currentMins <= endM;
               return currentMins >= startM || currentMins <= endM; // cruza medianoche
             };
 
-            let startEntH = hours.start - SHIFT_TOLERANCE.entradaAntes;
-            if (startEntH < 0) startEntH += 24;
-            let endEntH = hours.start + SHIFT_TOLERANCE.entradaDespues;
-            if (endEntH >= 24) endEntH -= 24;
+            let startEntM = (hours.start - SHIFT_TOLERANCE.entradaAntes) * 60;
+            if (startEntM < 0) startEntM += 24 * 60;
+            let endEntM = (hours.start + SHIFT_TOLERANCE.entradaDespues) * 60;
+            if (endEntM >= 24 * 60) endEntM -= 24 * 60;
 
-            let startSalH = hours.end - SHIFT_TOLERANCE.salidaAntes;
-            if (startSalH < 0) startSalH += 24;
-            const endSalMins = hours.end * 60 + SHIFT_TOLERANCE.salidaDespuesMin;
+            let startSalM = (hours.end - SHIFT_TOLERANCE.salidaAntes) * 60;
+            if (startSalM < 0) startSalM += 24 * 60;
+            let endSalM = hours.end * 60 + SHIFT_TOLERANCE.salidaDespuesMin;
+            if (endSalM >= 24 * 60) endSalM -= 24 * 60;
 
-            const isValidEntrada = isWithin(startEntH, endEntH);
-            const isValidSalida =
-              currentMins >= startSalH * 60 ||
-              currentMins <= endSalMins % (24 * 60);
+            const isValidEntrada = isWithinMins(startEntM, endEntM);
+            const isValidSalida = isWithinMins(startSalM, endSalM);
 
             if (!isValidEntrada && !isValidSalida) estado = 'fuera_horario';
           }

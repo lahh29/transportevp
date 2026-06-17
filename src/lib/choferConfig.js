@@ -32,9 +32,9 @@ export const SHIFT_HOURS = {
 /* ── Tolerancia para abordaje (en horas, relativa a inicio/fin) ──── */
 export const SHIFT_TOLERANCE = {
   entradaAntes:   2,  // hasta 2 h ANTES del inicio
-  entradaDespues: 1,  // hasta 1 h DESPUÉS del inicio
-  salidaAntes:    1,  // 1 h ANTES del fin
-  salidaDespuesMin: 20, // 20 min DESPUÉS del fin
+  entradaDespues: 0,  // Exactamente a la hora de inicio se cierra la entrada
+  salidaAntes:    0,  // No se puede escanear salida antes de que termine el turno
+  salidaDespuesMin: 20, // hasta 20 min DESPUÉS del fin
 };
 
 /**
