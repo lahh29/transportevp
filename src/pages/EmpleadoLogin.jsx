@@ -16,7 +16,8 @@ import { empleadoApi } from '../lib/empleadoApi';
 import { empleadoSession, webauthnHints } from '../lib/empleadoSession';
 import { webauthn } from '../lib/webauthn';
 import { WebAuthnDiagnostics } from '../components/WebAuthnDiagnostics';
-import { APP_ROUTES, MOTION, getFirstName } from '../lib/choferConfig';
+import { TypeWriter } from '../components/TypeWriter';
+import { APP_ROUTES, MOTION, getFirstName, toTitleCase } from '../lib/choferConfig';
 
 /* ============================================================
    LOGIN — Colaborador (flujo NIP 4 dígitos + WebAuthn biométrico)
@@ -637,7 +638,18 @@ const EmpleadoIdentity = ({ empleado, variant = 'full' }) => {
         </div>
       )}
       <h2 style={introTitleStyle}>
-        {compact ? `Hola, ${empleado.nombre || firstName}` : empleado.nombre || firstName}
+        {compact ? (
+          <TypeWriter
+            words={[`Hola, ${toTitleCase(empleado.nombre || firstName)}`]}
+            typeSpeed={70}
+            deleteSpeed={40}
+            holdFull={1800}
+            holdEmpty={400}
+            ariaLabel={`Hola, ${toTitleCase(empleado.nombre || firstName)}`}
+          />
+        ) : (
+          toTitleCase(empleado.nombre || firstName)
+        )}
       </h2>
       <p style={introSubtitleStyle}>
         {compact ? 'Ingresa tu NIP' : 'Verifiquemos tu identidad'}

@@ -170,6 +170,26 @@ export const getFirstName = (nombre) => {
   return String(nombre).trim().split(/\s+/)[0] || '';
 };
 
+/** Convierte "APELLIDOS NOMBRES" → "Apellidos Nombres" respetando partículas frecuentes
+ *  en español (de, del, la, las, los, y) que se mantienen en minúscula. */
+export const toTitleCase = (input) => {
+  if (!input) return '';
+  const lowers = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'da', 'do', 'dos']);
+  return String(input)
+    .toLocaleLowerCase('es-MX')
+    .split(/\s+/)
+    .map((w, i) => {
+      if (!w) return w;
+      if (i > 0 && lowers.has(w)) return w;
+      // Soporta nombres con guion: "Maria-Jose"
+      return w
+        .split('-')
+        .map((p) => (p ? p.charAt(0).toLocaleUpperCase('es-MX') + p.slice(1) : p))
+        .join('-');
+    })
+    .join(' ');
+};
+
 /** Split nombre completo en { apellidos, nombres } siguiendo convención "APE APE NOM". */
 export const splitName = (fullName) => {
   if (!fullName) return { apellidos: '', nombres: '' };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, User, Truck, ShieldCheck } from 'lucide-react';
 import { LogoMockup } from '../components/LogoMockup';
+import { TypeWriter } from '../components/TypeWriter';
 
 /* ============================================================
    LANDING — ViñoPlastic
@@ -95,7 +96,25 @@ export const Landing = () => {
         <header style={S.brand}>
           <LogoMockup />
           <h1 id="landing-title" style={S.title}>
-            Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
+            <TypeWriter
+              words={['ViñoPlastic']}
+              typeSpeed={110}
+              deleteSpeed={55}
+              holdFull={1800}
+              holdEmpty={450}
+              ariaLabel="ViñoPlastic"
+              renderChar={(t) => {
+                const split = 4; // "Viño" = 4 chars
+                const first = t.slice(0, split);
+                const rest = t.slice(split);
+                return (
+                  <>
+                    <span>{first}</span>
+                    <span style={{ color: 'var(--color-primary)' }}>{rest}</span>
+                  </>
+                );
+              }}
+            />
           </h1>
         </header>
 
