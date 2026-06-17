@@ -499,24 +499,19 @@ export const ChoferPortal = () => {
 
     const startCamera = () => qr
       .start(
-        // Cámara trasera; resolución alta para QR pequeños/densos
-        {
-          facingMode: { ideal: 'environment' },
-          width:  { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        // Config mínima — iOS Safari es muy estricto con MediaTrackConstraints;
+        // cualquier restricción de resolución puede tirar OverconstrainedError.
+        { facingMode: 'environment' },
         {
           fps: SCAN_CONFIG.fps,
           qrbox: (w, h) => {
             const size = Math.round(Math.min(w, h) * SCAN_CONFIG.qrboxRatio);
             return { width: size, height: size };
           },
-          // Usa BarcodeDetector nativo del navegador si está disponible
-          // (Safari 17+, Chrome moderno): mucho más rápido y tolerante.
-          // Si el navegador no lo soporta, html5-qrcode cae al decodificador JS.
+          // Usa BarcodeDetector nativo cuando esté disponible (Safari 17+, Chrome).
+          // Va dentro de experimentalFeatures, no top-level.
           experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           disableFlip: false,
-          rememberLastUsedCamera: false,
         },
         onScanSuccess,
         onScanError,
