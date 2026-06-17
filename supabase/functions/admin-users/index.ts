@@ -14,16 +14,20 @@ const SUPABASE_ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 const requireAdmin = async (req: Request) => {
   const auth = req.headers.get('authorization') || req.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
+  if (!auth?.startsWith('Bearer ')) throw new Error('Cabecera Authorization no encontrada o no es Bearer');
+  
   const token = auth.slice(7);
-  // Validamos con el cliente anónimo (Supabase Auth GoTrue)
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
-  const { data, error } = await userClient.auth.getUser();
-  if (error || !data?.user) return null;
+  
+  const { data, error } = await userClient.auth.getUser(token);
+  if (error) throw new Error(`Error auth.getUser: ${error.message}`);
+  if (!data?.user) throw new Error('No se encontró el usuario en token');
+  
   const role = data.user.user_metadata?.role || data.user.app_metadata?.role;
-  if (role !== 'admin') return null;
+  if (role !== 'admin') throw new Error(`El rol del usuario no es admin, es: ${role}`);
+  
   return data.user;
 };
 
@@ -32,8 +36,12 @@ Deno.serve(async (req) => {
   if (pre) return pre;
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' });
 
-  const admin = await requireAdmin(req);
-  if (!admin) return json({ error: 'no_autorizado' });
+  let admin;
+  try {
+    admin = await requireAdmin(req);
+  } catch (err: any) {
+    return json({ error: err.message });
+  }
 
   let body: any = {};
   try { body = await req.json(); } catch { return json({ error: 'invalid_json' }); }
