@@ -12,6 +12,7 @@
   "dependencies": {
     "@simplewebauthn/browser": "10.0.0",
     "@supabase/supabase-js": "^2.108.1",
+    "boring-avatars": "^2.0.4",
     "framer-motion": "^12.40.0",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^0.358.0",
