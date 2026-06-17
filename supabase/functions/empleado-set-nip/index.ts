@@ -41,12 +41,15 @@ Deno.serve(async (req) => {
   let empleadoId: string | null = null;
   let numero: string | null = null;
 
-  if (bearer) {
+  // Sólo entramos a "Modo B" si el bearer es un token de EMPLEADO válido.
+  // Cualquier otro bearer (p.ej. el anon-key que el SDK adjunta por defecto)
+  // se ignora y caemos al flujo A (primera vez).
+  const empleadoClaims = bearer ? await verifyEmpleadoToken(bearer) : null;
+
+  if (empleadoClaims) {
     /* Modo B: cambio con token */
-    const claims = await verifyEmpleadoToken(bearer);
-    if (!claims) return json({ error: 'token_invalido' }, { status: 401 });
-    empleadoId = claims.sub;
-    numero = claims.num;
+    empleadoId = empleadoClaims.sub;
+    numero = empleadoClaims.num;
   } else {
     /* Modo A: primera vez con verificación de turno */
     numero = String(body.numero_empleado || '').trim();
