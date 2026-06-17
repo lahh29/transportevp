@@ -37,3 +37,30 @@ export const adminApi = {
     await adminApi.resetWebauthn(empleadoId);
   },
 };
+
+const invokeAdminUsers = async (action, payload = {}) => {
+  const { data, error } = await supabase.functions.invoke('admin-users', {
+    body: { action, ...payload },
+  });
+  if (error) throw new Error(error.message || 'Error de red al contactar servidor');
+  if (data?.error) throw new Error(data.error);
+  return data;
+};
+
+export const adminUsersApi = {
+  listUsers: async () => {
+    const data = await invokeAdminUsers('list');
+    return data.users;
+  },
+  createUser: async (userData) => {
+    const data = await invokeAdminUsers('create', userData);
+    return data.user;
+  },
+  updateUser: async (userData) => {
+    const data = await invokeAdminUsers('update', userData);
+    return data.user;
+  },
+  deleteUser: async (id) => {
+    await invokeAdminUsers('delete', { id });
+  }
+};

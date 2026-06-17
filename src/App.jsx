@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Toaster } from 'sonner';
 import { TopNav } from './components/TopNav';
 import { EmpresaPortal } from './pages/EmpresaPortal';
+import { ConfiguracionAdmin } from './pages/ConfiguracionAdmin';
 import { Login } from './pages/Login';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ChoferPortal } from './pages/ChoferPortal';
@@ -69,6 +70,12 @@ function App() {
           <Route path="/empresa" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <EmpresaPortal />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/empresa/configuracion" element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ConfiguracionAdmin />
             </ProtectedRoute>
           } />
 

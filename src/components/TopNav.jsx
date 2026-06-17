@@ -10,6 +10,7 @@ import { TypeWriter } from './TypeWriter';
 const NAV_LINKS = [
   { label: 'Historial',  path: '/historial'  },
   { label: 'Empresa', path: '/empresa' },
+  { label: 'Configuración', path: '/empresa/configuracion' },
 ];
 
 export const TopNav = () => {

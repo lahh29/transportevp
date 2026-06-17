@@ -126,6 +126,7 @@ export const APP_ROUTES = {
   chofer:   '/chofer',
   choferLogin: '/chofer/login',
   empresa:  '/empresa',
+  configuracion: '/empresa/configuracion',
   empleadoLogin: '/empleado/login',
   empleadoDashboard: '/empleado/dashboard',
 };
