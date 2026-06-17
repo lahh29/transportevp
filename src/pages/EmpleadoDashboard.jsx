@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { MapPin, Clock, QrCode, AlertTriangle, WifiOff } from 'lucide-react';
+import { MapPin, Clock, QrCode, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PortalHeader } from '../components/PortalHeader';
 import { empleadoSession, empleadoCache } from '../lib/empleadoSession';
@@ -9,7 +9,7 @@ import { APP_ROUTES } from '../lib/choferConfig';
 
 /* ============================================================
    EMPLEADO DASHBOARD
-   Cohesivo · Mobile-first · 100% tokens · UI/UX semántico
+   Mobile-first · 100 % tokens · QR como héroe · Semántico
    ============================================================ */
 
 /* ─── Helpers ───────────────────────────────────────────── */
@@ -29,151 +29,72 @@ const splitName = (fullName) => {
 };
 
 const parseRutaCode = (ruta) => {
-  if (!ruta) return 'SR';
+  if (!ruta) return null;
   const m = ruta.match(/^(R\d+)/i);
-  return m ? m[1].toUpperCase() : 'R?';
+  return m ? m[1].toUpperCase() : ruta;
 };
 
-/* ─── Skeleton ──────────────────────────────────────────── */
-const Skeleton = ({ w = '100%', h = '1rem', radius = 'var(--rounded-sm)' }) => (
-  <div style={{
-    width: w, height: h, borderRadius: radius,
-    background: 'var(--color-hairline-soft)',
-    animation: 'vp-emp-pulse 1.4s ease-in-out infinite',
-  }} />
-);
-
-const LoadingState = () => (
-  <main style={S.page} data-testid="empleado-dashboard-loading">
-    <style>{`@keyframes vp-emp-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
-    <PortalHeader subtitle="Acceso Personal" showRefresh={false} onLogout={() => {}} />
-    <section style={S.body}>
-      <article style={S.card} aria-busy="true">
-        <div style={S.identityRow}>
-          <Skeleton w="3rem" h="3rem" radius="50%" />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
-            <Skeleton w="70%" h="0.875rem" />
-            <Skeleton w="40%" h="0.75rem" />
-          </div>
-        </div>
-        <div style={S.statsRow}>
-          <Skeleton h="3rem" radius="var(--rounded-md)" />
-          <Skeleton h="3rem" radius="var(--rounded-md)" />
-        </div>
-        <Skeleton h="14rem" radius="var(--rounded-lg)" />
-      </article>
-    </section>
-  </main>
-);
-
 /* ─── Avatar ────────────────────────────────────────────── */
-const Avatar = ({ empleado, size = '3rem' }) => {
+const Avatar = ({ empleado }) => {
   if (empleado.foto_url) {
     return (
       <img
         src={empleado.foto_url}
         alt=""
-        style={{
-          width: size, height: size, borderRadius: '50%',
-          objectFit: 'cover',
-          border: '1px solid var(--color-hairline-soft)',
-        }}
+        className="emp-avatar emp-avatar--photo"
+        loading="eager"
+        decoding="async"
       />
     );
   }
   return (
-    <div
-      aria-hidden="true"
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        background: 'rgb(var(--color-accent-raw) / 0.1)',
-        color: 'var(--color-accent)',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'var(--font-body)',
-        fontSize: '0.95rem',
-        fontWeight: 600,
-        letterSpacing: '-0.02em',
-        flexShrink: 0,
-      }}
-    >
+    <div className="emp-avatar emp-avatar--initials" aria-hidden="true">
       {getInitials(empleado.nombre)}
     </div>
   );
 };
 
-/* ─── Stat tile ─────────────────────────────────────────── */
-const StatTile = ({ icon: Icon, label, value, testId }) => (
-  <div style={S.statTile} data-testid={testId}>
-    <Icon size={14} strokeWidth={1.75} style={{ color: 'var(--color-accent)', flexShrink: 0 }} aria-hidden="true" />
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: '1px' }}>
-      <span style={S.statLabel}>{label}</span>
-      <span style={S.statValue} title={value || 'Sin asignar'}>
-        {value || '—'}
-      </span>
-    </div>
-  </div>
-);
-
-/* ─── QR Panel ──────────────────────────────────────────── */
-const QrPanel = ({ empleado }) => (
-  <figure style={S.qrPanel} data-testid="qr-panel">
-    <figcaption style={S.qrEyebrow}>Código de acceso</figcaption>
-
-    {empleado.qr_code ? (
-      <div style={S.qrFrame}>
-        <img
-          src={empleado.qr_code}
-          alt="Código QR personal"
-          data-testid="qr-image"
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-        />
+/* ─── Skeleton ──────────────────────────────────────────── */
+const LoadingState = () => (
+  <main className="emp-page" data-testid="empleado-dashboard-loading">
+    <style>{CSS}</style>
+    <PortalHeader subtitle="Acceso Personal" showRefresh={false} onLogout={() => {}} />
+    <div className="emp-body" aria-busy="true" aria-label="Cargando">
+      <div className="emp-identity">
+        <div className="emp-skel emp-skel--avatar" />
+        <div className="emp-skel-stack">
+          <div className="emp-skel emp-skel--lg" />
+          <div className="emp-skel emp-skel--sm" />
+        </div>
       </div>
-    ) : (
-      <div style={S.qrEmpty} aria-label="Sin código asignado">
-        <QrCode size={32} strokeWidth={1.5} aria-hidden="true" />
-        <span style={S.qrEmptyText}>Sin código asignado</span>
+      <div className="emp-skel emp-skel--qr" />
+      <div className="emp-stats">
+        <div className="emp-skel emp-skel--chip" />
+        <div className="emp-skel emp-skel--chip" />
       </div>
-    )}
-
-    <p style={S.qrHint}>Muéstralo al chofer para abordar.</p>
-  </figure>
+    </div>
+  </main>
 );
 
-/* ─── Banner ────────────────────────────────────────────── */
-const PersonalUseBanner = () => (
-  <aside role="note" data-testid="banner-personal" style={S.banner}>
-    <div style={S.bannerIcon} aria-hidden="true">
-      <AlertTriangle size={18} strokeWidth={2.25} />
-    </div>
-    <div style={{ minWidth: 0 }}>
-      <p style={S.bannerTitle}>Uso personal</p>
-      <p style={S.bannerBody}>
-        Este código es <strong style={{ color: 'var(--color-semantic-warning)' }}>intransferible</strong>.
-        Su préstamo conlleva sanciones administrativas.
-      </p>
-    </div>
-  </aside>
-);
-
-/* ─── Componente principal ──────────────────────────────── */
+/* ─── Página ────────────────────────────────────────────── */
 export const EmpleadoDashboard = () => {
   const navigate = useNavigate();
   const [empleado, setEmpleado] = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     const id = empleadoSession.getEmpleadoId();
     if (!id) { navigate(APP_ROUTES.empleadoLogin, { replace: true }); return; }
 
-    // 1) Hidratación inmediata desde caché local (modo offline / render instantáneo)
+    // 1) Hidratación inmediata desde caché local
     const cached = empleadoCache.get();
     if (cached?.empleado?.id === id) {
       setEmpleado(cached.empleado);
       setLoading(false);
     }
 
-    // 2) Refresco contra Supabase (si hay red)
+    // 2) Refresco contra Supabase
     const fetchEmpleado = async () => {
       try {
         const { data, error } = await supabase
@@ -185,7 +106,6 @@ export const EmpleadoDashboard = () => {
         if (error) throw error;
 
         if (!data) {
-          // El empleado ya no existe en BD → cerrar sesión
           empleadoSession.clear();
           navigate(APP_ROUTES.empleadoLogin, { replace: true });
           return;
@@ -193,13 +113,11 @@ export const EmpleadoDashboard = () => {
 
         setEmpleado(data);
         setIsOffline(false);
-        empleadoCache.save(data); // refresca caché local con datos frescos
+        empleadoCache.save(data);
       } catch {
-        // Sin red o error de fetch: si tenemos caché, mantenerla y avisar.
         if (cached?.empleado?.id === id) {
           setIsOffline(true);
         } else {
-          // Sin caché y sin red → no hay nada que mostrar
           empleadoSession.clear();
           navigate(APP_ROUTES.empleadoLogin, { replace: true });
           return;
@@ -212,9 +130,8 @@ export const EmpleadoDashboard = () => {
     fetchEmpleado();
   }, [navigate]);
 
-  // Escuchar cambios de conectividad para actualizar el banner
   useEffect(() => {
-    const update = () => setIsOffline((prev) => prev && !navigator.onLine ? true : !navigator.onLine && Boolean(empleado));
+    const update = () => setIsOffline(!navigator.onLine && Boolean(empleado));
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
     return () => {
@@ -228,303 +145,413 @@ export const EmpleadoDashboard = () => {
     navigate(APP_ROUTES.empleadoLogin, { replace: true });
   };
 
-  if (loading)   return <LoadingState />;
+  if (loading) return <LoadingState />;
   if (!empleado) return null;
 
   const { apellidos, nombres } = splitName(empleado.nombre);
   const rutaCode = parseRutaCode(empleado.ruta);
 
   return (
-    <main style={S.page} data-testid="empleado-dashboard">
+    <main className="emp-page" data-testid="empleado-dashboard">
+      <style>{CSS}</style>
       <PortalHeader
         subtitle="Acceso Personal"
         onBrandClick={() => navigate('/empleado/dashboard')}
         onLogout={handleLogout}
       />
 
-      <section style={S.body}>
-        <motion.article
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22, ease: 'easeOut' }}
-          style={S.card}
-          aria-labelledby="emp-name"
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+        className="emp-body"
+      >
+        {/* ── Identidad ── */}
+        <header className="emp-identity" aria-labelledby="emp-name">
+          <Avatar empleado={empleado} />
+          <div className="emp-identity__text">
+            {apellidos && <p className="emp-identity__surname">{apellidos}</p>}
+            <h1 id="emp-name" className="emp-identity__name">{nombres}</h1>
+            <p className="emp-identity__num" data-testid="empleado-numero">
+              #{empleado.numero_empleado}
+            </p>
+          </div>
+        </header>
+
+        {/* ── QR Hero ── */}
+        <section
+          className="emp-qr"
+          aria-labelledby="qr-title"
+          data-testid="qr-panel"
         >
-          {/* Identidad */}
-          <header style={S.identityRow}>
-            <Avatar empleado={empleado} />
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {apellidos && (
-                <span style={S.surname}>{apellidos}</span>
-              )}
-              <h2 id="emp-name" style={S.name}>{nombres}</h2>
-              <span style={S.empNumber} data-testid="empleado-numero">
-                #{empleado.numero_empleado}
+          <header className="emp-qr__head">
+            <h2 id="qr-title" className="emp-qr__title">Código de acceso</h2>
+            {isOffline && (
+              <span
+                className="emp-qr__offline"
+                role="status"
+                aria-label="Sin conexión, mostrando código guardado"
+                data-testid="qr-offline-badge"
+              >
+                <WifiOff size={11} strokeWidth={2.25} aria-hidden="true" />
+                Sin conexión
               </span>
-            </div>
+            )}
           </header>
 
-          {/* Stats */}
-          <div style={S.statsRow} role="list">
-            <StatTile icon={MapPin} label="Ruta"  value={rutaCode}        testId="stat-ruta" />
-            <StatTile icon={Clock}  label="Turno" value={empleado.turno}  testId="stat-turno" />
+          {empleado.qr_code ? (
+            <div className="emp-qr__frame">
+              <img
+                src={empleado.qr_code}
+                alt={`Código QR de acceso de ${empleado.nombre}`}
+                data-testid="qr-image"
+                className="emp-qr__img"
+              />
+            </div>
+          ) : (
+            <div className="emp-qr__empty" role="status">
+              <QrCode size={36} strokeWidth={1.5} aria-hidden="true" />
+              <p className="emp-qr__empty-text">Sin código asignado</p>
+              <p className="emp-qr__empty-sub">Contacta a RH para generar el tuyo.</p>
+            </div>
+          )}
+
+          <p className="emp-qr__hint">
+            {isOffline
+              ? 'Tu código sigue disponible sin conexión.'
+              : 'Muéstralo al chofer al abordar.'}
+          </p>
+        </section>
+
+        {/* ── Datos de transporte (secundarios) ── */}
+        <section className="emp-stats" aria-label="Detalles de transporte">
+          <div className="emp-stat" data-testid="stat-ruta">
+            <MapPin size={14} strokeWidth={1.75} aria-hidden="true" className="emp-stat__icon" />
+            <span className="emp-stat__label">Ruta</span>
+            <span className="emp-stat__value">{rutaCode || '—'}</span>
           </div>
+          <div className="emp-stat" data-testid="stat-turno">
+            <Clock size={14} strokeWidth={1.75} aria-hidden="true" className="emp-stat__icon" />
+            <span className="emp-stat__label">Turno</span>
+            <span className="emp-stat__value">{empleado.turno || '—'}</span>
+          </div>
+        </section>
 
-          {/* QR */}
-          <QrPanel empleado={empleado} isOffline={isOffline} />
+        {/* ── Nota legal discreta ── */}
+        <aside role="note" className="emp-note" data-testid="banner-personal">
+          <p className="emp-note__text">
+            Código <strong className="emp-note__strong">intransferible</strong>.
+            Su préstamo conlleva sanciones administrativas.
+          </p>
+        </aside>
 
-          {/* Banner */}
-          <PersonalUseBanner />
-        </motion.article>
-
-        <footer style={S.footer}>
+        <footer className="emp-foot">
           Planta Querétaro · {new Date().getFullYear()}
         </footer>
-      </section>
+      </motion.div>
     </main>
   );
 };
 
-/* ============================================================
-   STYLES — 100% tokens, mobile-first
-   ============================================================ */
-const S = {
-  /* Page */
-  page: {
-    minHeight: '100dvh',
-    background: 'var(--color-canvas)',
-    display: 'flex',
-    flexDirection: 'column',
-  },
+/* ════════════════════════════════════════════════════════════
+   Scoped CSS — 100 % tokens · mobile-first
+   ════════════════════════════════════════════════════════════ */
+const CSS = /* css */ `
+.emp-page {
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  display: flex;
+  flex-direction: column;
+}
 
-  /* Body wrapper */
-  body: {
-    flex: 1,
-    width: '100%',
-    maxWidth: 'min(100%, 28rem)',
-    margin: '0 auto',
-    padding: 'var(--spacing-base)',
-    paddingBottom: 'max(var(--spacing-base), env(safe-area-inset-bottom))',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-lg)',
-  },
+.emp-body {
+  flex: 1;
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+  padding: var(--spacing-base);
+  padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
 
-  /* Card */
-  card: {
-    background: 'var(--color-surface-card)',
-    border: '1px solid var(--color-hairline-soft)',
-    borderRadius: 'var(--rounded-xl)',
-    padding: 'clamp(var(--spacing-base), 5vw, var(--spacing-lg))',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 'var(--spacing-lg)',
-    boxShadow: '0 1px 0 var(--color-hairline-soft)',
-  },
+/* ── Identidad ── */
+.emp-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding-block: var(--spacing-xs);
+}
+.emp-identity__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+.emp-identity__surname {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-eyebrow-size);
+  font-weight: var(--typography-eyebrow-weight);
+  line-height: var(--typography-eyebrow-lh);
+  letter-spacing: var(--typography-eyebrow-ls);
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.emp-identity__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--typography-title-size);
+  font-weight: var(--typography-title-weight);
+  line-height: var(--typography-title-lh);
+  letter-spacing: var(--ls-tight-2);
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.emp-identity__num {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-caption-size);
+  color: var(--color-ink-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-wide-1);
+}
 
-  /* Identity */
-  identityRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-  },
-  surname: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    letterSpacing: '0.01em',
-    lineHeight: 1.1,
-    textTransform: 'uppercase',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  name: {
-    margin: 0,
-    fontFamily: 'var(--font-display)',
-    fontSize: 'var(--typography-title-sm-size)',
-    fontWeight: 'var(--typography-title-md-weight)',
-    color: 'var(--color-ink)',
-    lineHeight: 1.15,
-    letterSpacing: '-0.01em',
-    textTransform: 'uppercase',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  empNumber: {
-    marginTop: '2px',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    fontVariantNumeric: 'tabular-nums',
-    letterSpacing: '0.03em',
-  },
+/* ── Avatar ── */
+.emp-avatar {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--rounded-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.emp-avatar--photo {
+  object-fit: cover;
+  border: 1px solid var(--color-hairline-soft);
+}
+.emp-avatar--initials {
+  background: rgb(var(--color-primary-raw) / 0.1);
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: var(--typography-body-sm-size);
+  font-weight: 600;
+  letter-spacing: var(--ls-tight-2);
+}
 
-  /* Stats */
-  statsRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 'var(--spacing-xs)',
-  },
-  statTile: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-xs)',
-    padding: 'var(--spacing-sm) var(--spacing-base)',
-    borderRadius: 'var(--rounded-md)',
-    background: 'var(--color-canvas-soft)',
-    border: '1px solid var(--color-hairline-soft)',
-    minWidth: 0,
-  },
-  statLabel: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-uppercase-size)',
-    fontWeight: 'var(--typography-caption-uppercase-weight)',
-    letterSpacing: 'var(--typography-caption-uppercase-ls)',
-    textTransform: 'uppercase',
-    color: 'var(--color-muted)',
-    lineHeight: 1,
-  },
-  statValue: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-    color: 'var(--color-ink)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    lineHeight: 1.15,
-  },
+/* ── QR héroe ── */
+.emp-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-base);
+  padding: var(--spacing-lg) var(--spacing-base) var(--spacing-base);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-xl);
+  box-shadow: var(--shadow-soft);
+}
+.emp-qr__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-xs);
+}
+.emp-qr__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-eyebrow-size);
+  font-weight: var(--typography-eyebrow-weight);
+  line-height: var(--typography-eyebrow-lh);
+  letter-spacing: var(--typography-eyebrow-ls);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+.emp-qr__offline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs);
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  border-radius: var(--rounded-pill);
+  background: rgb(var(--color-semantic-warning-raw) / 0.12);
+  color: var(--color-semantic-warning);
+  font-family: var(--font-body);
+  font-size: var(--typography-eyebrow-size);
+  font-weight: var(--typography-eyebrow-weight);
+  letter-spacing: var(--typography-eyebrow-ls);
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+.emp-qr__frame {
+  width: 100%;
+  max-width: min(78vw, 18rem);
+  aspect-ratio: 1 / 1;
+  padding: var(--spacing-sm);
+  border-radius: var(--rounded-lg);
+  background: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.emp-qr__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+.emp-qr__empty {
+  width: 100%;
+  max-width: min(78vw, 18rem);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--rounded-lg);
+  border: 1px dashed var(--color-hairline);
+  background: var(--color-canvas);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  color: var(--color-ink-faint);
+  text-align: center;
+  padding: var(--spacing-base);
+}
+.emp-qr__empty-text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-body-sm-size);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+.emp-qr__empty-sub {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-caption-size);
+  color: var(--color-ink-faint);
+}
+.emp-qr__hint {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-body-sm-size);
+  color: var(--color-ink-muted);
+  text-align: center;
+  line-height: var(--typography-body-sm-lh);
+}
 
-  /* QR */
-  qrPanel: {
-    margin: 0,
-    width: '100%',
-    padding: 'var(--spacing-lg)',
-    borderRadius: 'var(--rounded-lg)',
-    border: '1px dashed rgb(var(--color-accent-raw) / 0.25)',
-    background: 'rgb(var(--color-accent-raw) / 0.02)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 'var(--spacing-sm)',
-  },
-  qrEyebrowRow: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 'var(--spacing-xs)',
-  },
-  qrEyebrow: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-uppercase-size)',
-    fontWeight: 'var(--typography-caption-uppercase-weight)',
-    letterSpacing: 'var(--typography-caption-uppercase-ls)',
-    textTransform: 'uppercase',
-    color: 'var(--color-muted)',
-  },
-  offlineBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    padding: '0.125rem 0.5rem',
-    borderRadius: 'var(--rounded-pill)',
-    background: 'rgb(var(--color-semantic-warning-raw) / 0.12)',
-    color: 'var(--color-semantic-warning)',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-eyebrow-size)',
-    fontWeight: 'var(--typography-eyebrow-weight)',
-    letterSpacing: 'var(--typography-eyebrow-ls)',
-    textTransform: 'uppercase',
-    lineHeight: 1,
-    whiteSpace: 'nowrap',
-  },
-  qrFrame: {
-    width: '100%',
-    maxWidth: 'min(60vw, 14rem)',
-    aspectRatio: '1 / 1',
-    padding: 'var(--spacing-xs)',
-    borderRadius: 'var(--rounded-md)',
-    background: 'var(--color-surface-card)',
-    border: '1px solid var(--color-hairline-soft)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qrEmpty: {
-    width: '100%',
-    maxWidth: 'min(60vw, 14rem)',
-    aspectRatio: '1 / 1',
-    borderRadius: 'var(--rounded-md)',
-    border: '1px solid var(--color-hairline-soft)',
-    background: 'var(--color-canvas)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 'var(--spacing-xs)',
-    color: 'var(--color-hairline-strong)',
-  },
-  qrEmptyText: {
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted-soft)',
-  },
-  qrHint: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    textAlign: 'center',
-    lineHeight: 'var(--typography-caption-lh)',
-  },
+/* ── Chips de transporte ── */
+.emp-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
+}
+.emp-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-base);
+  border-radius: var(--rounded-md);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-soft);
+  min-width: 0;
+}
+.emp-stat__icon {
+  color: var(--color-ink-faint);
+  flex-shrink: 0;
+}
+.emp-stat__label {
+  font-family: var(--font-body);
+  font-size: var(--typography-eyebrow-size);
+  font-weight: var(--typography-eyebrow-weight);
+  letter-spacing: var(--typography-eyebrow-ls);
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.emp-stat__value {
+  margin-left: auto;
+  font-family: var(--font-body);
+  font-size: var(--typography-body-sm-size);
+  font-weight: 600;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 
-  /* Banner */
-  banner: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: 'var(--spacing-sm)',
-    padding: 'var(--spacing-sm) var(--spacing-base)',
-    borderRadius: 'var(--rounded-md)',
-    background: 'rgb(var(--color-semantic-warning-raw) / 0.06)',
-    border: '1px solid rgb(var(--color-semantic-warning-raw) / 0.22)',
-  },
-  bannerIcon: {
-    flexShrink: 0,
-    width: '2rem',
-    height: '2rem',
-    borderRadius: 'var(--rounded-md)',
-    background: 'rgb(var(--color-semantic-warning-raw) / 0.15)',
-    color: 'var(--color-semantic-warning)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bannerTitle: {
-    margin: 0,
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 'var(--typography-title-sm-weight)',
-    color: 'var(--color-semantic-warning)',
-    lineHeight: 1.2,
-  },
-  bannerBody: {
-    margin: 'var(--spacing-xxs) 0 0',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted)',
-    lineHeight: 'var(--typography-caption-lh)',
-  },
+/* ── Nota legal mínima ── */
+.emp-note {
+  border-left: 2px solid rgb(var(--color-semantic-warning-raw) / 0.4);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgb(var(--color-semantic-warning-raw) / 0.04);
+  border-radius: 0 var(--rounded-sm) var(--rounded-sm) 0;
+}
+.emp-note__text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--typography-caption-size);
+  color: var(--color-ink-muted);
+  line-height: var(--typography-caption-lh);
+}
+.emp-note__strong {
+  color: var(--color-semantic-warning);
+  font-weight: 600;
+}
 
-  /* Footer */
-  footer: {
-    textAlign: 'center',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-caption-size)',
-    color: 'var(--color-muted-soft)',
-    letterSpacing: '0.02em',
-  },
-};
+/* ── Footer ── */
+.emp-foot {
+  margin-top: auto;
+  padding-top: var(--spacing-sm);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--typography-eyebrow-size);
+  letter-spacing: var(--typography-eyebrow-ls);
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+/* ── Skeleton ── */
+.emp-skel {
+  background: var(--color-hairline-soft);
+  border-radius: var(--rounded-sm);
+  animation: emp-pulse 1.4s ease-in-out infinite;
+}
+.emp-skel-stack {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+.emp-skel--avatar { width: 3rem; height: 3rem; border-radius: var(--rounded-full); flex-shrink: 0; }
+.emp-skel--lg     { height: 1rem; width: 70%; }
+.emp-skel--sm     { height: 0.75rem; width: 40%; }
+.emp-skel--qr     { height: 18rem; border-radius: var(--rounded-xl); }
+.emp-skel--chip   { height: 2.75rem; border-radius: var(--rounded-md); }
+
+@keyframes emp-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.45; }
+}
+
+/* ── Tabletas+ ── */
+@media (min-width: 30rem) {
+  .emp-body { gap: var(--spacing-xl); padding: var(--spacing-lg); }
+  .emp-qr__frame, .emp-qr__empty { max-width: 18rem; }
+}
+
+/* ── Reduce motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .emp-skel { animation: none; opacity: 0.7; }
+}
+`;
