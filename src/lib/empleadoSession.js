@@ -6,6 +6,7 @@ import { safeStorage, STORAGE_KEYS } from './safeStorage';
 
 const TOKEN_KEY = STORAGE_KEYS.empleadoToken;
 const ID_KEY    = STORAGE_KEYS.empleadoId;
+const PROFILE_KEY = STORAGE_KEYS.empleadoProfile;
 
 /** Decodifica payload de un JWT (sin verificar — solo para leer exp/sub). */
 const decode = (token) => {
@@ -52,6 +53,32 @@ export const empleadoSession = {
   clear() {
     safeStorage.remove(TOKEN_KEY);
     safeStorage.remove(ID_KEY);
+    safeStorage.remove(PROFILE_KEY);
+  },
+};
+
+/**
+ * empleadoCache — perfil del empleado persistido localmente para modo OFFLINE.
+ * Guarda los campos visibles en el dashboard (incluido `qr_code`) tras un fetch
+ * exitoso, para que el colaborador pueda mostrar su QR aunque no tenga red.
+ */
+export const empleadoCache = {
+  save(empleado) {
+    if (!empleado?.id) return;
+    safeStorage.set(PROFILE_KEY, {
+      empleado,
+      cachedAt: Date.now(),
+    });
+  },
+
+  get() {
+    const entry = safeStorage.get(PROFILE_KEY, null);
+    if (!entry?.empleado) return null;
+    return entry;
+  },
+
+  clear() {
+    safeStorage.remove(PROFILE_KEY);
   },
 };
 

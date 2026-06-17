@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { MapPin, Clock, QrCode, AlertTriangle } from 'lucide-react';
+import { MapPin, Clock, QrCode, AlertTriangle, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PortalHeader } from '../components/PortalHeader';
-import { empleadoSession } from '../lib/empleadoSession';
+import { empleadoSession, empleadoCache } from '../lib/empleadoSession';
 import { APP_ROUTES } from '../lib/choferConfig';
 
 /* ============================================================
@@ -160,29 +160,68 @@ export const EmpleadoDashboard = () => {
   const navigate = useNavigate();
   const [empleado, setEmpleado] = useState(null);
   const [loading,  setLoading]  = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     const id = empleadoSession.getEmpleadoId();
     if (!id) { navigate(APP_ROUTES.empleadoLogin, { replace: true }); return; }
 
-    const fetchEmpleado = async () => {
-      const { data, error } = await supabase
-        .from('empleados')
-        .select('id, nombre, numero_empleado, turno, ruta, foto_url, qr_code, colonia, referencia')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (error || !data) {
-        empleadoSession.clear();
-        navigate(APP_ROUTES.empleadoLogin, { replace: true });
-      } else {
-        setEmpleado(data);
-      }
+    // 1) Hidratación inmediata desde caché local (modo offline / render instantáneo)
+    const cached = empleadoCache.get();
+    if (cached?.empleado?.id === id) {
+      setEmpleado(cached.empleado);
       setLoading(false);
+    }
+
+    // 2) Refresco contra Supabase (si hay red)
+    const fetchEmpleado = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('empleados')
+          .select('id, nombre, numero_empleado, turno, ruta, foto_url, qr_code, colonia, referencia')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          // El empleado ya no existe en BD → cerrar sesión
+          empleadoSession.clear();
+          navigate(APP_ROUTES.empleadoLogin, { replace: true });
+          return;
+        }
+
+        setEmpleado(data);
+        setIsOffline(false);
+        empleadoCache.save(data); // refresca caché local con datos frescos
+      } catch {
+        // Sin red o error de fetch: si tenemos caché, mantenerla y avisar.
+        if (cached?.empleado?.id === id) {
+          setIsOffline(true);
+        } else {
+          // Sin caché y sin red → no hay nada que mostrar
+          empleadoSession.clear();
+          navigate(APP_ROUTES.empleadoLogin, { replace: true });
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchEmpleado();
   }, [navigate]);
+
+  // Escuchar cambios de conectividad para actualizar el banner
+  useEffect(() => {
+    const update = () => setIsOffline((prev) => prev && !navigator.onLine ? true : !navigator.onLine && Boolean(empleado));
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, [empleado]);
 
   const handleLogout = () => {
     empleadoSession.clear();
@@ -232,7 +271,7 @@ export const EmpleadoDashboard = () => {
           </div>
 
           {/* QR */}
-          <QrPanel empleado={empleado} />
+          <QrPanel empleado={empleado} isOffline={isOffline} />
 
           {/* Banner */}
           <PersonalUseBanner />
@@ -371,6 +410,13 @@ const S = {
     alignItems: 'center',
     gap: 'var(--spacing-sm)',
   },
+  qrEyebrowRow: {
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 'var(--spacing-xs)',
+  },
   qrEyebrow: {
     margin: 0,
     fontFamily: 'var(--font-body)',
@@ -379,6 +425,22 @@ const S = {
     letterSpacing: 'var(--typography-caption-uppercase-ls)',
     textTransform: 'uppercase',
     color: 'var(--color-muted)',
+  },
+  offlineBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0.125rem 0.5rem',
+    borderRadius: 'var(--rounded-pill)',
+    background: 'rgb(var(--color-semantic-warning-raw) / 0.12)',
+    color: 'var(--color-semantic-warning)',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-eyebrow-size)',
+    fontWeight: 'var(--typography-eyebrow-weight)',
+    letterSpacing: 'var(--typography-eyebrow-ls)',
+    textTransform: 'uppercase',
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
   },
   qrFrame: {
     width: '100%',

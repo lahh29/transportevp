@@ -96,5 +96,6 @@ export const STORAGE_KEYS = {
   offlineQueue: 'vp:offline_queue',
   empleadoId:   'vp:empleado_id',
   empleadoToken:'vp:empleado_token',
+  empleadoProfile:'vp:empleado_profile', // perfil cacheado para modo offline
   webauthnHints:'vp:webauthn_hints', // mapa numero_empleado → bool (sólo UI hint)
 };
