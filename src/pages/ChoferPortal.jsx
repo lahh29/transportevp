@@ -485,16 +485,25 @@ export const ChoferPortal = () => {
       }
     };
 
+    // Contador de errores de decodificación para debugging.
+    // Errores "QR no encontrado en el frame" son normales y frecuentes:
+    // sólo los registramos cada 60 frames para detectar problemas reales.
+    let scanErrorCount = 0;
+    const onScanError = (err) => {
+      scanErrorCount++;
+      if (scanErrorCount % 60 === 0) {
+        // eslint-disable-next-line no-console
+        console.debug('[scanner] sin QR detectado en últimos 60 frames:', err);
+      }
+    };
+
     const startCamera = () => qr
       .start(
-        // Selecciona cámara trasera con constraints avanzados:
-        // - autofocus continuo (clave para leer QR en pantallas)
-        // - resolución ideal alta para captar QR densos
+        // Cámara trasera; resolución alta para QR pequeños/densos
         {
           facingMode: { ideal: 'environment' },
-          focusMode: 'continuous',
-          width:  { ideal: 1920 },
-          height: { ideal: 1080 },
+          width:  { ideal: 1280 },
+          height: { ideal: 720 },
         },
         {
           fps: SCAN_CONFIG.fps,
@@ -502,26 +511,33 @@ export const ChoferPortal = () => {
             const size = Math.round(Math.min(w, h) * SCAN_CONFIG.qrboxRatio);
             return { width: size, height: size };
           },
-          // Usa BarcodeDetector nativo del navegador cuando exista (Safari/Chrome
-          // modernos): es 5-10× más rápido y tolera más rotación/desenfoque.
-          useBarCodeDetectorIfSupported: true,
+          // Usa BarcodeDetector nativo del navegador si está disponible
+          // (Safari 17+, Chrome moderno): mucho más rápido y tolerante.
+          // Si el navegador no lo soporta, html5-qrcode cae al decodificador JS.
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
           disableFlip: false,
+          rememberLastUsedCamera: false,
         },
         onScanSuccess,
-        () => {},
+        onScanError,
       )
-      .catch(() => qr.start(
-        // Fallback a la cámara frontal si la trasera no está disponible
-        { facingMode: 'user' },
-        {
-          fps: SCAN_CONFIG.fps,
-          qrbox: { width: 240, height: 240 },
-          useBarCodeDetectorIfSupported: true,
-        },
-        onScanSuccess,
-        () => {},
-      ))
+      .catch((errEnv) => {
+        // eslint-disable-next-line no-console
+        console.warn('[scanner] cámara trasera no disponible, intentando frontal:', errEnv);
+        return qr.start(
+          { facingMode: 'user' },
+          {
+            fps: SCAN_CONFIG.fps,
+            qrbox: { width: 240, height: 240 },
+            experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+          },
+          onScanSuccess,
+          onScanError,
+        );
+      })
       .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[scanner] no se pudo iniciar la cámara:', err);
         setCameraError(
           err?.message?.includes('Permission') || err?.name === 'NotAllowedError'
             ? 'permission'
