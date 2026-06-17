@@ -262,29 +262,34 @@ export const EmpresaPortal = () => {
             .from('empleados')
             .update({ turno })
             .eq('numero_empleado', numero_empleado)
-            .select('id'),
+            .select('id')
+            .then((r) => ({ ...r, numero_empleado })),
         ),
       );
-      const updated  = results.filter((r) => !r.error && r.data && r.data.length > 0).length;
-      const notFound = results.filter((r) => !r.error && (!r.data || r.data.length === 0)).length;
-      const failed   = results.filter((r) => r.error).length;
+
+      const updatedRows  = results.filter((r) => !r.error && r.data && r.data.length > 0);
+      const notFoundRows = results.filter((r) => !r.error && (!r.data || r.data.length === 0));
+      const failedRows   = results.filter((r) => r.error);
+
+      const updated  = updatedRows.length;
+      const notFound = notFoundRows.map((r) => r.numero_empleado);
+      const failed   = failedRows.map((r) => r.numero_empleado);
 
       if (updated > 0) {
         notify.success(`${updated} turno${updated !== 1 ? 's' : ''} actualizado${updated !== 1 ? 's' : ''}`);
       }
-      if (notFound > 0) {
-        notify.error(`${notFound} colaborador${notFound !== 1 ? 'es' : ''} no encontrado${notFound !== 1 ? 's' : ''}`);
+
+      // Si todo salió perfecto, cerramos el modal. Si hay incidencias, lo dejamos
+      // abierto para que el usuario vea quiénes no se procesaron.
+      if (notFound.length === 0 && failed.length === 0) {
+        setIsTurnoUpdateModalOpen(false);
       }
-      if (failed > 0) {
-        notify.error(`${failed} actualizacion${failed !== 1 ? 'es' : ''} fallaron`);
-      }
-      if (updated === 0 && notFound === 0 && failed === 0) {
-        notify.error('No se actualizó ningún turno');
-      }
-      setIsTurnoUpdateModalOpen(false);
       fetchEmployees();
+
+      return { updated, notFound, failed };
     } catch {
       notify.error('No se pudieron actualizar los turnos');
+      return { updated: 0, notFound: [], failed: [] };
     }
   };
 

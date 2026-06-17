@@ -1,7 +1,8 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Upload, CheckCircle, FileText, AlertCircle, X as XIcon } from 'lucide-react';
+import { Upload, CheckCircle, FileText, AlertCircle, X as XIcon, Copy, Download, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModalActions } from './ModalKit';
+import { notify } from '../lib/notify';
 import { plural } from '../lib/choferConfig';
 
 /* ============================================================
@@ -131,6 +132,7 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
   const [error,      setError]      = useState(null);
   const [loading,    setLoading]    = useState(false);
   const [dragging,   setDragging]   = useState(false);
+  const [result,     setResult]     = useState(null); // { updated, notFound:[], failed:[] }
   const fileInputRef = useRef(null);
 
   const previewItems = useMemo(
@@ -179,8 +181,37 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
   const handleConfirm = async () => {
     if (!parsedData) return;
     setLoading(true);
-    await onConfirm(parsedData);
+    const r = await onConfirm(parsedData);
     setLoading(false);
+    // Si la operación devolvió un reporte y hay incidencias, lo mostramos.
+    if (r && (Array.isArray(r.notFound) || Array.isArray(r.failed))) {
+      const hasIssues = (r.notFound?.length || 0) + (r.failed?.length || 0) > 0;
+      if (hasIssues) setResult(r);
+    }
+  };
+
+  /* ── Copiar lista al portapapeles ── */
+  const copyList = async (list, label) => {
+    try {
+      await navigator.clipboard.writeText(list.join('\n'));
+      notify.success(`${label} copiado${list.length !== 1 ? 's' : ''} al portapapeles`);
+    } catch {
+      notify.error('No se pudo copiar');
+    }
+  };
+
+  /* ── Descargar lista como CSV ── */
+  const downloadList = (list, filename) => {
+    const csv = 'numero_empleado\n' + list.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   /* ── Reset ── */
@@ -260,7 +291,7 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
         )}
 
         {/* Estado 3: Preview */}
-        {parsedData && (
+        {parsedData && !result && (
           <motion.div
             key="preview"
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
@@ -311,23 +342,134 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
           </motion.div>
         )}
 
+        {/* Estado 4: Resultado con incidencias */}
+        {result && (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-base)' }}
+            data-testid="bulk-result"
+          >
+            {/* Resumen */}
+            <ul role="list" style={S.summaryList}>
+              {result.updated > 0 && (
+                <li style={{ ...S.summaryItem, ...S.summaryItemOk }}>
+                  <CheckCircle2 size={16} strokeWidth={2} aria-hidden="true" />
+                  <span><strong>{result.updated}</strong> turno{result.updated !== 1 ? 's' : ''} actualizado{result.updated !== 1 ? 's' : ''}</span>
+                </li>
+              )}
+              {result.notFound?.length > 0 && (
+                <li style={{ ...S.summaryItem, ...S.summaryItemErr }}>
+                  <AlertCircle size={16} strokeWidth={2} aria-hidden="true" />
+                  <span><strong>{result.notFound.length}</strong> colaborador{result.notFound.length !== 1 ? 'es' : ''} no encontrado{result.notFound.length !== 1 ? 's' : ''}</span>
+                </li>
+              )}
+              {result.failed?.length > 0 && (
+                <li style={{ ...S.summaryItem, ...S.summaryItemErr }}>
+                  <AlertCircle size={16} strokeWidth={2} aria-hidden="true" />
+                  <span><strong>{result.failed.length}</strong> con error al actualizar</span>
+                </li>
+              )}
+            </ul>
+
+            {/* Listas con detalle */}
+            {result.notFound?.length > 0 && (
+              <IssueGroup
+                title="No encontrados"
+                hint="Estos números no existen en el directorio. Revísalos en tu archivo."
+                items={result.notFound}
+                onCopy={() => copyList(result.notFound, 'No encontrados')}
+                onDownload={() => downloadList(result.notFound, 'no-encontrados.csv')}
+                testId="bulk-not-found"
+                tone="error"
+              />
+            )}
+
+            {result.failed?.length > 0 && (
+              <IssueGroup
+                title="Con error al actualizar"
+                hint="No se pudo guardar el cambio. Inténtalo más tarde."
+                items={result.failed}
+                onCopy={() => copyList(result.failed, 'Con error')}
+                onDownload={() => downloadList(result.failed, 'con-error.csv')}
+                testId="bulk-failed"
+                tone="error"
+              />
+            )}
+          </motion.div>
+        )}
+
       </AnimatePresence>
 
       {/* Acciones */}
-      <ModalActions
-        cancel={{ onClick: onCancel, disabled: loading }}
-        confirm={{
-          onClick: handleConfirm,
-          disabled: !parsedData,
-          loading,
-          loadingLabel: cfg.loadingLabel,
-          icon: CheckCircle,
-          label: parsedData ? cfg.confirmLabel(parsedData.length) : 'Continuar',
-        }}
-        testIdCancel="bulk-modal-cancel"
-        testIdConfirm="bulk-modal-confirm"
-      />
+      {result ? (
+        <ModalActions
+          confirm={{
+            onClick: onCancel,
+            icon: CheckCircle,
+            label: 'Cerrar',
+          }}
+          testIdConfirm="bulk-result-close"
+        />
+      ) : (
+        <ModalActions
+          cancel={{ onClick: onCancel, disabled: loading }}
+          confirm={{
+            onClick: handleConfirm,
+            disabled: !parsedData,
+            loading,
+            loadingLabel: cfg.loadingLabel,
+            icon: CheckCircle,
+            label: parsedData ? cfg.confirmLabel(parsedData.length) : 'Continuar',
+          }}
+          testIdCancel="bulk-modal-cancel"
+          testIdConfirm="bulk-modal-confirm"
+        />
+      )}
     </div>
+  );
+};
+
+/* ─── Sub-componente: bloque de incidencias con copia + descarga ── */
+const IssueGroup = ({ title, hint, items, onCopy, onDownload, testId, tone = 'error' }) => {
+  const toneStyles = tone === 'error' ? S.issueErr : S.issueWarn;
+  return (
+    <section style={{ ...S.issueGroup, ...toneStyles }} data-testid={testId}>
+      <header style={S.issueHeader}>
+        <div style={{ minWidth: 0 }}>
+          <h4 style={S.issueTitle}>{title}</h4>
+          <p style={S.issueHint}>{hint}</p>
+        </div>
+        <div style={S.issueActions}>
+          <button
+            type="button"
+            onClick={onCopy}
+            aria-label="Copiar lista"
+            data-testid={`${testId}-copy`}
+            style={S.iconBtnSubtle}
+          >
+            <Copy size={14} strokeWidth={2} aria-hidden="true" />
+            <span>Copiar</span>
+          </button>
+          <button
+            type="button"
+            onClick={onDownload}
+            aria-label="Descargar lista"
+            data-testid={`${testId}-download`}
+            style={S.iconBtnSubtle}
+          >
+            <Download size={14} strokeWidth={2} aria-hidden="true" />
+            <span>CSV</span>
+          </button>
+        </div>
+      </header>
+      <ul role="list" style={S.issueList} aria-label={title}>
+        {items.map((num) => (
+          <li key={num} style={S.issueChip}>#{num}</li>
+        ))}
+      </ul>
+    </section>
   );
 };
 
@@ -502,5 +644,117 @@ const S = {
     alignItems: 'center',
     flexShrink: 0,
     borderRadius: 'var(--rounded-sm)',
+  },
+
+  /* Result — summary list */
+  summaryList: {
+    listStyle: 'none',
+    margin: 0, padding: 0,
+    display: 'flex', flexDirection: 'column',
+    gap: 'var(--spacing-xs)',
+  },
+  summaryItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xs)',
+    padding: 'var(--spacing-sm) var(--spacing-base)',
+    borderRadius: 'var(--rounded-md)',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    color: 'var(--color-ink)',
+    border: '1px solid transparent',
+  },
+  summaryItemOk: {
+    background: 'rgb(var(--color-semantic-success-raw) / 0.08)',
+    borderColor: 'rgb(var(--color-semantic-success-raw) / 0.25)',
+    color: 'var(--color-semantic-success)',
+  },
+  summaryItemErr: {
+    background: 'rgb(var(--color-semantic-error-raw) / 0.06)',
+    borderColor: 'rgb(var(--color-semantic-error-raw) / 0.25)',
+    color: 'var(--color-semantic-error)',
+  },
+
+  /* Issue group */
+  issueGroup: {
+    border: '1px solid var(--color-hairline-soft)',
+    borderRadius: 'var(--rounded-md)',
+    padding: 'var(--spacing-sm) var(--spacing-base)',
+    background: 'var(--color-surface-card)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 'var(--spacing-sm)',
+  },
+  issueErr: {
+    borderColor: 'rgb(var(--color-semantic-error-raw) / 0.2)',
+    background: 'rgb(var(--color-semantic-error-raw) / 0.03)',
+  },
+  issueWarn: {
+    borderColor: 'rgb(var(--color-semantic-warning-raw) / 0.25)',
+    background: 'rgb(var(--color-semantic-warning-raw) / 0.04)',
+  },
+  issueHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 'var(--spacing-sm)',
+    flexWrap: 'wrap',
+  },
+  issueTitle: {
+    margin: 0,
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-body-sm-size)',
+    fontWeight: 600,
+    color: 'var(--color-ink)',
+  },
+  issueHint: {
+    margin: 'var(--spacing-xxs) 0 0',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    color: 'var(--color-ink-muted)',
+    lineHeight: 'var(--typography-caption-lh)',
+    maxWidth: '32ch',
+  },
+  issueActions: {
+    display: 'inline-flex',
+    gap: 'var(--spacing-xxs)',
+    flexShrink: 0,
+  },
+  iconBtnSubtle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xxs)',
+    padding: 'var(--spacing-xxs) var(--spacing-xs)',
+    borderRadius: 'var(--rounded-sm)',
+    border: '1px solid var(--color-hairline)',
+    background: 'var(--color-canvas-soft)',
+    color: 'var(--color-ink)',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-eyebrow-size)',
+    fontWeight: 600,
+    letterSpacing: 'var(--typography-eyebrow-ls)',
+    cursor: 'pointer',
+  },
+  issueList: {
+    listStyle: 'none',
+    margin: 0, padding: 0,
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 'var(--spacing-xxs)',
+    maxHeight: '12rem',
+    overflowY: 'auto',
+  },
+  issueChip: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: 'var(--spacing-xxs) var(--spacing-xs)',
+    borderRadius: 'var(--rounded-sm)',
+    background: 'var(--color-canvas-soft)',
+    border: '1px solid var(--color-hairline)',
+    color: 'var(--color-ink)',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-caption-size)',
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: '0.02em',
   },
 };
