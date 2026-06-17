@@ -142,6 +142,35 @@ export const EmpleadoDashboard = () => {
     };
   }, [empleado]);
 
+  /* Genera el QR localmente si el backend no devolvió uno.
+     Garantiza que el colaborador SIEMPRE pueda mostrar su código,
+     incluso sin red y aunque RH aún no lo haya generado masivamente. */
+  useEffect(() => {
+    if (!empleado) return;
+    if (empleado.qr_code) {
+      setQrSrc(empleado.qr_code);
+      setQrGenerated(false);
+      return;
+    }
+    if (!empleado.numero_empleado) {
+      setQrSrc(null);
+      return;
+    }
+    let cancelled = false;
+    const content = JSON.stringify({ numero_empleado: empleado.numero_empleado });
+    QRCode.toDataURL(content, { width: 300, margin: 2 })
+      .then((dataUrl) => {
+        if (!cancelled) {
+          setQrSrc(dataUrl);
+          setQrGenerated(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setQrSrc(null);
+      });
+    return () => { cancelled = true; };
+  }, [empleado]);
+
   const handleLogout = () => {
     empleadoSession.clear();
     navigate(APP_ROUTES.empleadoLogin, { replace: true });
@@ -211,17 +240,23 @@ export const EmpleadoDashboard = () => {
               />
             </div>
           ) : (
-            <div className="emp-qr__empty" role="status">
-              <QrCode size={36} strokeWidth={1.5} aria-hidden="true" />
-              <p className="emp-qr__empty-text">Sin código asignado</p>
-              <p className="emp-qr__empty-sub">Contacta a RH para generar el tuyo.</p>
+            <div className="emp-qr__empty" role="status" data-testid="qr-empty">
+              <div className="emp-qr__empty-icon" aria-hidden="true">
+                <QrCode size={32} strokeWidth={1.5} />
+              </div>
+              <p className="emp-qr__empty-text">Tu código aún no está listo</p>
+              <p className="emp-qr__empty-sub">
+                Pide a Recursos Humanos que genere tu código para poder abordar.
+              </p>
             </div>
           )}
 
           <p className="emp-qr__hint">
-            {isOffline
-              ? 'Tu código sigue disponible sin conexión.'
-              : 'Muéstralo al chofer al abordar.'}
+            {empleado.qr_code
+              ? (isOffline
+                  ? 'Tu código sigue disponible sin conexión.'
+                  : 'Muéstralo al chofer al abordar.')
+              : 'Mientras tanto, el chofer puede registrarte manualmente con tu número.'}
           </p>
         </section>
 
@@ -425,18 +460,32 @@ const CSS = /* css */ `
   text-align: center;
   padding: var(--spacing-base);
 }
+.emp-qr__empty-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--rounded-full);
+  background: var(--color-hairline-soft);
+  color: var(--color-ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-xs);
+}
 .emp-qr__empty-text {
   margin: 0;
-  font-family: var(--font-body);
-  font-size: var(--typography-body-sm-size);
+  font-family: var(--font-display);
+  font-size: var(--typography-body-md-size);
   font-weight: 600;
-  color: var(--color-ink-muted);
+  letter-spacing: var(--ls-tight-2);
+  color: var(--color-ink);
 }
 .emp-qr__empty-sub {
   margin: 0;
   font-family: var(--font-body);
-  font-size: var(--typography-caption-size);
-  color: var(--color-ink-faint);
+  font-size: var(--typography-body-sm-size);
+  color: var(--color-ink-muted);
+  line-height: var(--typography-body-sm-lh);
+  max-width: 24ch;
 }
 .emp-qr__hint {
   margin: 0;
