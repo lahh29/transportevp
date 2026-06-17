@@ -38,14 +38,14 @@ const RutaSelectionPanel = ({ onSelect, rutasActivas, loading, reducedMotion }) 
       style={{
         position: 'absolute',
         inset: 0,
-        padding: 'max(var(--spacing-lg), env(safe-area-inset-top)) var(--spacing-lg) max(var(--spacing-xxl), env(safe-area-inset-bottom))',
+        padding: 'var(--spacing-base) var(--spacing-lg) max(var(--spacing-xxl), env(safe-area-inset-bottom))',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--spacing-lg)',
         overflowY: 'auto',
       }}
     >
-      <header style={{ marginBottom: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}>
+      <header style={{ marginBottom: 'var(--spacing-xs)', marginTop: 0 }}>
         <h1
           id="ruta-heading"
           style={{

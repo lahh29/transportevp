@@ -78,13 +78,12 @@ export const EmpleadoLogin = () => {
     }
   }, [navigate]);
 
-  /* ── Detecta soporte biométrico ── */
+  /* ── Detecta soporte biométrico ──
+     TEMPORALMENTE DESACTIVADO: biometría deshabilitada manualmente.
+     Para reactivar, restaurar el bloque original que invoca
+     webauthn.hasPlatformAuthenticator(). */
   useEffect(() => {
-    let alive = true;
-    webauthn.hasPlatformAuthenticator().then((ok) => {
-      if (alive) setBioAvailable(ok);
-    });
-    return () => { alive = false; };
+    setBioAvailable(false);
   }, []);
 
   /* ── Progreso visual ── */
