@@ -125,6 +125,91 @@ export const ConfiguracionAdmin = () => {
 
   return (
     <div style={S.page}>
+      <style>{`
+        .admin-table-container {
+          background: var(--color-surface, #fff);
+          border-radius: var(--rounded-xl, 1rem);
+          border: 1px solid var(--color-hairline-soft);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+          overflow: hidden;
+        }
+        .admin-table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+        }
+        .admin-table th {
+          padding: 1rem;
+          border-bottom: 2px solid var(--color-hairline-soft);
+          color: var(--color-ink-muted);
+          font-weight: 600;
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .admin-table td {
+          padding: 1rem;
+          color: var(--color-ink);
+          font-size: 0.95rem;
+          border-bottom: 1px solid var(--color-hairline-soft);
+        }
+        
+        /* Mobile First: Card View */
+        @media (max-width: 768px) {
+          .admin-table-container {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            overflow: visible;
+          }
+          .admin-table thead {
+            display: none;
+          }
+          .admin-table, .admin-table tbody, .admin-table tr, .admin-table td {
+            display: block;
+            width: 100%;
+          }
+          .admin-table tr {
+            margin-bottom: 1rem;
+            background: var(--color-surface, #fff);
+            border: 1px solid var(--color-hairline-soft);
+            border-radius: var(--rounded-lg, 0.75rem);
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+          }
+          .admin-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: none;
+            text-align: right;
+          }
+          .admin-table td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--color-ink-muted);
+            margin-right: 1rem;
+          }
+          .admin-table td[data-label="Nombre"] {
+            justify-content: flex-start;
+          }
+          .admin-table td[data-label="Nombre"]::before {
+            display: none;
+          }
+          .admin-table td[data-label="Acciones"] {
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-hairline-soft);
+          }
+          .admin-table td[data-label="Acciones"]::before {
+            display: none;
+          }
+        }
+      `}</style>
       <main style={S.main}>
         <div style={S.toolbar}>
           <h1 style={S.title}><Users size={24} style={{ color: 'var(--color-primary)' }}/> Gestión de Accesos</h1>
@@ -134,14 +219,14 @@ export const ConfiguracionAdmin = () => {
           </button>
         </div>
 
-        <div style={S.tableContainer}>
-          <table style={S.table}>
+        <div className="admin-table-container">
+          <table className="admin-table">
             <thead>
               <tr>
-                <th style={S.th}>Nombre</th>
-                <th style={S.th}>Correo Electrónico</th>
-                <th style={S.th}>Rol</th>
-                <th style={S.th}>Acciones</th>
+                <th>Nombre</th>
+                <th>Correo Electrónico</th>
+                <th>Rol</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -157,21 +242,21 @@ export const ConfiguracionAdmin = () => {
                 </tr>
               ) : (
                 users.map(user => (
-                  <tr key={user.id} style={S.tr}>
-                    <td style={S.td} data-label="Nombre">
+                  <tr key={user.id}>
+                    <td data-label="Nombre">
                       <div style={S.userCell}>
                         <div style={S.avatar}>{user.nombre?.charAt(0).toUpperCase() || '?'}</div>
                         <span style={S.userName}>{user.nombre || 'Sin nombre'}</span>
                       </div>
                     </td>
-                    <td style={S.td} data-label="Correo">{user.email}</td>
-                    <td style={S.td} data-label="Rol">
+                    <td data-label="Correo">{user.email}</td>
+                    <td data-label="Rol">
                       <span style={user.role === 'admin' ? S.badgeAdmin : S.badgeChofer}>
                         {user.role === 'admin' ? <Shield size={12} /> : <Truck size={12} />}
                         {user.role === 'admin' ? 'Admin' : 'Chofer'}
                       </span>
                     </td>
-                    <td style={S.td} data-label="Acciones">
+                    <td data-label="Acciones">
                       <div style={S.actionBtns}>
                         <button style={S.iconBtn} onClick={() => handleOpenModal(user)} title="Editar">
                           <Edit2 size={16} />
@@ -273,14 +358,6 @@ const S = {
     color: '#fff', border: 'none', padding: '0.75rem 1.25rem', borderRadius: 'var(--rounded-lg)',
     fontWeight: 600, cursor: 'pointer', boxShadow: '0 4px 12px rgba(9, 30, 66, 0.15)'
   },
-  tableContainer: {
-    background: '#fff', borderRadius: '1rem', border: '1px solid var(--color-hairline-soft)',
-    overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
-  },
-  table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },
-  th: { padding: '1rem', borderBottom: '2px solid var(--color-hairline-soft)', color: 'var(--color-ink-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  tr: { borderBottom: '1px solid var(--color-hairline-soft)' },
-  td: { padding: '1rem', color: 'var(--color-ink)', fontSize: '0.95rem' },
   emptyCell: { padding: '3rem', textAlign: 'center', color: 'var(--color-muted)', fontStyle: 'italic' },
   userCell: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
   avatar: { width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(9, 30, 66, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--color-primary)' },
