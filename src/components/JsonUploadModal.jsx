@@ -415,7 +415,9 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
             {result.failed?.length > 0 && (
               <IssueGroup
                 title={mode === 'turnos' ? 'Con error al actualizar' : 'Con error al cargar'}
-                hint="No se pudo guardar el cambio. Inténtalo más tarde."
+                hint={result.errorMessage
+                  ? `Causa: ${result.errorMessage}`
+                  : 'No se pudo guardar el cambio. Inténtalo más tarde.'}
                 items={result.failed}
                 onCopy={() => copyList(result.failed, 'Con error')}
                 onDownload={() => downloadList(result.failed, 'con-error.csv')}

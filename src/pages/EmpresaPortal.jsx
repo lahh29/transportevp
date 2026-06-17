@@ -260,6 +260,7 @@ export const EmpresaPortal = () => {
 
       let created = 0;
       let failed = [];
+      let errorMessage = null;
 
       if (toInsert.length > 0) {
         const { data: inserted, error: insErr } = await supabase
@@ -269,6 +270,9 @@ export const EmpresaPortal = () => {
 
         if (insErr) {
           failed = toInsert.map((r) => r.numero_empleado);
+          errorMessage = insErr.message || insErr.details || 'Error desconocido al guardar.';
+          // eslint-disable-next-line no-console
+          console.error('[carga colaboradores] error:', insErr);
         } else {
           created = inserted?.length || 0;
         }
@@ -284,10 +288,18 @@ export const EmpresaPortal = () => {
       }
       fetchEmployees();
 
-      return { updated: created, duplicates, failed, notFound: [] };
-    } catch {
+      return { updated: created, duplicates, failed, notFound: [], errorMessage };
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[carga colaboradores] excepción:', err);
       notify.error('No se pudieron cargar los datos');
-      return { updated: 0, duplicates: [], failed: [], notFound: [] };
+      return {
+        updated: 0,
+        duplicates: [],
+        failed: parsedData.map((r) => r.numero_empleado),
+        notFound: [],
+        errorMessage: err?.message || 'No se pudo conectar con el servidor.',
+      };
     }
   };
 
