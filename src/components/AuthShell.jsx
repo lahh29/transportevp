@@ -23,10 +23,10 @@ import { LogoMockup } from './LogoMockup';
  *  - eyebrow: string corto sobre el card (ej. "ADMINISTRACIÓN")
  *  - children: contenido del card (form, multi-step, etc.)
  *  - showBack: bool, default true. Muestra el link "Volver al inicio"
- *  - hideBrand: bool, default false. Oculta el logo + nombre de marca (vista limpia)
+ *  - hideBrand: bool, default true. Oculta el logo + nombre de marca (vista limpia/minimalista)
  *  - testId: opcional. data-testid del contenedor
  */
-export const AuthShell = ({ eyebrow, children, showBack = true, hideBrand = false, testId }) => {
+export const AuthShell = ({ eyebrow, children, showBack = true, hideBrand = true, testId }) => {
   const navigate = useNavigate();
 
   return (
