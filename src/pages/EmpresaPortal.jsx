@@ -169,9 +169,15 @@ export const EmpresaPortal = () => {
       isDestructive: true,
       onConfirm: async () => {
         setConfirmDialog((p) => ({ ...p, isOpen: false }));
-        const { error } = await supabase.from('empleados').delete().eq('id', emp.id);
-        if (error) notify.error('No se pudo eliminar');
-        else { notify.success('Empleado eliminado'); fetchEmployees(); }
+        const { data, error } = await supabase.from('empleados').delete().eq('id', emp.id).select();
+        if (error) {
+          notify.error('No se pudo eliminar');
+        } else if (!data || data.length === 0) {
+          notify.error('Falta política DELETE en Supabase (RLS impide borrar).');
+        } else {
+          notify.success('Empleado eliminado');
+          fetchEmployees();
+        }
       },
     });
   };
@@ -266,12 +272,17 @@ export const EmpresaPortal = () => {
       onConfirm: async () => {
         setConfirmDialog((p) => ({ ...p, isOpen: false }));
         const ids = Array.from(selectedIds);
-        const { error } = await supabase.from('empleados').delete().in('id', ids);
-        if (error) notify.error('No se pudieron eliminar todos');
-        else { notify.success(`${plural(ids.length, 'empleado')} eliminado${ids.length !== 1 ? 's' : ''}`); }
-        setSelectedIds(new Set());
-        setSelectMode(false);
-        fetchEmployees();
+        const { data, error } = await supabase.from('empleados').delete().in('id', ids).select();
+        if (error) {
+          notify.error('No se pudo eliminar');
+        } else if (!data || data.length === 0) {
+          notify.error('Falta política DELETE en Supabase (RLS impide borrar).');
+        } else {
+          notify.success(`${data.length} empleado(s) eliminado(s)`);
+          setSelectedIds(new Set());
+          setSelectMode(false);
+          fetchEmployees();
+        }
       },
     });
   };

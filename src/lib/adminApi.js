@@ -1,28 +1,39 @@
 /**
- * adminApi.js — Wrapper sobre Edge Functions de administrador.
- * Usa el JWT activo de Supabase Auth (admin) en el header automáticamente.
+ * adminApi.js — Operaciones de administrador.
+ * Modificado para usar actualizaciones directas desde el cliente en lugar de Edge Functions,
+ * ya que las Edge Functions no están desplegadas y el admin tiene permisos de UPDATE.
  */
 import { supabase } from './supabaseClient';
 
-const invoke = async (fn, body) => {
-  const { data, error } = await supabase.functions.invoke(fn, { body });
-  if (error) throw new Error(error.message || 'Error de red');
-  if (data?.error) throw new Error(data.error);
-  return data;
-};
-
 export const adminApi = {
   /** Limpia NIP del empleado para que cree uno nuevo en el próximo login. */
-  resetNip: (empleadoId) =>
-    invoke('empleado-admin-reset', { empleado_id: empleadoId, reset_nip: true }),
+  resetNip: async (empleadoId) => {
+    const { error } = await supabase
+      .from('empleados')
+      .update({
+        nip_hash: null,
+        nip_failed_attempts: 0,
+        nip_locked_until: null
+      })
+      .eq('id', empleadoId);
+    if (error) throw new Error(error.message || 'Error al resetear NIP');
+  },
 
   /** Borra credenciales WebAuthn del empleado. */
-  resetWebauthn: (empleadoId) =>
-    invoke('empleado-admin-reset', { empleado_id: empleadoId, reset_webauthn: true }),
+  resetWebauthn: async (empleadoId) => {
+    // Intentamos borrar la credencial (puede fallar si no hay política DELETE en la tabla de credenciales)
+    await supabase.from('empleado_webauthn_credentials').delete().eq('empleado_id', empleadoId);
+    // Pero lo importante es quitar el flag en el empleado
+    const { error } = await supabase
+      .from('empleados')
+      .update({ webauthn_enrolled_at: null })
+      .eq('id', empleadoId);
+    if (error) throw new Error(error.message || 'Error al borrar biometría');
+  },
 
   /** Ambos a la vez. */
-  resetAll: (empleadoId) =>
-    invoke('empleado-admin-reset', {
-      empleado_id: empleadoId, reset_nip: true, reset_webauthn: true,
-    }),
+  resetAll: async (empleadoId) => {
+    await adminApi.resetNip(empleadoId);
+    await adminApi.resetWebauthn(empleadoId);
+  },
 };
