@@ -125,8 +125,8 @@ export const parseRuta = (ruta) => {
 
 /* ── Parámetros del escáner (UX / batería) ───────────────────────── */
 export const SCAN_CONFIG = {
-  fps: 12,                 // 12 fps equilibra detección y batería en móviles medios
-  qrboxRatio: 0.65,        // proporción de la caja sobre min(w,h)
+  fps: 15,                 // 15 fps con BarcodeDetector nativo: lectura rápida sin afectar batería
+  qrboxRatio: 0.7,         // proporción de la caja sobre min(w,h) — un poco mayor para capturar mejor el QR
   scanCooldownMs: {        // tiempo que persiste el banner antes de re-escanear
     success: 4000,
     warning: 6000,

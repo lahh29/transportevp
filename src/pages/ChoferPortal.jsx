@@ -487,22 +487,37 @@ export const ChoferPortal = () => {
 
     const startCamera = () => qr
       .start(
-        { facingMode: 'environment' },
+        // Selecciona cámara trasera con constraints avanzados:
+        // - autofocus continuo (clave para leer QR en pantallas)
+        // - resolución ideal alta para captar QR densos
+        {
+          facingMode: { ideal: 'environment' },
+          focusMode: 'continuous',
+          width:  { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
         {
           fps: SCAN_CONFIG.fps,
           qrbox: (w, h) => {
             const size = Math.round(Math.min(w, h) * SCAN_CONFIG.qrboxRatio);
             return { width: size, height: size };
           },
-          aspectRatio: window.innerHeight / window.innerWidth,
+          // Usa BarcodeDetector nativo del navegador cuando exista (Safari/Chrome
+          // modernos): es 5-10× más rápido y tolera más rotación/desenfoque.
+          useBarCodeDetectorIfSupported: true,
           disableFlip: false,
         },
         onScanSuccess,
         () => {},
       )
       .catch(() => qr.start(
+        // Fallback a la cámara frontal si la trasera no está disponible
         { facingMode: 'user' },
-        { fps: SCAN_CONFIG.fps, qrbox: { width: 240, height: 240 } },
+        {
+          fps: SCAN_CONFIG.fps,
+          qrbox: { width: 240, height: 240 },
+          useBarCodeDetectorIfSupported: true,
+        },
         onScanSuccess,
         () => {},
       ))
