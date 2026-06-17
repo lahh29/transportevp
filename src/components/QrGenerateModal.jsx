@@ -9,7 +9,29 @@ import QRCode from 'qrcode';
 
 /* ============================================================
    QR GENERATE MODAL — Generación masiva de QRs
+   ============================================================
+   Diseño del código:
+   - Contenido: SOLO el numero_empleado como texto plano (string corto)
+       → QR mucho menos denso → mejor lectura en pantallas y a distancia
+   - errorCorrectionLevel 'H' (30% redundancia)
+       → tolera reflejos, sombras, desenfoque
+   - margin 4 módulos (quiet zone estándar)
+       → cámaras reconocen los bordes más rápido
+   - 512 px de salida (data URL)
+       → suficiente para impresión y pantalla sin pixelar
+   El portal del chofer ya acepta tanto texto plano numérico como JSON,
+   por lo que es compatible con cualquier QR previamente generado.
    ============================================================ */
+
+const QR_OPTIONS = {
+  errorCorrectionLevel: 'H',
+  margin: 4,
+  width: 512,
+  color: { dark: '#000000', light: '#FFFFFF' },
+};
+
+const BATCH_SIZE = 10; // updates en paralelo (acelera ~10x sin saturar BD)
+
 export const QrGenerateModal = ({ onCancel, onComplete }) => {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress]     = useState({ current: 0, total: 0 });
@@ -31,13 +53,22 @@ export const QrGenerateModal = ({ onCancel, onComplete }) => {
       }
 
       setProgress({ current: 0, total: target.length });
-      for (let i = 0; i < target.length; i++) {
-        const emp = target[i];
-        const qrContent = JSON.stringify({ numero_empleado: emp.numero_empleado });
-        const qrDataUrl = await QRCode.toDataURL(qrContent, { width: 300, margin: 2 });
-        await supabase.from('empleados').update({ qr_code: qrDataUrl }).eq('id', emp.id);
-        successCount++;
-        setProgress((p) => ({ ...p, current: p.current + 1 }));
+
+      // Genera y guarda en lotes paralelos para acelerar
+      for (let i = 0; i < target.length; i += BATCH_SIZE) {
+        const batch = target.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map(async (emp) => {
+            // Contenido: texto plano corto = QR más simple = mejor lectura
+            const content = String(emp.numero_empleado);
+            const dataUrl = await QRCode.toDataURL(content, QR_OPTIONS);
+            const { error: updErr } = await supabase
+              .from('empleados').update({ qr_code: dataUrl }).eq('id', emp.id);
+            if (updErr) throw updErr;
+          }),
+        );
+        successCount += results.filter((r) => r.status === 'fulfilled').length;
+        setProgress((p) => ({ ...p, current: p.current + batch.length }));
       }
 
       notify.success(`${plural(successCount, 'QR', 'QRs')} generado${successCount !== 1 ? 's' : ''}`);
