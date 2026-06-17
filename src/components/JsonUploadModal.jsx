@@ -1,21 +1,142 @@
-import React, { useState, useRef } from 'react';
-import { Upload, CheckCircle, FileJson, AlertCircle, X as XIcon } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { Upload, CheckCircle, FileText, AlertCircle, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ModalActions } from './ModalKit';
 import { plural } from '../lib/choferConfig';
 
 /* ============================================================
-   JSON UPLOAD MODAL — Carga masiva de empleados
-   Cohesivo · 100% tokens · UI/UX semántico
-   Lógica de parseo/validación intacta.
+   BULK UPLOAD MODAL — Carga masiva de colaboradores
+   Modos:
+     - 'full'   → alta/actualización completa (numero, nombre, turno, ruta, colonia, ref)
+     - 'turnos' → actualización masiva de turnos (solo numero_empleado + turno)
+   Formatos aceptados: .csv y .json
    ============================================================ */
-export const JsonUploadModal = ({ onConfirm, onCancel }) => {
+
+const NORM = (s) => String(s ?? '').trim();
+const NORM_KEY = (k) =>
+  NORM(k).toLowerCase().replace(/\s+/g, '_').replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u').replace(/ñ/g, 'n');
+
+const NUM_ALIASES = ['numero_empleado', 'numero', 'no_empleado', 'no_de_empleado', 'num_empleado', 'numero_de_empleado'];
+const TURNO_ALIASES = ['turno', 'shift'];
+
+const pickField = (row, aliases) => {
+  for (const k of Object.keys(row)) {
+    if (aliases.includes(NORM_KEY(k))) return row[k];
+  }
+  return null;
+};
+
+/* ── CSV parser básico con soporte para comillas dobles ── */
+const parseCSV = (text) => {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n').filter((l) => l.trim() !== '');
+  if (lines.length < 2) return [];
+
+  const splitLine = (line) => {
+    const out = [];
+    let cur = '';
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQ) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQ = false; }
+        else { cur += ch; }
+      } else {
+        if (ch === '"') inQ = true;
+        else if (ch === ',') { out.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+    }
+    out.push(cur);
+    return out;
+  };
+
+  const headers = splitLine(lines[0]).map((h) => h.trim());
+  return lines.slice(1).map((line) => {
+    const cells = splitLine(line);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (cells[i] ?? '').trim(); });
+    return obj;
+  });
+};
+
+const parseFileContent = (text, filename) => {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  if (ext === 'csv') return parseCSV(text);
+  // JSON por defecto
+  const json = JSON.parse(text);
+  if (!Array.isArray(json)) throw new Error('El archivo no contiene una lista de colaboradores.');
+  return json;
+};
+
+/* ── Config por modo ── */
+const MODE_CONFIG = {
+  full: {
+    title: 'Cargar colaboradores',
+    hint: 'Acepta archivos .csv o .json con la lista de colaboradores.',
+    dropTitle: 'Arrastra el archivo aquí',
+    dropSub: 'o toca para seleccionarlo',
+    previewLabel: (n) => `${plural(n, 'colaborador', 'colaboradores')} listo${n !== 1 ? 's' : ''} para cargar`,
+    confirmLabel: (n) => `Cargar ${plural(n, 'colaborador', 'colaboradores')}`,
+    loadingLabel: 'Cargando…',
+    parse: (raw) =>
+      raw.map((item) => ({
+        numero_empleado: NORM(item.numero_empleado || item['numero empleado']),
+        nombre:      NORM(item.nombre),
+        turno:       item.turno ?? null,
+        ruta:        item.ruta ?? null,
+        colonia:     item.colonia ?? null,
+        referencia:  item.referencia ?? null,
+      })).filter((r) => r.numero_empleado && r.nombre),
+    validate: (rows, raw) => {
+      if (rows.length === 0) {
+        throw new Error('No se encontraron registros con número y nombre.');
+      }
+      if (rows.length !== raw.length) {
+        throw new Error(`${raw.length - rows.length} registro(s) sin número o nombre fueron ignorados.`);
+      }
+    },
+    renderPreviewItem: (it) => ({ primary: it.nombre, secondary: `#${it.numero_empleado}` }),
+  },
+  turnos: {
+    title: 'Actualizar turnos',
+    hint: 'Solo se actualizará el turno de los colaboradores que ya existan.',
+    dropTitle: 'Arrastra el archivo aquí',
+    dropSub: 'o toca para seleccionarlo',
+    previewLabel: (n) => `${n} turno${n !== 1 ? 's' : ''} listo${n !== 1 ? 's' : ''} para actualizar`,
+    confirmLabel: (n) => `Actualizar ${n} turno${n !== 1 ? 's' : ''}`,
+    loadingLabel: 'Actualizando…',
+    parse: (raw) =>
+      raw.map((item) => ({
+        numero_empleado: NORM(pickField(item, NUM_ALIASES) ?? item.numero_empleado),
+        turno: NORM(pickField(item, TURNO_ALIASES) ?? item.turno),
+      })).filter((r) => r.numero_empleado && r.turno),
+    validate: (rows, raw) => {
+      if (rows.length === 0) {
+        throw new Error('No se encontró ningún registro con número de empleado y turno.');
+      }
+      if (rows.length !== raw.length) {
+        // No es un error duro: solo informativo.
+      }
+    },
+    renderPreviewItem: (it) => ({ primary: `Turno ${it.turno}`, secondary: `#${it.numero_empleado}` }),
+  },
+};
+
+export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
+  const cfg = MODE_CONFIG[mode] || MODE_CONFIG.full;
+
   const [file,       setFile]       = useState(null);
   const [parsedData, setParsedData] = useState(null);
   const [error,      setError]      = useState(null);
   const [loading,    setLoading]    = useState(false);
   const [dragging,   setDragging]   = useState(false);
   const fileInputRef = useRef(null);
+
+  const previewItems = useMemo(
+    () => (parsedData ? parsedData.slice(0, 3).map(cfg.renderPreviewItem) : []),
+    [parsedData, cfg],
+  );
 
   /* ── Parseo y validación ── */
   const processFile = (selected) => {
@@ -27,29 +148,19 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const json = JSON.parse(event.target.result);
-        if (!Array.isArray(json)) {
-          throw new Error('El archivo debe ser un arreglo JSON ( [...] ).');
+        const raw = parseFileContent(event.target.result, selected.name);
+        if (!Array.isArray(raw)) {
+          throw new Error('El archivo no contiene una lista de colaboradores.');
         }
-
-        const formattedJson = json.map((item) => ({
-          numero_empleado: String(item.numero_empleado || item['numero empleado'] || '').trim(),
-          nombre:      (item.nombre      || '').trim(),
-          turno:       item.turno       || null,
-          ruta:        item.ruta        || null,
-          colonia:     item.colonia     || null,
-          referencia:  item.referencia  || null,
-        }));
-
-        const isValid = formattedJson.every((i) => i.numero_empleado && i.nombre);
-        if (!isValid) throw new Error('Algunos registros no tienen número de empleado o nombre.');
-
-        setParsedData(formattedJson);
+        const rows = cfg.parse(raw);
+        cfg.validate(rows, raw);
+        setParsedData(rows);
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'El archivo no tiene un formato válido.');
         setParsedData(null);
       }
     };
+    reader.onerror = () => setError('No se pudo leer el archivo.');
     reader.readAsText(selected);
   };
 
@@ -80,7 +191,7 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
   };
 
   return (
-    <div style={S.root} data-testid="json-upload-modal">
+    <div style={S.root} data-testid="bulk-upload-modal">
       <AnimatePresence mode="wait">
 
         {/* Estado 1: Drop zone */}
@@ -91,10 +202,10 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
             transition={{ duration: 0.18 }}
           >
             <input
-              type="file" accept=".json"
+              type="file" accept=".json,.csv,application/json,text/csv"
               ref={fileInputRef}
               onChange={handleFileChange}
-              data-testid="json-file-input"
+              data-testid="bulk-file-input"
               style={{ display: 'none' }}
             />
 
@@ -104,8 +215,8 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              data-testid="json-dropzone"
-              aria-label="Seleccionar archivo JSON o arrastrar aquí"
+              data-testid="bulk-dropzone"
+              aria-label="Seleccionar archivo o arrastrar aquí"
               style={{
                 ...S.dropzone,
                 borderColor: dragging ? 'var(--color-accent)' : 'var(--color-hairline-strong)',
@@ -115,9 +226,9 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
               <div style={S.dropIcon} aria-hidden="true">
                 <Upload size={18} strokeWidth={1.75} />
               </div>
-              <p style={S.dropTitle}>Arrastra el archivo aquí</p>
-              <p style={S.dropSub}>o toca para seleccionarlo</p>
-              <p style={S.dropHint}>Formato: JSON con array de empleados</p>
+              <p style={S.dropTitle}>{cfg.dropTitle}</p>
+              <p style={S.dropSub}>{cfg.dropSub}</p>
+              <p style={S.dropHint}>{cfg.hint}</p>
             </button>
           </motion.div>
         )}
@@ -129,17 +240,17 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
             style={S.errorBox}
-            data-testid="json-error"
+            data-testid="bulk-error"
           >
             <AlertCircle size={18} strokeWidth={1.75} style={{ color: 'var(--color-semantic-error)', flexShrink: 0, marginTop: '2px' }} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={S.errorTitle}>Error de validación</p>
+              <p style={S.errorTitle}>No se pudo procesar el archivo</p>
               <p style={S.errorBody}>{error}</p>
             </div>
             <button
               type="button"
               onClick={handleReset}
-              data-testid="json-error-reset"
+              data-testid="bulk-error-reset"
               aria-label="Reintentar"
               style={S.iconBtnGhost}
             >
@@ -155,25 +266,25 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
             initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
             style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-base)' }}
-            data-testid="json-preview"
+            data-testid="bulk-preview"
           >
             {/* Resumen archivo */}
             <div style={S.fileSummary}>
               <div style={S.fileIcon} aria-hidden="true">
-                <FileJson size={16} strokeWidth={1.75} />
+                <FileText size={16} strokeWidth={1.75} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={S.fileName} title={file?.name}>{file?.name}</p>
                 <p style={S.fileMeta}>
                   <span style={S.fileCount}>{parsedData.length}</span>
-                  {' '}empleado{parsedData.length !== 1 ? 's' : ''} listo{parsedData.length !== 1 ? 's' : ''} para cargar
+                  {' '}{cfg.previewLabel(parsedData.length).replace(/^\d+\s/, '')}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleReset}
                 aria-label="Cambiar archivo"
-                data-testid="json-preview-reset"
+                data-testid="bulk-preview-reset"
                 style={S.iconBtnGhost}
               >
                 <XIcon size={15} strokeWidth={2} />
@@ -184,10 +295,10 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
             <div>
               <p style={S.previewEyebrow}>Vista previa — primeros 3</p>
               <ul role="list" style={S.previewList}>
-                {parsedData.slice(0, 3).map((emp, i) => (
+                {previewItems.map((it, i) => (
                   <li key={i} style={S.previewItem}>
-                    <span style={S.previewNum}>#{emp.numero_empleado}</span>
-                    <span style={S.previewName} title={emp.nombre}>{emp.nombre}</span>
+                    <span style={S.previewNum}>{it.secondary}</span>
+                    <span style={S.previewName} title={it.primary}>{it.primary}</span>
                   </li>
                 ))}
               </ul>
@@ -209,12 +320,12 @@ export const JsonUploadModal = ({ onConfirm, onCancel }) => {
           onClick: handleConfirm,
           disabled: !parsedData,
           loading,
-          loadingLabel: 'Subiendo…',
+          loadingLabel: cfg.loadingLabel,
           icon: CheckCircle,
-          label: parsedData ? `Subir ${plural(parsedData.length, 'empleado')}` : 'Subir',
+          label: parsedData ? cfg.confirmLabel(parsedData.length) : 'Continuar',
         }}
-        testIdCancel="json-modal-cancel"
-        testIdConfirm="json-modal-confirm"
+        testIdCancel="bulk-modal-cancel"
+        testIdConfirm="bulk-modal-confirm"
       />
     </div>
   );
@@ -265,6 +376,8 @@ const S = {
     margin: 'var(--spacing-xs) 0 0',
     fontSize: 'var(--typography-caption-size)',
     color: 'var(--color-muted-soft)',
+    maxWidth: '32ch',
+    lineHeight: 'var(--typography-caption-lh)',
   },
 
   /* Error */
@@ -367,7 +480,6 @@ const S = {
     fontFamily: 'var(--font-body)',
     fontSize: 'var(--typography-body-sm-size)',
     fontWeight: 'var(--typography-title-sm-weight)',
-    textTransform: 'uppercase',
     letterSpacing: '0.01em',
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
   },
@@ -390,43 +502,5 @@ const S = {
     alignItems: 'center',
     flexShrink: 0,
     borderRadius: 'var(--rounded-sm)',
-  },
-
-  /* Actions */
-  actions: {
-    display: 'flex',
-    gap: 'var(--spacing-sm)',
-    paddingTop: 'var(--spacing-sm)',
-    borderTop: '1px solid var(--color-hairline-soft)',
-  },
-  btnSecondary: {
-    flex: 1,
-    minHeight: '2.5rem',
-    padding: '0 var(--spacing-base)',
-    borderRadius: 'var(--rounded-md)',
-    border: '1px solid var(--color-hairline)',
-    background: 'transparent',
-    color: 'var(--color-ink)',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 500,
-    cursor: 'pointer',
-  },
-  btnPrimary: {
-    flex: 2,
-    minHeight: '2.5rem',
-    padding: '0 var(--spacing-base)',
-    borderRadius: 'var(--rounded-md)',
-    border: 'none',
-    background: 'var(--color-accent)',
-    color: 'var(--color-on-primary)',
-    fontFamily: 'var(--font-body)',
-    fontSize: 'var(--typography-body-sm-size)',
-    fontWeight: 600,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 'var(--spacing-xs)',
-    transition: 'opacity 120ms ease',
   },
 };

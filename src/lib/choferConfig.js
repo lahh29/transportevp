@@ -59,6 +59,44 @@ export const RUTAS_LIST = [
   'R6- AV. DE LA LUZ - PASEOS QUERETARO',
 ];
 
+/* ── Turnos canónicos para alta/edición de empleados ─────────────── */
+export const TURNOS_OPTIONS = [
+  { value: '1', label: 'Turno 1' },
+  { value: '2', label: 'Turno 2' },
+  { value: '3', label: 'Turno 3' },
+  { value: '4', label: 'Turno 4 · rotativo' },
+];
+
+/* ── Colonias conocidas (sugerencias para datalist) ──────────────── */
+export const COLONIAS_LIST = [
+  'AV. DE LA LUZ',
+  'AV. PEDREGAL',
+  'BUENAVISTA',
+  'COREA',
+  'FRACC. MONTENEGRO',
+  'HDA SANTA ROSA',
+  'LA BARRETA',
+  'LA LUZ',
+  'LA MONJA',
+  'MONTENEGRO',
+  'OBRERA',
+  'OJO DE AGUA',
+  'PASEOS QUERETARO',
+  'PEÑAFLOR',
+  'PIE DE LA CUESTA',
+  'PLAZA DEL SOL',
+  'PROL. BERNARDO QUINTANA',
+  'PUERTO AGUIRRE',
+  'PUERTO CARROZA',
+  'RINCON OJO DE AGUA',
+  'SALITRE',
+  'SAN ISIDRO',
+  'SAN JOSE ITURBIDE',
+  'SANTA CATARINA',
+  'SANTA ROSA',
+  'TLALOC',
+];
+
 /* ── Paleta por ruta — homogeneizada con tokens semánticos ───────── */
 export const RUTA_COLORS = {
   R1: { bgRaw: 'var(--color-accent-raw)',   text: 'var(--color-accent)' },

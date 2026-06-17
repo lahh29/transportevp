@@ -12,6 +12,7 @@ import {
   Upload, Users, Search, Edit2, Trash2, ChevronLeft, ChevronRight,
   UserPlus, Image as ImageIcon, QrCode, Unlock, MoreHorizontal, X as XIcon,
   MoreVertical, Printer, Fingerprint, Copy, Download, FileSpreadsheet, Check,
+  RefreshCw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notify } from '../lib/notify';
@@ -50,7 +51,7 @@ const EmptyState = ({ hasQuery }) => (
   <div role="status" data-testid="empresa-empty" style={S.empty}>
     <div aria-hidden="true" style={S.emptyIcon}><Users size={22} strokeWidth={1.5} /></div>
     <p style={S.emptyTitle}>{hasQuery ? 'Sin resultados' : 'Directorio vacío'}</p>
-    <p style={S.emptySub}>{hasQuery ? 'No hay empleados que coincidan.' : 'Añade empleados o carga un JSON para empezar.'}</p>
+    <p style={S.emptySub}>{hasQuery ? 'No hay empleados que coincidan.' : 'Añade colaboradores o sube un archivo para empezar.'}</p>
   </div>
 );
 
@@ -116,6 +117,7 @@ export const EmpresaPortal = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isTurnoUpdateModalOpen, setIsTurnoUpdateModalOpen] = useState(false);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -173,7 +175,7 @@ export const EmpresaPortal = () => {
         if (error) {
           notify.error('No se pudo eliminar');
         } else if (!data || data.length === 0) {
-          notify.error('Falta política DELETE en Supabase (RLS impide borrar).');
+          notify.error('No tienes permisos para eliminar estos registros.');
         } else {
           notify.success('Empleado eliminado');
           fetchEmployees();
@@ -243,11 +245,46 @@ export const EmpresaPortal = () => {
     try {
       const { error } = await supabase.from('empleados').insert(parsedData);
       if (error) throw error;
-      notify.success(`${plural(parsedData.length, 'empleado')} cargado${parsedData.length !== 1 ? 's' : ''}`);
+      notify.success(`${plural(parsedData.length, 'colaborador', 'colaboradores')} cargado${parsedData.length !== 1 ? 's' : ''}`);
       setIsUploadModalOpen(false);
       fetchEmployees();
     } catch {
       notify.error('No se pudieron cargar los datos');
+    }
+  };
+
+  const handleTurnoUpdateConfirm = async (rows) => {
+    try {
+      // Actualiza turno de cada colaborador por número de empleado.
+      const results = await Promise.all(
+        rows.map(({ numero_empleado, turno }) =>
+          supabase
+            .from('empleados')
+            .update({ turno })
+            .eq('numero_empleado', numero_empleado)
+            .select('id'),
+        ),
+      );
+      const updated  = results.filter((r) => !r.error && r.data && r.data.length > 0).length;
+      const notFound = results.filter((r) => !r.error && (!r.data || r.data.length === 0)).length;
+      const failed   = results.filter((r) => r.error).length;
+
+      if (updated > 0) {
+        notify.success(`${updated} turno${updated !== 1 ? 's' : ''} actualizado${updated !== 1 ? 's' : ''}`);
+      }
+      if (notFound > 0) {
+        notify.error(`${notFound} colaborador${notFound !== 1 ? 'es' : ''} no encontrado${notFound !== 1 ? 's' : ''}`);
+      }
+      if (failed > 0) {
+        notify.error(`${failed} actualizacion${failed !== 1 ? 'es' : ''} fallaron`);
+      }
+      if (updated === 0 && notFound === 0 && failed === 0) {
+        notify.error('No se actualizó ningún turno');
+      }
+      setIsTurnoUpdateModalOpen(false);
+      fetchEmployees();
+    } catch {
+      notify.error('No se pudieron actualizar los turnos');
     }
   };
 
@@ -276,7 +313,7 @@ export const EmpresaPortal = () => {
         if (error) {
           notify.error('No se pudo eliminar');
         } else if (!data || data.length === 0) {
-          notify.error('Falta política DELETE en Supabase (RLS impide borrar).');
+          notify.error('No tienes permisos para eliminar estos registros.');
         } else {
           notify.success(`${data.length} empleado(s) eliminado(s)`);
           setSelectedIds(new Set());
@@ -397,7 +434,8 @@ export const EmpresaPortal = () => {
 
                 <DropdownMenu isOpen={bulkMenuOpen} onClose={() => setBulkMenuOpen(false)} label="Acciones masivas">
                   <MenuGroupLabel>Importar</MenuGroupLabel>
-                  <MenuItem icon={Upload} onClick={() => { setBulkMenuOpen(false); setIsUploadModalOpen(true); }} testId="bulk-upload">Cargar JSON</MenuItem>
+                  <MenuItem icon={Upload} onClick={() => { setBulkMenuOpen(false); setIsUploadModalOpen(true); }} testId="bulk-upload">Cargar colaboradores</MenuItem>
+                  <MenuItem icon={RefreshCw} onClick={() => { setBulkMenuOpen(false); setIsTurnoUpdateModalOpen(true); }} testId="bulk-turno-update">Actualizar turnos</MenuItem>
                   <MenuItem icon={ImageIcon} onClick={() => { setBulkMenuOpen(false); setIsPhotoModalOpen(true); }} testId="bulk-photos">Cargar fotos</MenuItem>
                   <div style={S.dropdownDivider} aria-hidden="true" />
                   <MenuGroupLabel>Exportar</MenuGroupLabel>
@@ -613,14 +651,17 @@ export const EmpresaPortal = () => {
              title={editingEmployee ? 'Editar empleado' : 'Nuevo empleado'} testId="modal-employee">
         <EmployeeWizard
           initialData={editingEmployee}
-          flat={Boolean(editingEmployee)}
           onSave={handleSaveEmployee}
           onCancel={() => { setIsModalOpen(false); setEditingEmployee(null); }}
         />
       </Modal>
 
-      <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Carga masiva" testId="modal-upload">
-        <JsonUploadModal onConfirm={handleUploadConfirm} onCancel={() => setIsUploadModalOpen(false)} />
+      <Modal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} title="Cargar colaboradores" testId="modal-upload">
+        <JsonUploadModal mode="full" onConfirm={handleUploadConfirm} onCancel={() => setIsUploadModalOpen(false)} />
+      </Modal>
+
+      <Modal isOpen={isTurnoUpdateModalOpen} onClose={() => setIsTurnoUpdateModalOpen(false)} title="Actualizar turnos" testId="modal-turno-update">
+        <JsonUploadModal mode="turnos" onConfirm={handleTurnoUpdateConfirm} onCancel={() => setIsTurnoUpdateModalOpen(false)} />
       </Modal>
 
       <Modal isOpen={isPhotoModalOpen} onClose={() => setIsPhotoModalOpen(false)} title="Carga de fotos" size="lg" testId="modal-photos">

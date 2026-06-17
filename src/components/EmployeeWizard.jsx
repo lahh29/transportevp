@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useId } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Truck, MapPin, Check, ChevronLeft } from 'lucide-react';
+import { User, Truck, MapPin, Check, ChevronLeft, ChevronDown } from 'lucide-react';
+import { RUTAS_LIST, TURNOS_OPTIONS, COLONIAS_LIST } from '../lib/choferConfig';
 
 /* ============================================================
    EMPLOYEE WIZARD — Crear / editar empleado (3 pasos)
@@ -22,8 +23,22 @@ const STEPS = [
     label: 'Logística',
     icon: Truck,
     fields: [
-      { name: 'turno', label: 'Turno', placeholder: 'Ej. 1, 2, 3…', required: true, autoComplete: 'off' },
-      { name: 'ruta',  label: 'Ruta',  placeholder: 'Ej. R1- QUERETARO', required: true, autoComplete: 'off' },
+      {
+        name: 'turno',
+        label: 'Turno',
+        type: 'select',
+        required: true,
+        options: TURNOS_OPTIONS,
+        placeholder: 'Selecciona un turno',
+      },
+      {
+        name: 'ruta',
+        label: 'Ruta',
+        type: 'select',
+        required: true,
+        options: RUTAS_LIST.map((r) => ({ value: r, label: r })),
+        placeholder: 'Selecciona una ruta',
+      },
     ],
   },
   {
@@ -31,8 +46,17 @@ const STEPS = [
     label: 'Ubicación',
     icon: MapPin,
     fields: [
-      { name: 'colonia',     label: 'Colonia',    placeholder: 'Ej. La Luz', required: true, autoComplete: 'address-level2' },
-      { name: 'referencia',  label: 'Referencia', placeholder: 'Casa verde esquina con…', required: false, autoComplete: 'off' },
+      {
+        name: 'colonia',
+        label: 'Colonia',
+        type: 'combobox',
+        required: true,
+        placeholder: 'Ej. La Luz',
+        options: COLONIAS_LIST,
+        autoComplete: 'address-level2',
+        hint: 'Elige una existente o escribe una nueva.',
+      },
+      { name: 'referencia', label: 'Referencia', placeholder: 'Casa verde esquina con…', required: false, autoComplete: 'off' },
     ],
   },
 ];
@@ -97,13 +121,99 @@ const StepIndicator = ({ current }) => (
 
 /* ─── Field ───────────────────────────────────────────────── */
 const Field = ({ field, value, onChange }) => {
-  const id = `field-${field.name}`;
+  const reactId = useId();
+  const id = `field-${field.name}-${reactId}`;
+  const hintId = field.hint ? `${id}-hint` : undefined;
+  const listId = field.type === 'combobox' ? `${id}-list` : undefined;
+  const isReadOnly = Boolean(field.readOnly);
+
+  const labelEl = (
+    <label htmlFor={id} style={S.label}>
+      {field.label}
+      {field.required && !isReadOnly && <span style={S.required} aria-hidden="true">*</span>}
+      {isReadOnly && <span style={S.lockedTag} aria-hidden="true">No editable</span>}
+    </label>
+  );
+
+  const inputStyle = isReadOnly ? { ...S.input, ...S.inputReadOnly } : S.input;
+
+  /* SELECT estricto (turno / ruta) */
+  if (field.type === 'select') {
+    return (
+      <div style={S.field}>
+        {labelEl}
+        <div style={S.selectWrap}>
+          <select
+            id={id}
+            name={field.name}
+            value={value || ''}
+            onChange={onChange}
+            required={field.required}
+            disabled={isReadOnly}
+            aria-describedby={hintId}
+            data-testid={`wizard-field-${field.name}`}
+            style={{ ...inputStyle, ...S.select }}
+          >
+            <option value="" disabled>
+              {field.placeholder || 'Selecciona una opción'}
+            </option>
+            {field.options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          {!isReadOnly && (
+            <ChevronDown
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+              style={S.selectChevron}
+            />
+          )}
+        </div>
+        {field.hint && <p id={hintId} style={S.hint}>{field.hint}</p>}
+      </div>
+    );
+  }
+
+  /* COMBOBOX (colonia con datalist) */
+  if (field.type === 'combobox') {
+    return (
+      <div style={S.field}>
+        {labelEl}
+        <input
+          id={id}
+          name={field.name}
+          type="text"
+          list={isReadOnly ? undefined : listId}
+          value={value || ''}
+          onChange={onChange}
+          placeholder={field.placeholder}
+          required={field.required}
+          readOnly={isReadOnly}
+          aria-readonly={isReadOnly || undefined}
+          autoComplete={field.autoComplete}
+          aria-describedby={hintId}
+          data-testid={`wizard-field-${field.name}`}
+          style={inputStyle}
+        />
+        {!isReadOnly && (
+          <datalist id={listId}>
+            {field.options.map((opt) => (
+              <option key={opt} value={opt} />
+            ))}
+          </datalist>
+        )}
+        {field.hint && <p id={hintId} style={S.hint}>{field.hint}</p>}
+      </div>
+    );
+  }
+
+  /* INPUT texto por defecto */
   return (
     <div style={S.field}>
-      <label htmlFor={id} style={S.label}>
-        {field.label}
-        {field.required && <span style={S.required} aria-hidden="true">*</span>}
-      </label>
+      {labelEl}
       <input
         id={id}
         name={field.name}
@@ -112,17 +222,23 @@ const Field = ({ field, value, onChange }) => {
         onChange={onChange}
         placeholder={field.placeholder}
         required={field.required}
+        readOnly={isReadOnly}
+        aria-readonly={isReadOnly || undefined}
+        tabIndex={isReadOnly ? -1 : undefined}
         inputMode={field.inputMode}
         autoComplete={field.autoComplete}
+        aria-describedby={hintId}
         data-testid={`wizard-field-${field.name}`}
-        style={S.input}
+        style={inputStyle}
       />
+      {field.hint && <p id={hintId} style={S.hint}>{field.hint}</p>}
     </div>
   );
 };
 
 /* ─── Componente principal ────────────────────────────────── */
-export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) => {
+export const EmployeeWizard = ({ initialData, onSave, onCancel }) => {
+  const isEditing = Boolean(initialData);
   const [step,     setStep]     = useState(1);
   const [dir,      setDir]      = useState(1);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -154,59 +270,26 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!flat && step < STEPS.length) { handleNext(); return; }
+    if (step < STEPS.length) { handleNext(); return; }
     onSave(formData);
   };
 
   const currentStep = STEPS[step - 1];
+
+  /* En edición: el número de empleado queda bloqueado (no editable) */
+  const stepFields = useMemo(
+    () =>
+      currentStep.fields.map((f) =>
+        isEditing && f.name === 'numero_empleado' ? { ...f, readOnly: true } : f
+      ),
+    [currentStep, isEditing],
+  );
 
   const variants = {
     enter:  { opacity: 0, x: dir * 24 },
     center: { opacity: 1, x: 0 },
     exit:   { opacity: 0, x: dir * -24 },
   };
-
-  /* Modo plano (edición): todos los campos visibles */
-  if (flat) {
-    return (
-      <div style={S.root} data-testid="employee-wizard-flat">
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
-            {STEPS.map((stepCfg) => (
-              <fieldset key={stepCfg.id} style={S.fieldset}>
-                <legend style={S.legendVisible}>{stepCfg.label}</legend>
-                {stepCfg.fields.map((field) => (
-                  <Field key={field.name} field={field} value={formData[field.name]} onChange={handleChange} />
-                ))}
-              </fieldset>
-            ))}
-          </div>
-
-          <div style={S.footer}>
-            <button type="button" onClick={handleCancel} data-testid="wizard-cancel" style={S.btnLink}>
-              Cancelar
-            </button>
-            <motion.button
-              type="submit"
-              whileTap={isDirty ? { scale: 0.985 } : {}}
-              disabled={!isDirty}
-              data-testid="wizard-submit"
-              style={{
-                ...S.btnPrimary,
-                background: 'var(--color-accent)',
-                color: 'var(--color-on-primary)',
-                border: 'none',
-                opacity: isDirty ? 1 : 0.5,
-                cursor: isDirty ? 'pointer' : 'not-allowed',
-              }}
-            >
-              <Check size={14} strokeWidth={2.5} /> Guardar cambios
-            </motion.button>
-          </div>
-        </form>
-      </div>
-    );
-  }
 
   return (
     <div style={S.root} data-testid="employee-wizard">
@@ -229,7 +312,7 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) 
               style={S.fieldset}
             >
               <legend style={S.legend}>{currentStep.label}</legend>
-              {currentStep.fields.map((field) => (
+              {stepFields.map((field) => (
                 <Field
                   key={field.name}
                   field={field}
@@ -268,6 +351,7 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) 
           <motion.button
             type="submit"
             whileTap={{ scale: 0.985 }}
+            disabled={isEditing && step === STEPS.length && !isDirty}
             data-testid="wizard-submit"
             style={{
               ...S.btnPrimary,
@@ -276,10 +360,12 @@ export const EmployeeWizard = ({ initialData, onSave, onCancel, flat = false }) 
                 : 'rgb(var(--color-accent-raw) / 0.1)',
               color: step === STEPS.length ? 'var(--color-on-primary)' : 'var(--color-accent)',
               border: step === STEPS.length ? 'none' : '1px solid rgb(var(--color-accent-raw) / 0.4)',
+              opacity: (isEditing && step === STEPS.length && !isDirty) ? 0.5 : 1,
+              cursor:  (isEditing && step === STEPS.length && !isDirty) ? 'not-allowed' : 'pointer',
             }}
           >
             {step === STEPS.length
-              ? <><Check size={14} strokeWidth={2.5} /> {initialData ? 'Guardar cambios' : 'Crear empleado'}</>
+              ? <><Check size={14} strokeWidth={2.5} /> {isEditing ? 'Guardar cambios' : 'Crear empleado'}</>
               : 'Siguiente'
             }
           </motion.button>
@@ -401,6 +487,53 @@ const S = {
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 120ms ease, background 120ms ease',
+  },
+  inputReadOnly: {
+    background: 'var(--color-hairline-soft)',
+    color: 'var(--color-ink-muted)',
+    borderColor: 'var(--color-hairline-soft)',
+    cursor: 'not-allowed',
+    fontVariantNumeric: 'tabular-nums',
+  },
+  lockedTag: {
+    marginLeft: 'var(--spacing-xs)',
+    padding: '0 var(--spacing-xxs)',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-eyebrow-size)',
+    fontWeight: 600,
+    letterSpacing: 'var(--typography-eyebrow-ls)',
+    textTransform: 'none',
+    color: 'var(--color-ink-faint)',
+    background: 'transparent',
+    borderRadius: 'var(--rounded-xs)',
+  },
+  selectWrap: {
+    position: 'relative',
+    display: 'block',
+    width: '100%',
+  },
+  select: {
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+    paddingRight: 'calc(var(--spacing-sm) * 2 + 1rem)',
+    cursor: 'pointer',
+    backgroundImage: 'none',
+  },
+  selectChevron: {
+    position: 'absolute',
+    right: 'var(--spacing-sm)',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: 'var(--color-ink-muted)',
+    pointerEvents: 'none',
+  },
+  hint: {
+    margin: 'var(--spacing-xxs) 0 0',
+    fontFamily: 'var(--font-body)',
+    fontSize: 'var(--typography-eyebrow-size)',
+    color: 'var(--color-ink-faint)',
+    lineHeight: 'var(--typography-eyebrow-lh)',
   },
 
   /* Footer */
