@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { MapPin, Clock, QrCode, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AvatarComponent from 'boring-avatars';
 import { PortalHeader } from '../components/PortalHeader';
 import { empleadoSession, empleadoCache } from '../lib/empleadoSession';
 import { APP_ROUTES } from '../lib/choferConfig';
@@ -13,13 +14,6 @@ import { APP_ROUTES } from '../lib/choferConfig';
    ============================================================ */
 
 /* ─── Helpers ───────────────────────────────────────────── */
-const getInitials = (nombre) => {
-  if (!nombre) return '?';
-  const parts = nombre.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-};
-
 const splitName = (fullName) => {
   if (!fullName) return { apellidos: '', nombres: '' };
   const parts = fullName.trim().split(/\s+/);
@@ -35,6 +29,9 @@ const parseRutaCode = (ruta) => {
 };
 
 /* ─── Avatar ────────────────────────────────────────────── */
+const AVATAR_SIZE_PX = 48;
+const AVATAR_PALETTE = ['#0A0310', '#49007E', '#FF005B', '#FF7D10', '#FFB238'];
+
 const Avatar = ({ empleado }) => {
   if (empleado.foto_url) {
     return (
@@ -48,8 +45,13 @@ const Avatar = ({ empleado }) => {
     );
   }
   return (
-    <div className="emp-avatar emp-avatar--initials" aria-hidden="true">
-      {getInitials(empleado.nombre)}
+    <div className="emp-avatar emp-avatar--generated" aria-hidden="true">
+      <AvatarComponent
+        size={AVATAR_SIZE_PX}
+        name={empleado.nombre || empleado.numero_empleado || 'colaborador'}
+        variant="beam"
+        colors={AVATAR_PALETTE}
+      />
     </div>
   );
 };
@@ -338,13 +340,9 @@ const CSS = /* css */ `
   object-fit: cover;
   border: 1px solid var(--color-hairline-soft);
 }
-.emp-avatar--initials {
-  background: rgb(var(--color-primary-raw) / 0.1);
-  color: var(--color-primary);
-  font-family: var(--font-body);
-  font-size: var(--typography-body-sm-size);
-  font-weight: 600;
-  letter-spacing: var(--ls-tight-2);
+.emp-avatar--generated {
+  overflow: hidden;
+  background: var(--color-hairline-soft);
 }
 
 /* ── QR héroe ── */
