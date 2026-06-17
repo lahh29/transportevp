@@ -142,35 +142,6 @@ export const EmpleadoDashboard = () => {
     };
   }, [empleado]);
 
-  /* Genera el QR localmente si el backend no devolvió uno.
-     Garantiza que el colaborador SIEMPRE pueda mostrar su código,
-     incluso sin red y aunque RH aún no lo haya generado masivamente. */
-  useEffect(() => {
-    if (!empleado) return;
-    if (empleado.qr_code) {
-      setQrSrc(empleado.qr_code);
-      setQrGenerated(false);
-      return;
-    }
-    if (!empleado.numero_empleado) {
-      setQrSrc(null);
-      return;
-    }
-    let cancelled = false;
-    const content = JSON.stringify({ numero_empleado: empleado.numero_empleado });
-    QRCode.toDataURL(content, { width: 300, margin: 2 })
-      .then((dataUrl) => {
-        if (!cancelled) {
-          setQrSrc(dataUrl);
-          setQrGenerated(true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setQrSrc(null);
-      });
-    return () => { cancelled = true; };
-  }, [empleado]);
-
   const handleLogout = () => {
     empleadoSession.clear();
     navigate(APP_ROUTES.empleadoLogin, { replace: true });
