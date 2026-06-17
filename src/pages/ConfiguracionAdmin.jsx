@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { PortalHeader } from '../components/PortalHeader';
 import { Modal } from '../components/Modal';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { Plus, Users, Edit2, Trash2, Shield, Truck, ArrowLeft } from 'lucide-react';
+import { Plus, Users, Edit2, Trash2, Shield, Truck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { notify } from '../lib/notify';
 import { adminUsersApi } from '../lib/adminApi';
@@ -126,23 +125,6 @@ export const ConfiguracionAdmin = () => {
 
   return (
     <div style={S.page}>
-      <PortalHeader 
-        subtitle="Configuración" 
-        onLogout={handleLogout} 
-        onBrandClick={() => navigate(APP_ROUTES.empresa)}
-        extras={
-          <motion.button
-            whileHover={{ scale: 1.05, background: 'rgba(0,0,0,0.05)', color: 'var(--color-ink)' }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(APP_ROUTES.empresa)}
-            title="Volver al Portal"
-            style={S.headerBtn}
-          >
-            <ArrowLeft size={18} strokeWidth={2} />
-          </motion.button>
-        }
-      />
-
       <main style={S.main}>
         <div style={S.toolbar}>
           <h1 style={S.title}><Users size={24} style={{ color: 'var(--color-primary)' }}/> Gestión de Accesos</h1>

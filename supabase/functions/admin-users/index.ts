@@ -30,13 +30,13 @@ const requireAdmin = async (req: Request) => {
 Deno.serve(async (req) => {
   const pre = handlePreflight(req);
   if (pre) return pre;
-  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, { status: 405 });
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' });
 
   const admin = await requireAdmin(req);
-  if (!admin) return json({ error: 'no_autorizado' }, { status: 401 });
+  if (!admin) return json({ error: 'no_autorizado' });
 
   let body: any = {};
-  try { body = await req.json(); } catch { return json({ error: 'invalid_json' }, { status: 400 }); }
+  try { body = await req.json(); } catch { return json({ error: 'invalid_json' }); }
 
   const supaAdmin = supabaseAdmin();
   const action = body.action;
@@ -106,10 +106,10 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    return json({ error: 'accion_desconocida' }, { status: 400 });
+    return json({ error: 'accion_desconocida' });
 
   } catch (err: any) {
     console.error('[admin-users] Error:', err);
-    return json({ error: err.message }, { status: 400 });
+    return json({ error: err.message });
   }
 });
