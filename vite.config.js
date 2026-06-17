@@ -55,7 +55,7 @@ export default defineConfig({
         description: 'Portal de abordaje QR para transporte empresarial.',
         lang: 'es-MX',
         dir: 'ltr',
-        start_url: '/chofer',
+        start_url: '/',
         scope: '/',
         theme_color: '#26251E',
         background_color: '#FCFBF8',

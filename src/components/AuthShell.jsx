@@ -23,9 +23,10 @@ import { LogoMockup } from './LogoMockup';
  *  - eyebrow: string corto sobre el card (ej. "ADMINISTRACIÓN")
  *  - children: contenido del card (form, multi-step, etc.)
  *  - showBack: bool, default true. Muestra el link "Volver al inicio"
+ *  - hideBrand: bool, default false. Oculta el logo + nombre de marca (vista limpia)
  *  - testId: opcional. data-testid del contenedor
  */
-export const AuthShell = ({ eyebrow, children, showBack = true, testId }) => {
+export const AuthShell = ({ eyebrow, children, showBack = true, hideBrand = false, testId }) => {
   const navigate = useNavigate();
 
   return (
@@ -43,12 +44,14 @@ export const AuthShell = ({ eyebrow, children, showBack = true, testId }) => {
       <section style={S.container} aria-labelledby="auth-brand">
 
         {/* Brand */}
-        <header style={S.brand}>
-          <LogoMockup />
-          <h1 id="auth-brand" style={S.brandName}>
-            Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
-          </h1>
-        </header>
+        {!hideBrand && (
+          <header style={S.brand}>
+            <LogoMockup />
+            <h1 id="auth-brand" style={S.brandName}>
+              Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
+            </h1>
+          </header>
+        )}
 
         {/* Eyebrow opcional */}
         {eyebrow && (

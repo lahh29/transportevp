@@ -286,7 +286,7 @@ export const EmpleadoLogin = () => {
   return (
     <>
       <LoginTransition isVisible={successAnim} userName={empleado?.nombre} />
-      <AuthShell eyebrow={stepCfg.eyebrow} testId="empleado-login-page">
+      <AuthShell eyebrow={stepCfg.eyebrow} hideBrand testId="empleado-login-page">
 
         {step !== 6 && <StepProgress current={currentForUI} total={total} />}
 
@@ -637,7 +637,7 @@ const EmpleadoIdentity = ({ empleado, variant = 'full' }) => {
         </div>
       )}
       <h2 style={introTitleStyle}>
-        {compact ? `Hola, ${firstName}` : empleado.nombre || firstName}
+        {compact ? `Hola, ${empleado.nombre || firstName}` : empleado.nombre || firstName}
       </h2>
       <p style={introSubtitleStyle}>
         {compact ? 'Ingresa tu NIP' : 'Verifiquemos tu identidad'}
