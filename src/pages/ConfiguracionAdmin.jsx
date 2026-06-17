@@ -282,7 +282,7 @@ export const ConfiguracionAdmin = () => {
             </button>
             <button
               type="submit"
-              className="cfg-btn cfg-btn--primary"
+              className="cfg-btn cfg-btn--solid"
               disabled={isSubmitting}
               data-testid="user-form-submit"
             >
@@ -342,24 +342,26 @@ const CSS = /* css */ `
   gap: var(--spacing-sm);
 }
 
-/* ── Buttons (cohesivos) ────────────────────────────────── */
+/* ── Buttons (cohesivos con el resto del portal) ───────── */
 .cfg-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
   font-family: var(--font-body);
-  font-size: var(--typography-button-size);
-  font-weight: var(--typography-button-weight);
+  font-size: var(--typography-body-sm-size);
+  font-weight: 600;
   line-height: var(--typography-button-lh);
   letter-spacing: var(--typography-button-ls);
-  height: var(--button-height-md);
-  padding-inline: var(--spacing-lg);
+  min-height: var(--button-height-lg);
+  padding-inline: var(--spacing-base);
   border: 1px solid transparent;
-  border-radius: var(--rounded-pill);
+  border-radius: var(--rounded-md);
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 120ms ease, color 120ms ease, transform 80ms ease, border-color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .cfg-btn:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -368,11 +370,27 @@ const CSS = /* css */ `
 .cfg-btn:disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
 .cfg-btn:active { transform: scale(0.97); }
 
+/* Primary — soft tint (abre modales / añade)  */
 .cfg-btn--primary {
-  background: var(--color-ink);
-  color: var(--color-canvas-soft);
+  background: rgb(var(--color-primary-raw) / 0.08);
+  color: var(--color-primary);
+  border-color: rgb(var(--color-primary-raw) / 0.4);
 }
-.cfg-btn--primary:hover { background: var(--color-ink-secondary); }
+.cfg-btn--primary:hover {
+  background: rgb(var(--color-primary-raw) / 0.14);
+  border-color: rgb(var(--color-primary-raw) / 0.55);
+}
+
+/* Solid primary — CTA final (guardar) */
+.cfg-btn--solid {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
+}
+.cfg-btn--solid:hover {
+  background: var(--color-primary-active);
+  border-color: var(--color-primary-active);
+}
 
 .cfg-btn--ghost {
   background: transparent;
