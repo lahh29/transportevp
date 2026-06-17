@@ -243,13 +243,51 @@ export const EmpresaPortal = () => {
 
   const handleUploadConfirm = async (parsedData) => {
     try {
-      const { error } = await supabase.from('empleados').insert(parsedData);
-      if (error) throw error;
-      notify.success(`${plural(parsedData.length, 'colaborador', 'colaboradores')} cargado${parsedData.length !== 1 ? 's' : ''}`);
-      setIsUploadModalOpen(false);
+      // 1) Detectar qué números ya existen en el directorio
+      const numbers = parsedData.map((r) => r.numero_empleado);
+      const { data: existing, error: checkErr } = await supabase
+        .from('empleados')
+        .select('numero_empleado')
+        .in('numero_empleado', numbers);
+
+      if (checkErr) throw checkErr;
+
+      const existingSet = new Set((existing || []).map((e) => String(e.numero_empleado)));
+      const toInsert  = parsedData.filter((r) => !existingSet.has(String(r.numero_empleado)));
+      const duplicates = parsedData
+        .filter((r) => existingSet.has(String(r.numero_empleado)))
+        .map((r) => r.numero_empleado);
+
+      let created = 0;
+      let failed = [];
+
+      if (toInsert.length > 0) {
+        const { data: inserted, error: insErr } = await supabase
+          .from('empleados')
+          .insert(toInsert)
+          .select('numero_empleado');
+
+        if (insErr) {
+          failed = toInsert.map((r) => r.numero_empleado);
+        } else {
+          created = inserted?.length || 0;
+        }
+      }
+
+      if (created > 0) {
+        notify.success(`${created} colaborador${created !== 1 ? 'es' : ''} cargado${created !== 1 ? 's' : ''}`);
+      }
+
+      // Cierra solo si no hay incidencias
+      if (duplicates.length === 0 && failed.length === 0) {
+        setIsUploadModalOpen(false);
+      }
       fetchEmployees();
+
+      return { updated: created, duplicates, failed, notFound: [] };
     } catch {
       notify.error('No se pudieron cargar los datos');
+      return { updated: 0, duplicates: [], failed: [], notFound: [] };
     }
   };
 

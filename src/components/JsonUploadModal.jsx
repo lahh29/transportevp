@@ -184,8 +184,11 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
     const r = await onConfirm(parsedData);
     setLoading(false);
     // Si la operación devolvió un reporte y hay incidencias, lo mostramos.
-    if (r && (Array.isArray(r.notFound) || Array.isArray(r.failed))) {
-      const hasIssues = (r.notFound?.length || 0) + (r.failed?.length || 0) > 0;
+    if (r && (Array.isArray(r.notFound) || Array.isArray(r.failed) || Array.isArray(r.duplicates))) {
+      const hasIssues =
+        (r.notFound?.length || 0) +
+        (r.failed?.length || 0) +
+        (r.duplicates?.length || 0) > 0;
       if (hasIssues) setResult(r);
     }
   };
@@ -356,7 +359,12 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
               {result.updated > 0 && (
                 <li style={{ ...S.summaryItem, ...S.summaryItemOk }}>
                   <CheckCircle2 size={16} strokeWidth={2} aria-hidden="true" />
-                  <span><strong>{result.updated}</strong> turno{result.updated !== 1 ? 's' : ''} actualizado{result.updated !== 1 ? 's' : ''}</span>
+                  <span>
+                    <strong>{result.updated}</strong>{' '}
+                    {mode === 'turnos'
+                      ? `turno${result.updated !== 1 ? 's' : ''} actualizado${result.updated !== 1 ? 's' : ''}`
+                      : `colaborador${result.updated !== 1 ? 'es' : ''} cargado${result.updated !== 1 ? 's' : ''}`}
+                  </span>
                 </li>
               )}
               {result.notFound?.length > 0 && (
@@ -365,10 +373,16 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
                   <span><strong>{result.notFound.length}</strong> colaborador{result.notFound.length !== 1 ? 'es' : ''} no encontrado{result.notFound.length !== 1 ? 's' : ''}</span>
                 </li>
               )}
+              {result.duplicates?.length > 0 && (
+                <li style={{ ...S.summaryItem, ...S.summaryItemWarn }}>
+                  <AlertCircle size={16} strokeWidth={2} aria-hidden="true" />
+                  <span><strong>{result.duplicates.length}</strong> ya existía{result.duplicates.length !== 1 ? 'n' : ''} en el directorio</span>
+                </li>
+              )}
               {result.failed?.length > 0 && (
                 <li style={{ ...S.summaryItem, ...S.summaryItemErr }}>
                   <AlertCircle size={16} strokeWidth={2} aria-hidden="true" />
-                  <span><strong>{result.failed.length}</strong> con error al actualizar</span>
+                  <span><strong>{result.failed.length}</strong> con error al {mode === 'turnos' ? 'actualizar' : 'cargar'}</span>
                 </li>
               )}
             </ul>
@@ -386,9 +400,21 @@ export const JsonUploadModal = ({ onConfirm, onCancel, mode = 'full' }) => {
               />
             )}
 
+            {result.duplicates?.length > 0 && (
+              <IssueGroup
+                title="Ya existen en el directorio"
+                hint="Estos colaboradores ya estaban registrados y se omitieron. Edítalos individualmente si necesitas cambiar sus datos."
+                items={result.duplicates}
+                onCopy={() => copyList(result.duplicates, 'Ya existen')}
+                onDownload={() => downloadList(result.duplicates, 'ya-existen.csv')}
+                testId="bulk-duplicates"
+                tone="warn"
+              />
+            )}
+
             {result.failed?.length > 0 && (
               <IssueGroup
-                title="Con error al actualizar"
+                title={mode === 'turnos' ? 'Con error al actualizar' : 'Con error al cargar'}
                 hint="No se pudo guardar el cambio. Inténtalo más tarde."
                 items={result.failed}
                 onCopy={() => copyList(result.failed, 'Con error')}
@@ -673,6 +699,11 @@ const S = {
     background: 'rgb(var(--color-semantic-error-raw) / 0.06)',
     borderColor: 'rgb(var(--color-semantic-error-raw) / 0.25)',
     color: 'var(--color-semantic-error)',
+  },
+  summaryItemWarn: {
+    background: 'rgb(var(--color-semantic-warning-raw) / 0.08)',
+    borderColor: 'rgb(var(--color-semantic-warning-raw) / 0.3)',
+    color: 'var(--color-semantic-warning)',
   },
 
   /* Issue group */
