@@ -227,7 +227,7 @@ export const EmpleadoDashboard = () => {
               ? (isOffline
                   ? 'Tu código sigue disponible sin conexión.'
                   : 'Muéstralo al chofer al abordar.')
-              : 'Mientras tanto, el chofer puede registrarte manualmente con tu número.'}
+              : 'No podrás abordar hasta que tu código esté listo.'}
           </p>
         </section>
 
