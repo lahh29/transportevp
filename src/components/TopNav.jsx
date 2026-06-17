@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { LogOut, Menu, X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notify } from '../lib/notify';
+import { TypeWriter } from './TypeWriter';
 
 /* ─── Rutas de navegación ─── */
 const NAV_LINKS = [
@@ -135,7 +136,23 @@ export const TopNav = () => {
               fontFamily: 'var(--font-display)',
               lineHeight: 1.1,
             }}>
-              Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
+              <TypeWriter
+                words={['ViñoPlastic']}
+                typeSpeed={110}
+                deleteSpeed={55}
+                holdFull={1800}
+                holdEmpty={450}
+                ariaLabel="ViñoPlastic"
+                renderChar={(t) => {
+                  const split = 4;
+                  return (
+                    <>
+                      <span>{t.slice(0, split)}</span>
+                      <span style={{ color: 'var(--color-primary)' }}>{t.slice(split)}</span>
+                    </>
+                  );
+                }}
+              />
             </span>
             <span style={{
               fontSize: '0.75rem',

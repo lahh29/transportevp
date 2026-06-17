@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { notify } from '../lib/notify';
+import { TypeWriter } from './TypeWriter';
 
 /**
  * PortalHeader — header sticky cohesivo con TopNav (Empresa).
@@ -115,7 +116,25 @@ export const PortalHeader = ({
                 lineHeight: 1.1,
               }}
             >
-              Viño<span style={{ color: 'var(--color-primary)' }}>Plastic</span>
+              <TypeWriter
+                words={['ViñoPlastic']}
+                typeSpeed={110}
+                deleteSpeed={55}
+                holdFull={1800}
+                holdEmpty={450}
+                ariaLabel="ViñoPlastic"
+                renderChar={(t) => {
+                  const split = 4; // "Viño"
+                  const first = t.slice(0, split);
+                  const rest = t.slice(split);
+                  return (
+                    <>
+                      <span>{first}</span>
+                      <span style={{ color: 'var(--color-primary)' }}>{rest}</span>
+                    </>
+                  );
+                }}
+              />
             </span>
             {subtitle && (
               <span
