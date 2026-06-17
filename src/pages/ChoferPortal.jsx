@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -208,9 +208,7 @@ export const ChoferPortal = () => {
 
   const timerRef = useRef(null);
   const isScanningRef = useRef(false);
-  const qrRef = useRef(null);
   const lastScanRef = useRef({ text: null, at: 0 }); // dedupe re-escaneos
-  const cancelledRef = useRef(false);                // ignora callbacks tras desmontar
 
   /* ── Sesión + listener de auth state (item 7 mejorado) ───────── */
   useEffect(() => {
@@ -299,272 +297,175 @@ export const ChoferPortal = () => {
     notify.message(`Ruta ${code} finalizada`);
   }, [selectedRoute, session, fetchRutasActivas]);
 
-  /* ── Escáner QR ──────────────────────────────────────────────── */
-  useEffect(() => {
-    if (!selectedRoute) return undefined;
+  /* ── Procesador de QR escaneado ──────────────────────────────
+     Función pura, sin acoplamiento a ninguna librería de cámara.
+     Recibe el texto crudo del QR y ejecuta lookup + validación. */
+  const processScan = useCallback(async (decodedText) => {
+    if (isScanningRef.current) return;
 
-    cancelledRef.current = false;
-    const qr = new Html5Qrcode('reader');
-    qrRef.current = qr;
+    // Dedupe: ignora el mismo QR si llega dentro de la ventana de cooldown
+    const now = Date.now();
+    if (
+      lastScanRef.current.text === decodedText &&
+      now - lastScanRef.current.at < SCAN_CONFIG.dedupeWindowMs
+    ) {
+      return;
+    }
+    lastScanRef.current = { text: decodedText, at: now };
 
-    const stopScanner = async () => {
-      try {
-        if (qr?.isScanning) {
-          await qr.stop();
-          await qr.clear();
-        }
-      } catch {
-        /* noop */
-      }
-    };
+    isScanningRef.current = true;
+    if (timerRef.current) clearTimeout(timerRef.current);
 
-    const onScanSuccess = async (decodedText) => {
-      if (cancelledRef.current) return;
-      if (isScanningRef.current) return;
+    let uiColor = 'success';
 
-      // Dedupe: ignora el mismo QR si llega dentro de la ventana de cooldown
-      const now = Date.now();
-      if (
-        lastScanRef.current.text === decodedText &&
-        now - lastScanRef.current.at < SCAN_CONFIG.dedupeWindowMs
-      ) {
-        return;
-      }
-      lastScanRef.current = { text: decodedText, at: now };
+    try {
+      // Parse QR → lookup por id o numero_empleado
+      let lookupField = 'id';
+      let lookupValue = decodedText;
+      const trimmed = String(decodedText).trim();
 
-      isScanningRef.current = true;
-      if (timerRef.current) clearTimeout(timerRef.current);
-
-      let uiColor = 'success';
-
-      try {
-        // Parse QR → lookup por id o numero_empleado
-        let lookupField = 'id';
-        let lookupValue = decodedText;
-        const trimmed = String(decodedText).trim();
-
-        if (trimmed.startsWith('{')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            if (parsed && parsed.numero_empleado != null) {
-              lookupField = 'numero_empleado';
-              lookupValue = String(parsed.numero_empleado).trim();
-            } else if (parsed && parsed.id != null) {
-              lookupField = 'id';
-              lookupValue = String(parsed.id).trim();
-            }
-          } catch {
-            /* texto no-JSON, lo dejamos como UUID/id */
-          }
-        } else if (/^\d+$/.test(trimmed)) {
-          lookupField = 'numero_empleado';
-          lookupValue = trimmed;
-        }
-
-        const { data: emp, error: empError } = await supabase
-          .from('empleados')
-          .select('*')
-          .eq(lookupField, lookupValue)
-          .maybeSingle();
-        const nowDate = new Date();
-        const timeStr = nowDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-
-        let estado = 'autorizado';
-        let isValid = true;
-        let rejectReason = '';
-
-        if (!emp || empError) {
-          isValid = false;
-          estado = 'rechazado_qr';
-          rejectReason = 'El código no está registrado.';
-        } else if (emp.ruta !== selectedRoute) {
-          isValid = false;
-          estado = 'rechazado_ruta';
-          rejectReason = `Pertenece a la ${emp.ruta || 'Sin Ruta'}.`;
-        } else {
-          const diaActualStr = DAY_NAMES[nowDate.getDay()];
-          const diasLaborables = SHIFT_SCHEDULE[emp.turno];
-
-          if (diasLaborables && !diasLaborables.includes(diaActualStr)) {
-            estado = 'dia_descanso';
-          } else {
-            const turnoReal = resolveTurno(emp.turno, diaActualStr);
-            const hours = SHIFT_HOURS[turnoReal];
-            if (hours) {
-              const currentMins = nowDate.getHours() * 60 + nowDate.getMinutes();
-              const isWithin = (hStart, hEnd) => {
-                const startM = hStart * 60;
-                const endM = hEnd * 60;
-                if (startM <= endM) return currentMins >= startM && currentMins <= endM;
-                return currentMins >= startM || currentMins <= endM; // cruza medianoche
-              };
-
-              let startEntH = hours.start - SHIFT_TOLERANCE.entradaAntes;
-              if (startEntH < 0) startEntH += 24;
-              let endEntH = hours.start + SHIFT_TOLERANCE.entradaDespues;
-              if (endEntH >= 24) endEntH -= 24;
-
-              let startSalH = hours.end - SHIFT_TOLERANCE.salidaAntes;
-              if (startSalH < 0) startSalH += 24;
-              const endSalMins = hours.end * 60 + SHIFT_TOLERANCE.salidaDespuesMin;
-
-              const isValidEntrada = isWithin(startEntH, endEntH);
-              const isValidSalida =
-                currentMins >= startSalH * 60 ||
-                currentMins <= endSalMins % (24 * 60);
-
-              if (!isValidEntrada && !isValidSalida) estado = 'fuera_horario';
-            }
-          }
-        }
-
-        const isWarning = estado === 'dia_descanso' || estado === 'fuera_horario';
-        uiColor = isValid ? (isWarning ? 'warning' : 'success') : 'error';
-
-        let warningReason = '';
-        if (estado === 'dia_descanso') warningReason = 'Día de descanso';
-        else if (estado === 'fuera_horario') warningReason = 'Fuera de horario de abordaje';
-
-        if (cancelledRef.current) return;
-
-        setScanResult({
-          text: decodedText,
-          isValid,
-          estado,
-          uiColor,
-          rejectReason: isValid && isWarning ? warningReason : rejectReason,
-          employee: emp,
-          time: timeStr,
-        });
-
-        // Háptica solo si el usuario NO pidió reducir movimiento
-        if (
-          !reducedMotion &&
-          typeof navigator !== 'undefined' &&
-          typeof navigator.vibrate === 'function'
-        ) {
-          navigator.vibrate(SCAN_CONFIG.haptics[uiColor]);
-        }
-
-        const record = {
-          chofer_id: session?.user?.id || null,
-          ruta_chofer: selectedRoute,
-          estado,
-          qr_leido: decodedText,
-        };
-        if (emp) record.empleado_id = emp.id;
-
+      if (trimmed.startsWith('{')) {
         try {
-          const { error: regError } = await supabase.from('registros').insert(record);
-          if (regError) throw regError;
+          const parsed = JSON.parse(trimmed);
+          if (parsed && parsed.numero_empleado != null) {
+            lookupField = 'numero_empleado';
+            lookupValue = String(parsed.numero_empleado).trim();
+          } else if (parsed && parsed.id != null) {
+            lookupField = 'id';
+            lookupValue = String(parsed.id).trim();
+          }
         } catch {
-          offlineQueue.enqueue(record);
-          // Historial local de respaldo
-          const local = safeStorage.get(STORAGE_KEYS.qrHistory, []);
-          local.unshift({
-            id: Date.now(),
-            fecha_hora: nowDate.toISOString(),
-            empleados: emp,
-            estado,
-            ruta_chofer: selectedRoute,
-          });
-          safeStorage.set(STORAGE_KEYS.qrHistory, local.slice(0, 500));
+          /* texto no-JSON, lo dejamos como UUID/id */
         }
-      } catch {
-        // Falla de red en la búsqueda: notificamos al chofer
-        if (!cancelledRef.current) {
-          notify.networkError();
+      } else if (/^\d+$/.test(trimmed)) {
+        lookupField = 'numero_empleado';
+        lookupValue = trimmed;
+      }
+
+      const { data: emp, error: empError } = await supabase
+        .from('empleados')
+        .select('*')
+        .eq(lookupField, lookupValue)
+        .maybeSingle();
+      const nowDate = new Date();
+      const timeStr = nowDate.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+      let estado = 'autorizado';
+      let isValid = true;
+      let rejectReason = '';
+
+      if (!emp || empError) {
+        isValid = false;
+        estado = 'rechazado_qr';
+        rejectReason = 'El código no está registrado.';
+      } else if (emp.ruta !== selectedRoute) {
+        isValid = false;
+        estado = 'rechazado_ruta';
+        rejectReason = `Pertenece a la ${emp.ruta || 'Sin Ruta'}.`;
+      } else {
+        const diaActualStr = DAY_NAMES[nowDate.getDay()];
+        const diasLaborables = SHIFT_SCHEDULE[emp.turno];
+
+        if (diasLaborables && !diasLaborables.includes(diaActualStr)) {
+          estado = 'dia_descanso';
+        } else {
+          const turnoReal = resolveTurno(emp.turno, diaActualStr);
+          const hours = SHIFT_HOURS[turnoReal];
+          if (hours) {
+            const currentMins = nowDate.getHours() * 60 + nowDate.getMinutes();
+            const isWithin = (hStart, hEnd) => {
+              const startM = hStart * 60;
+              const endM = hEnd * 60;
+              if (startM <= endM) return currentMins >= startM && currentMins <= endM;
+              return currentMins >= startM || currentMins <= endM; // cruza medianoche
+            };
+
+            let startEntH = hours.start - SHIFT_TOLERANCE.entradaAntes;
+            if (startEntH < 0) startEntH += 24;
+            let endEntH = hours.start + SHIFT_TOLERANCE.entradaDespues;
+            if (endEntH >= 24) endEntH -= 24;
+
+            let startSalH = hours.end - SHIFT_TOLERANCE.salidaAntes;
+            if (startSalH < 0) startSalH += 24;
+            const endSalMins = hours.end * 60 + SHIFT_TOLERANCE.salidaDespuesMin;
+
+            const isValidEntrada = isWithin(startEntH, endEntH);
+            const isValidSalida =
+              currentMins >= startSalH * 60 ||
+              currentMins <= endSalMins % (24 * 60);
+
+            if (!isValidEntrada && !isValidSalida) estado = 'fuera_horario';
+          }
         }
-      } finally {
-        const ms = SCAN_CONFIG.scanCooldownMs[uiColor] || SCAN_CONFIG.scanCooldownMs.success;
-        timerRef.current = setTimeout(() => {
-          if (cancelledRef.current) return;
-          setScanResult(null);
-          isScanningRef.current = false;
-        }, ms);
       }
-    };
 
-    // Contador de errores de decodificación para debugging.
-    // Errores "QR no encontrado en el frame" son normales y frecuentes:
-    // sólo los registramos cada 60 frames para detectar problemas reales.
-    let scanErrorCount = 0;
-    const onScanError = (err) => {
-      scanErrorCount++;
-      if (scanErrorCount % 60 === 0) {
-        // eslint-disable-next-line no-console
-        console.debug('[scanner] sin QR detectado en últimos 60 frames:', err);
-      }
-    };
+      const isWarning = estado === 'dia_descanso' || estado === 'fuera_horario';
+      uiColor = isValid ? (isWarning ? 'warning' : 'success') : 'error';
 
-    const startCamera = () => qr
-      .start(
-        // Config mínima — iOS Safari es muy estricto con MediaTrackConstraints;
-        // cualquier restricción de resolución puede tirar OverconstrainedError.
-        { facingMode: 'environment' },
-        {
-          fps: SCAN_CONFIG.fps,
-          qrbox: (w, h) => {
-            const size = Math.round(Math.min(w, h) * SCAN_CONFIG.qrboxRatio);
-            return { width: size, height: size };
-          },
-          // Usa BarcodeDetector nativo cuando esté disponible (Safari 17+, Chrome).
-          // Va dentro de experimentalFeatures, no top-level.
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-          disableFlip: false,
-        },
-        onScanSuccess,
-        onScanError,
-      )
-      .catch((errEnv) => {
-        // eslint-disable-next-line no-console
-        console.warn('[scanner] cámara trasera no disponible, intentando frontal:', errEnv);
-        return qr.start(
-          { facingMode: 'user' },
-          {
-            fps: SCAN_CONFIG.fps,
-            qrbox: { width: 240, height: 240 },
-            experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-          },
-          onScanSuccess,
-          onScanError,
-        );
-      })
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error('[scanner] no se pudo iniciar la cámara:', err);
-        setCameraError(
-          err?.message?.includes('Permission') || err?.name === 'NotAllowedError'
-            ? 'permission'
-            : 'unavailable'
-        );
+      let warningReason = '';
+      if (estado === 'dia_descanso') warningReason = 'Día de descanso';
+      else if (estado === 'fuera_horario') warningReason = 'Fuera de horario de abordaje';
+
+      setScanResult({
+        text: decodedText,
+        isValid,
+        estado,
+        uiColor,
+        rejectReason: isValid && isWarning ? warningReason : rejectReason,
+        employee: emp,
+        time: timeStr,
       });
 
-    startCamera();
-
-    /* ── Pausar cámara si el usuario sale a otra app (item 7) ──── */
-    const onVisibility = async () => {
-      if (document.visibilityState === 'hidden') {
-        if (qr?.isScanning) {
-          try { await qr.stop(); } catch { /* noop */ }
-        }
-      } else if (document.visibilityState === 'visible' && !cancelledRef.current) {
-        if (qrRef.current && !qrRef.current.isScanning) startCamera();
+      // Háptica solo si el usuario NO pidió reducir movimiento
+      if (
+        !reducedMotion &&
+        typeof navigator !== 'undefined' &&
+        typeof navigator.vibrate === 'function'
+      ) {
+        navigator.vibrate(SCAN_CONFIG.haptics[uiColor]);
       }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
 
+      const record = {
+        chofer_id: session?.user?.id || null,
+        ruta_chofer: selectedRoute,
+        estado,
+        qr_leido: decodedText,
+      };
+      if (emp) record.empleado_id = emp.id;
+
+      try {
+        const { error: regError } = await supabase.from('registros').insert(record);
+        if (regError) throw regError;
+      } catch {
+        offlineQueue.enqueue(record);
+        const local = safeStorage.get(STORAGE_KEYS.qrHistory, []);
+        local.unshift({
+          id: Date.now(),
+          fecha_hora: nowDate.toISOString(),
+          empleados: emp,
+          estado,
+          ruta_chofer: selectedRoute,
+        });
+        safeStorage.set(STORAGE_KEYS.qrHistory, local.slice(0, 500));
+      }
+    } catch {
+      notify.networkError();
+    } finally {
+      const ms = SCAN_CONFIG.scanCooldownMs[uiColor] || SCAN_CONFIG.scanCooldownMs.success;
+      timerRef.current = setTimeout(() => {
+        setScanResult(null);
+        isScanningRef.current = false;
+      }, ms);
+    }
+  }, [selectedRoute, reducedMotion, session]);
+
+  /* ── Cleanup de timers al desmontar / cambiar de ruta ── */
+  useEffect(() => {
     return () => {
-      cancelledRef.current = true;
-      document.removeEventListener('visibilitychange', onVisibility);
       if (timerRef.current) clearTimeout(timerRef.current);
-      stopScanner();
+      isScanningRef.current = false;
     };
-    // Intencionalmente sin `session` en deps: la sesión cambia al refrescar
-    // token cada hora y reiniciaría la cámara. Usamos session.user.id solo
-    // para registrar el chofer en cada inserción.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRoute, reducedMotion]);
+  }, [selectedRoute]);
 
   return (
     <div
@@ -692,11 +593,45 @@ export const ChoferPortal = () => {
               />
             ) : (
               <>
-                <div
-                  id="reader"
-                  role="application"
-                  aria-label="Vista previa de cámara para escanear códigos QR"
-                  style={{ position: 'absolute', inset: 0 }}
+                <Scanner
+                  onScan={(detectedCodes) => {
+                    if (detectedCodes && detectedCodes.length > 0) {
+                      const value = detectedCodes[0].rawValue;
+                      if (value) processScan(value);
+                    }
+                  }}
+                  onError={(error) => {
+                    // eslint-disable-next-line no-console
+                    console.error('[scanner] error:', error);
+                    const name = error?.name || error?.error?.name;
+                    setCameraError(
+                      name === 'NotAllowedError' || name === 'PermissionDeniedError'
+                        ? 'permission'
+                        : 'unavailable'
+                    );
+                  }}
+                  constraints={{ facingMode: 'environment' }}
+                  formats={['qr_code']}
+                  scanDelay={300}
+                  components={{
+                    finder: false,        // ocultamos el finder por defecto: usamos el nuestro
+                    audio: false,         // sin sonido al escanear
+                    torch: false,
+                    zoom: false,
+                  }}
+                  styles={{
+                    container: {
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                    },
+                    video: {
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    },
+                  }}
                 />
 
                 {/* Mensaje de error de cámara */}
